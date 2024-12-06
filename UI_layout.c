@@ -1,29 +1,19 @@
-#ifndef GTK_LIB
-#define GTK_LIB
-#include <gtk/gtk.h>
-#endif
-
-#ifndef _SHARE_
-#define _SHARE_
-#include "share_variables.h"
+#ifndef Cali
+#define Cali
+#include "Cali.h"
 #endif
 
 #include "EventCallback.c"
-
-void init_share_var(void){
-    adjustment_status = 0;
-}
-
 //UI layout and event signal connecting
-static void on_activate(GtkApplication *app, gpointer user_data) {
-    //Initial shared variables
-    init_share_var();
-
+extern void on_activate(GtkApplication *app, gpointer user_data) {
+    adjustment_status = 0;
+    
     // Create Main window
     GtkWidget *window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "校正治具");
     gtk_window_set_default_size(GTK_WINDOW(window), 500, 500);
-
+    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER_ALWAYS);
+    
     // Create Labels
     GtkWidget *label1 = gtk_label_new("測試機型");
     GtkWidget *label2 = gtk_label_new("通訊界面");
@@ -111,20 +101,29 @@ static void on_activate(GtkApplication *app, gpointer user_data) {
 
     //Signal
     g_signal_connect(button_setting, "clicked", G_CALLBACK(CB_button_setting_click), label_SS);
-    g_signal_connect(window, "key-press-event", G_CALLBACK(CB_key_space), label_adjust_mode);
+    gtk_widget_set_events(window, GDK_ALL_EVENTS_MASK & ~GDK_KEY_PRESS_MASK);
+    g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+    //g_signal_connect(window, "key-press-event", G_CALLBACK(CB_key_press), label_adjust_mode);
     
+    
+    //Use timer to check the global variable to update UI
+    g_timeout_add(100, (GSourceFunc)CB_timer, label_adjust_mode);
 
     gtk_container_add(GTK_CONTAINER(window), vbox); // put the box on the screen
     gtk_widget_show_all(window); //show the window on the screen
+    
+    pthread_t keyboard_thread;
+    pthread_create(&keyboard_thread, NULL, read_keyboard_input_test, NULL);
+    pthread_detach(keyboard_thread);
 }
 
-int main(int argc, char *argv[]) {
-    // 创建应用程序
+extern void UI_task(void *arg){
+    //create application of UI
     GtkApplication *app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
+    //after creation the "activate" signal calls "on_activate" callback
     g_signal_connect(app, "activate", G_CALLBACK(on_activate), NULL);
+    
+    int status = g_application_run(G_APPLICATION(app), 0, NULL);
 
-    // 运行应用程序
-    int status = g_application_run(G_APPLICATION(app), argc, argv);
     g_object_unref(app);
-    return status;
 }

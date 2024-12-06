@@ -1,0 +1,21 @@
+This version can run following things parallelly:
+1. UI => Under "UI_thread" control, can read keyboard and interaction with button and keyboard
+2. main => Under other "threads" control.
+
+Feature :
+1. "UI" will not block the keyboard.
+2. After pressing(not rotate) the "knob", UI_thread update the label of adjustment_mode
+3. This version uses app form to launch the whole process including UI and exe.
+
+To-do:
+1. Combine to Cali.c
+	1.1 GTK_UI one label shows "Waiting for polling“ => (create threads)canbus & modbus polling => (join thread)canbus & modbus => use a signal to disable the label and showup all widgets
+2. Get the calibration type and show it on the screen (perhaps, we can put some fake data to frame.data[2..7])
+3. Get the communication interface and show it on the screen (Read "communication_found")
+4. 
+
+
+"compile.sh" will compile "Cali.c" and all the resources it needed.
+After that, it will generate a executable file named "b".
+
+
