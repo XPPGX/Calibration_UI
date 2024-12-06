@@ -3,10 +3,13 @@
 #include "Cali.h"
 #endif
 
+pthread_mutex_t button_lock;
+pthread_cond_t button_cond;
 
 extern void CB_button_setting_click(GtkButton *button, gpointer user_data) {
     GtkLabel *label = GTK_LABEL(user_data);
-    gtk_label_set_text(label, "O口O"); 
+    pthread_cond_signal(&button_cond);
+    gtk_label_set_text(label, "O口O");
 }
 
 extern void CB_timer(GtkWidget *label){
@@ -19,7 +22,15 @@ extern void CB_timer(GtkWidget *label){
 }
 
 extern void read_keyboard_input_test(){
+
+    pthread_mutex_lock(&button_lock);
+    printf("[keyboard_thread]Waiting for button pressing...\n");
+    pthread_cond_wait(&button_cond, &button_lock);
+    pthread_mutex_unlock(&button_lock);
+    printf("[keyboard_thread]Start\n");
+
     int SVR_value = 0;
+    int quit_flag = 0; //1 for leaving the while block, 0 otherwise
     const char *device = "/dev/input/event0";
     int fd = open(device, O_RDONLY);
     space_pressed = 0; // 記錄空白鍵的狀態
@@ -81,6 +92,7 @@ extern void read_keyboard_input_test(){
                     break;
                 
                 case KEY_ENTER:
+                    quit_flag = 1;
                     printf("enter");
                     break;
             }
@@ -94,6 +106,10 @@ extern void read_keyboard_input_test(){
             }
             printf("%d\n", space_pressed);
             printf("%d\n", SVR_value);
+        }
+
+        if(quit_flag == 1){
+            break;
         }
     }
 
@@ -131,4 +147,9 @@ extern gboolean CB_key_press(GtkWidget *widget, GdkEventKey *event, gpointer use
     }
     
     return FALSE;
+}
+
+extern void on_destroy(GtkWidget *widget, gpointer data){
+    
+    gtk_main_quit();
 }

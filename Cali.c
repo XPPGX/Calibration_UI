@@ -8,6 +8,8 @@
 void Manual_Calibration();
 
 int space_pressed;
+pthread_mutex_t button_lock;
+pthread_cond_t button_cond;
 
 // CRC16 計算函數
 uint16_t calculateCRC(uint8_t *data, int length) {
@@ -432,25 +434,23 @@ void Manual_Calibration(){
     close(fd);
 }
 
-int main(int argc, char *argv[]) {
-    
-    GtkApplication *app;
-    int status;
-    app = gtk_application_new("Meanwell.com", G_APPLICATION_FLAGS_NONE);
-    g_signal_connect(app, "activate", G_CALLBACK(on_activate), NULL);
-    status = g_application_run(G_APPLICATION(app), argc, argv);
-    g_object_unref(app);
-    
-    
-    pthread_t can_thread, rs485_thread;
+void flow_control_task(){
 
+    pthread_mutex_lock(&button_lock);
+    printf("[flow_control_thread]Waiting for button pressing...\n");
+    pthread_cond_wait(&button_cond, &button_lock);
+    pthread_mutex_unlock(&button_lock);
+    printf("[flow_control_thread]Start\n");    
+
+    pthread_t can_thread, rs485_thread;
+    
     // 初始化 Mutex
     pthread_mutex_init(&lock, NULL);
 
     // 創建 CANBUS 與 RS485 執行緒
     pthread_create(&can_thread, NULL, can_polling, NULL);
     pthread_create(&rs485_thread, NULL, rs485_polling, NULL);
-    
+
     // 等待執行緒結束
     pthread_join(can_thread, NULL);
     pthread_join(rs485_thread, NULL);
@@ -465,9 +465,9 @@ int main(int argc, char *argv[]) {
     } else {
         printf("No communication detected\n");
     }
-    
+
     pthread_mutex_destroy(&lock);
-    
+
     // 設定 GPIO 17 為輸出模式
     pinMode(LED_PIN, OUTPUT);
 
@@ -479,6 +479,16 @@ int main(int argc, char *argv[]) {
         MOD_CALI();
     }
     digitalWrite(LED_PIN, LOW); // LED OFF
+}
+
+int main(int argc, char *argv[]) {
+    
+    GtkApplication *app;
+    int status;
+    app = gtk_application_new("Meanwell.com", G_APPLICATION_FLAGS_NONE);
+    g_signal_connect(app, "activate", G_CALLBACK(on_activate), NULL);
+    status = g_application_run(G_APPLICATION(app), argc, argv);
+    g_object_unref(app);
     
     return 0;
 }

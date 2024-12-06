@@ -1,9 +1,11 @@
 #ifndef Cali
 #define Cali
 #include "Cali.h"
+
 #endif
 
 #include "EventCallback.c"
+
 //UI layout and event signal connecting
 extern void on_activate(GtkApplication *app, gpointer user_data) {
     adjustment_status = 0;
@@ -102,7 +104,7 @@ extern void on_activate(GtkApplication *app, gpointer user_data) {
     //Signal
     g_signal_connect(button_setting, "clicked", G_CALLBACK(CB_button_setting_click), label_SS);
     gtk_widget_set_events(window, GDK_ALL_EVENTS_MASK & ~GDK_KEY_PRESS_MASK);
-    g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+    // g_signal_connect(window, "destroy", G_CALLBACK(on_destroy), NULL);
     //g_signal_connect(window, "key-press-event", G_CALLBACK(CB_key_press), label_adjust_mode);
     
     
@@ -112,18 +114,23 @@ extern void on_activate(GtkApplication *app, gpointer user_data) {
     gtk_container_add(GTK_CONTAINER(window), vbox); // put the box on the screen
     gtk_widget_show_all(window); //show the window on the screen
     
-    pthread_t keyboard_thread;
-    pthread_create(&keyboard_thread, NULL, read_keyboard_input_test, NULL);
-    pthread_detach(keyboard_thread);
-}
 
-extern void UI_task(void *arg){
-    //create application of UI
-    GtkApplication *app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
-    //after creation the "activate" signal calls "on_activate" callback
-    g_signal_connect(app, "activate", G_CALLBACK(on_activate), NULL);
+    pthread_t flow_control_thread;
+    pthread_create(&flow_control_thread, NULL, flow_control_task, NULL);
+    pthread_detach(flow_control_thread);
     
-    int status = g_application_run(G_APPLICATION(app), 0, NULL);
-
-    g_object_unref(app);
+    // pthread_t keyboard_thread; //[solved]quit keytboard then terminal cannot type. Must press "enter"
+    // pthread_create(&keyboard_thread, NULL, read_keyboard_input_test, NULL);
+    // pthread_detach(keyboard_thread);
 }
+
+// extern void UI_task(void *arg){
+//     //create application of UI
+//     GtkApplication *app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
+//     //after creation the "activate" signal calls "on_activate" callback
+//     g_signal_connect(app, "activate", G_CALLBACK(on_activate), NULL);
+    
+//     int status = g_application_run(G_APPLICATION(app), 0, NULL);
+
+//     g_object_unref(app);
+// }
