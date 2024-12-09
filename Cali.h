@@ -54,3 +54,25 @@ struct Label_UpdateInfo{
 };
 
 void flow_control_task();
+
+
+pthread_mutex_t UI_label_target_lock;
+volatile int UI_label_target = 0; // 0: no decide, 1: LABEL_MT, 2: LABEL_CI, 3: LABEL_CK
+volatile char machine_type[13]; //Receive the machine type returned by the command 0x0082 and 0x0083
+#define UPDATE_LABEL_MT 1
+#define UPDATE_LABEL_CI 2
+#define UPDATE_LABEL_CT 3
+#define UPDATE_LABEL_R  4
+GtkWidget* label_MT;
+GtkWidget* label_CI;
+GtkWidget* label_CT;
+GtkWidget* label_R;
+
+//Cali types
+pthread_mutex_t CT_lock;
+volatile char cali_type_UI = 0x00; //values are defined below
+#define ACV_DC_OFFSET_3phi 	0x80
+#define ACV_DC_OFFSET_1phi 	0x40
+#define ACI_DC_OFFSET_3phi 	0x20
+#define ACI_DC_OFFSET_1phi 	0x10
+#define DC					0x01

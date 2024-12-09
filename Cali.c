@@ -5,11 +5,14 @@
 
 #include "UI_layout.c"
 
+#define _DEBUG_
+
 void Manual_Calibration();
 
 int space_pressed;
 pthread_mutex_t button_lock;
 pthread_cond_t button_cond;
+
 
 // CRC16 計算函數
 uint16_t calculateCRC(uint8_t *data, int length) {
@@ -71,6 +74,8 @@ void CAN_Init()
 }
 
 void *can_polling(void *arg) {
+    int ask_name = 0; // 0 : machine type is not asked yet, 2 : receive answer by asking 0x0082 and 0x0083
+    
     memset(&frame, 0, sizeof(struct can_frame));
     CAN_Init();
     // 設定 CAN Frame
@@ -80,7 +85,7 @@ void *can_polling(void *arg) {
     frame.data[1] = 0x00;
 
     while (!communication_found) {
-        // 發送資料
+        // 發送資料 (0x0082)
         if (write(s, &frame, sizeof(frame)) != sizeof(frame)) {
             perror("CAN Write error");
             usleep(10000); // 短暫延遲後重試
@@ -90,6 +95,58 @@ void *can_polling(void *arg) {
         // 嘗試讀取回應
         int read_bytes = read(s, &frame, sizeof(frame));
         if (read_bytes > 0) {
+            ask_name ++;
+            
+            #ifdef _DEBUG_
+            machine_type[0] = frame.data[0];
+            machine_type[1] = frame.data[1];
+            machine_type[2] = frame.data[2];
+            machine_type[3] = frame.data[3];
+            machine_type[4] = frame.data[4];
+            machine_type[5] = frame.data[5];
+            machine_type[6] = '\0';
+            printf("Machine Type(pre) : %s\n", machine_type);
+            
+            
+            
+            //設定 CAN frame
+            memset(&frame, 0, sizeof(struct can_frame));
+            frame.can_id = TX_ID | CAN_EFF_FLAG;
+            frame.can_dlc = 2;    // 資料長度
+            frame.data[0] = 0x83;
+            frame.data[1] = 0x00;
+            //發送資料 （0x0083)
+            while(1){
+                if (write(s, &frame, sizeof(frame)) != sizeof(frame)) {
+                    perror("CAN Write error");
+                    usleep(10000); // 短暫延遲後重試
+                    continue;
+                }
+                int read_bytes2 = read(s, &frame, sizeof(frame));
+                if(read_bytes2 > 0){
+                    ask_name ++;
+                    
+                    machine_type[6] = frame.data[0];
+                    machine_type[7] = frame.data[1];
+                    machine_type[8] = frame.data[2];
+                    machine_type[9] = frame.data[3];
+                    machine_type[10] = frame.data[4];
+                    machine_type[11] = frame.data[5];
+                    machine_type[12] = '\0';
+                    printf("Machine Type(whole) : %s\n", machine_type);
+                }
+                if(ask_name == 2){
+                    break;
+                }
+                usleep(20000); // 避免過度頻繁的輪詢
+            }
+            #endif
+            
+            pthread_mutex_lock(&UI_label_target_lock);
+            UI_label_target = UPDATE_LABEL_MT;
+            pthread_mutex_unlock(&UI_label_target_lock);
+            g_idle_add(update_label_text, NULL); //read "communication_found" in UI thread
+            
             pthread_mutex_lock(&lock);
             if (!communication_found) {
                 communication_found = CANBUS; // 設定為 CAN 通訊
@@ -260,7 +317,16 @@ void CAN_CALI(){
                         Manual_Cali_step = 2;
                     }
                     else if(frame.data[2] == 0xFF){
-                        printf("PASS\n");
+                        printf("Finish\n");
+                        
+                        #ifdef _DEBUG_
+                        
+                        pthread_mutex_lock(&UI_label_target_lock);
+                        UI_label_target = UPDATE_LABEL_R;
+                        pthread_mutex_unlock(&UI_label_target_lock);
+                        g_idle_add(update_label_text, NULL); //read "communication_found" in UI thread
+                        
+                        #endif
                         break;
                     }
                 }
@@ -359,7 +425,7 @@ void Manual_Calibration(){
 
         if (polling_cnt >= 200) {
             polling_cnt = 0;
-            if (Cali_type_polling == 1) {    //Need polling
+            if (Cali_type_polling == 1) {
                 if (communication_found == CANBUS) {
                     frame.can_id = TX_ID | CAN_EFF_FLAG;
                     frame.can_dlc = 4;    // 資料長度
@@ -393,9 +459,19 @@ void Manual_Calibration(){
                 int read_bytes = read(s, &frame, sizeof(frame));
                 if (read_bytes > 0) {
                     if((frame.data[0] == 0x10) && (frame.data[1] == 0xD0)){
-                        //Here, read frame.data[2] as Cali_type.
                         if ((frame.data[2] & 0xF1) != 0) {
                             Cali_type_polling = 1;
+                            
+                            #ifdef _DEBUG_
+                            pthread_mutex_lock(&CT_lock);
+                            cali_type_UI = frame.data[2] & 0xF1;
+                            pthread_mutex_unlock(&CT_lock);
+                            pthread_mutex_lock(&UI_label_target_lock);
+                            UI_label_target = UPDATE_LABEL_CT;
+                            pthread_mutex_unlock(&UI_label_target_lock);
+                            g_idle_add(update_label_text, NULL); //delegate UI thread to update UI
+                            #endif
+                            
                         } else {
                             Cali_type_polling = 0;
                         }
@@ -465,7 +541,12 @@ void flow_control_task(){
     } else {
         printf("No communication detected\n");
     }
-
+    
+    pthread_mutex_lock(&UI_label_target_lock);
+    UI_label_target = UPDATE_LABEL_CI;
+    pthread_mutex_unlock(&UI_label_target_lock);
+    g_idle_add(update_label_text, NULL); //read "communication_found" in UI thread
+    
     pthread_mutex_destroy(&lock);
 
     // 設定 GPIO 17 為輸出模式

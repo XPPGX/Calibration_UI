@@ -5,20 +5,77 @@
 
 pthread_mutex_t button_lock;
 pthread_cond_t button_cond;
+pthread_mutex_t UI_label_target_lock;
+pthread_mutex_t CT_lock;
+
 
 extern void CB_button_setting_click(GtkButton *button, gpointer user_data) {
     GtkLabel *label = GTK_LABEL(user_data);
     pthread_cond_signal(&button_cond);
     gtk_label_set_text(label, "O口O");
+    gtk_label_set_markup(label_R, "<span font='18' foreground='#8B4513'><b>Running</b></span>"); //just set text with some style
+    
 }
 
 extern void CB_timer(GtkWidget *label){
     if(space_pressed == 0){
         gtk_label_set_text(GTK_LABEL(label), "微調");
+        //~ gtk_label_set_markup(label, "<span font='14'><b>微調</b></span>"); //just set text with some style
     }
     else{
-        gtk_label_set_text(GTK_LABEL(label), "粗調");
+        //~ gtk_label_set_text(GTK_LABEL(label), "粗調");
+        gtk_label_set_markup(label, "<span font='16' foreground='#1B36C7'><b>粗調</b></span>"); //just set text with some style
     }
+}
+
+extern gboolean update_label_text(gpointer data){
+    pthread_mutex_lock(&UI_label_target_lock);
+    switch(UI_label_target){
+        case UPDATE_LABEL_MT:
+            gtk_label_set_text(GTK_LABEL(label_MT), machine_type);
+            printf("[case][UPDATE_LABEL_MT]\n");
+            break;
+        case UPDATE_LABEL_CI:
+            switch(communication_found){
+                case CANBUS:
+                    gtk_label_set_text(GTK_LABEL(label_CI), "CANBUS");
+                    break;
+                case MODBUS:
+                    gtk_label_set_text(GTK_LABEL(label_CI), "MODBUS");
+                    break;
+                default:
+                    gtk_label_set_text(GTK_LABEL(label_CI), "無通訊介面");
+            }
+            printf("[case][UPDATE_LABEL_CI]\n");
+            break;
+        case UPDATE_LABEL_CT:
+            switch(cali_type_UI){
+                case ACV_DC_OFFSET_3phi:
+                    gtk_label_set_text(GTK_LABEL(label_CT), "ACV_DC_OFFSET_3\u03A6");
+                    break;
+                case ACV_DC_OFFSET_1phi:
+                    gtk_label_set_text(GTK_LABEL(label_CT), "ACV_DC_OFFSET_1\u03A6");
+                    break;
+                case ACI_DC_OFFSET_3phi:
+                    gtk_label_set_text(GTK_LABEL(label_CT), "ACI_DC_OFFSET_3\u03A6");
+                    break;
+                case ACI_DC_OFFSET_1phi:
+                    gtk_label_set_text(GTK_LABEL(label_CT), "ACI_DC_OFFSET_1\u03A6");
+                    break;
+                case DC:
+                    gtk_label_set_text(GTK_LABEL(label_CT), "DC");
+                    break;
+                default:
+                    break;
+            }
+            printf("[case][UPDATE_LABEL_MT]\n");
+            break;
+        case UPDATE_LABEL_R:
+            gtk_label_set_markup(label_R, "<span font='18' foreground='#18E236'><b>Finish</b></span>"); //just set text with some style
+            break;
+            
+    }
+    pthread_mutex_unlock(&UI_label_target_lock);
 }
 
 extern void read_keyboard_input_test(){
