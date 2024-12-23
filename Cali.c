@@ -1,17 +1,35 @@
-#ifndef Cali
-#define Cali
+/* Includes ------------------------------------------------------------------*/
 #include "Cali.h"
-#endif
 
-#include "UI_layout.c"
+/* Parameter -----------------------------------------------*/
+int s;
+struct sockaddr_can addr;
+struct ifreq ifr;
+struct can_frame frame;
+uint8_t space_pressed = 0; //1:Coarse 0:Fine
+volatile char machine_type[13]; //Receive the machine type returned by the command 0x0082 and 0x0083
+int SVR_value = 0;
+uint8_t PSU_Calibration_Type;
+uint8_t Cali_Status;
+uint8_t Cali_Type_Point;
 
-void Manual_Calibration();
+volatile uint8_t communication_found = 0; // 0: No COMM, 1: CAN, 2: MODBUS
+pthread_mutex_t lock; // Protect Shared variables
+pthread_t Cali_thread; // Main Cali thread
 
-int space_pressed;
-pthread_mutex_t button_lock;
-pthread_cond_t button_cond;
+/* function -----------------------------------------------*/
+void Manual_Calibration(void);
+void CAN_TX(uint32_t CAN_Address, uint8_t CAN_DLC);
+void CAN_RX(void);
+char* Get_Machine_Name(void);
+uint8_t Get_Communication_Type(void);
+uint8_t Get_Keyboard_Adjustment(void);
+uint8_t Get_PSU_Calibration_Type(void);
+uint8_t Get_Calibration_Status(void);
+uint8_t Get_Calibration_Type_Point(void);
+void Parameter_Init(void);
 
-// CRC16 計算函數
+// CRC16
 uint16_t calculateCRC(uint8_t *data, int length) {
     uint16_t crc = 0xFFFF;
     for (int pos = 0; pos < length; pos++) {
@@ -28,22 +46,66 @@ uint16_t calculateCRC(uint8_t *data, int length) {
     return crc;
 }
 
-void CAN_Init()
+void CAN_TX(uint32_t CAN_Address, uint8_t CAN_DLC)
 {
-    // 初始化 CAN 設備
+    // Setting CAN Frame
+    frame.can_id = TX_ID | CAN_EFF_FLAG;
+    frame.can_dlc = CAN_DLC;    // Data Length
+    if(CAN_DLC == 2)
+    {
+        frame.data[0] = CAN_Address;
+        frame.data[1] = CAN_Address>>8;
+    }
+    else
+    {
+        frame.data[0] = CAN_Address;
+        frame.data[1] = CAN_Address>>8;
+        switch(CAN_Address){
+            case CALIBRATION:
+                frame.data[2] = 0x57;
+                frame.data[3] = 0x4D;
+            break;
+            case CALI_STEP:
+                frame.data[2] = 01;     // Low byte
+                frame.data[3] = 00;     // High byte
+            break;
+            case WRITE_SVR:
+                frame.data[2] = SVR_value & 0xFF;        // Low byte
+                frame.data[3] = (SVR_value >> 8) & 0x0F; // High byte
+            break;
+            default:
+            break;
+        }
+    }
+
+    int Retry_cnt = 0;
+    while(write(s, &frame, sizeof(frame)) != sizeof(frame)) {
+        Retry_cnt++;
+        perror("CAN Write error");
+        usleep(10000); //delay 10ms
+        if(Retry_cnt >= 10)
+        {
+            Cali_Status = FAIL;
+            break;
+        }
+    }
+}
+void CAN_Init(void)
+{
+    // Init CAN Port
     system("sudo ifconfig can0 down");
     usleep(10000);
     system("sudo ip link set can0 type can bitrate 250000");
     system("sudo ifconfig can0 up");
 
-    // 初始化 CANBUS Socket
-    // 1. 创建 CAN 套接字
+    // Init CANBUS Socket
+    // 1. Create CAN Socket
     s = socket(PF_CAN, SOCK_RAW, CAN_RAW);
     if (s < 0) {
         perror("CAN Socket error");
         pthread_exit(NULL);
     }
-    // 2. 指定 can0 设备
+    // 2. Specify can0 device
     strcpy(ifr.ifr_name, "can0");
     if (ioctl(s, SIOCGIFINDEX, &ifr) < 0)
     {
@@ -51,7 +113,7 @@ void CAN_Init()
         close(s);
         pthread_exit(NULL);
     }
-    // 3. 绑定套接字到 can0
+    // 3. Bind socket to can0
     addr.can_family = AF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
     if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
@@ -59,40 +121,74 @@ void CAN_Init()
         close(s);
         pthread_exit(NULL);
     }
-    // 4. 禁用过滤规则，接收和发送数据
-    struct can_filter rfilter[1];
-    rfilter[0].can_id = RX_ID | CAN_EFF_FLAG;
-    rfilter[0].can_mask = CAN_SFF_MASK;
+    
+    struct can_filter rfilter[1];               //Define CAN data filter
+    rfilter[0].can_id = RX_ID | CAN_EFF_FLAG;   //Specifies ID of the received CAN message、CAN_EFF_FLAG->29bits
+    rfilter[0].can_mask = CAN_EFF_MASK;
     setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
     
-    // 設置非阻塞模式
+    // Set non-blocking mode
     int flags = fcntl(s, F_GETFL, 0);
     fcntl(s, F_SETFL, flags | O_NONBLOCK);
 }
 
 void *can_polling(void *arg) {
+    int ask_name = 0; // 0 : machine type is not asked yet, 2 : receive answer by asking 0x0082 and 0x0083
     memset(&frame, 0, sizeof(struct can_frame));
     CAN_Init();
-    // 設定 CAN Frame
-    frame.can_id = TX_ID | CAN_EFF_FLAG;
-    frame.can_dlc = 2;    // 資料長度
-    frame.data[0] = 0x82;
-    frame.data[1] = 0x00;
 
     while (!communication_found) {
-        // 發送資料
-        if (write(s, &frame, sizeof(frame)) != sizeof(frame)) {
-            perror("CAN Write error");
-            usleep(10000); // 短暫延遲後重試
-            continue;
-        }
+        // Send 0x0082
+        CAN_TX(MODEL_NAME_B0B5, 2);
 
-        // 嘗試讀取回應
+        // Try to read
         int read_bytes = read(s, &frame, sizeof(frame));
         if (read_bytes > 0) {
+            if((frame.data[0] == 0x82) && (frame.data[1] == 0x00))
+            {
+                ask_name++;
+                machine_type[0] = frame.data[2];
+                machine_type[1] = frame.data[3];
+                machine_type[2] = frame.data[4];
+                machine_type[3] = frame.data[5];
+                machine_type[4] = frame.data[6];
+                machine_type[5] = frame.data[7];
+                machine_type[6] = '\0';
+            }
+            else
+            {
+                ask_name = 0;
+            }
+
+            while(ask_name == 1){ //Send 0x0083
+                CAN_TX(MODEL_NAME_B6B10, 2);
+                int read_bytes2 = read(s, &frame, sizeof(frame));
+                if(read_bytes2 > 0){
+                    if((frame.data[0] == 0x83) && (frame.data[1] == 0x00))
+                    {
+                        ask_name ++;
+                        machine_type[6] = frame.data[2];
+                        machine_type[7] = frame.data[3];
+                        machine_type[8] = frame.data[4];
+                        machine_type[9] = frame.data[5];
+                        machine_type[10] = frame.data[6];
+                        machine_type[11] = frame.data[7];
+                        machine_type[12] = '\0';
+                    }
+                    else
+                    {
+                        ask_name = 1;
+                    }
+                }
+                if(ask_name == 2){
+                    break;
+                }
+                usleep(20000); //Delay 20ms
+            }
+
             pthread_mutex_lock(&lock);
             if (!communication_found) {
-                communication_found = CANBUS; // 設定為 CAN 通訊
+                communication_found = CANBUS; // Set COMM -> CANBUS
                 printf("Detected CANBUS communication\n");
             }
             pthread_mutex_unlock(&lock);
@@ -100,7 +196,7 @@ void *can_polling(void *arg) {
         } else if (read_bytes < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
             perror("CAN Read error");
         }
-        usleep(20000); // 避免過度頻繁的輪詢
+        usleep(20000); // Delay 20ms
     }
 
     close(s);
@@ -181,41 +277,20 @@ void *rs485_polling(void *arg) {
     pthread_exit(NULL);
 }
 
-void CAN_CALI(){
+void CAN_CALI(void){
     memset(&frame, 0, sizeof(struct can_frame));
     CAN_Init();
     uint8_t Manual_Cali_step = 1;
     while(1){
-        if (Manual_Cali_step == 1){ //重複寫入KEY，詢問是否為校正模式
-            // 設定 CAN Frame(開啟校正模式)
-            frame.can_id = TX_ID | CAN_EFF_FLAG;
-            frame.can_dlc = 4;    // 資料長度
-            frame.data[0] = 0x00;
-            frame.data[1] = 0xD0;
-            frame.data[2] = 0x57;
-            frame.data[3] = 0x4D;
+        if (Manual_Cali_step == 1){ //Send KEY repeatedly、Ask calibration mode?
+            // Send Key
+            CAN_TX(CALIBRATION, 4);
+            usleep(20000); //Delay 20ms
 
-            // 發送資料(Send Key)
-            if (write(s, &frame, sizeof(frame)) != sizeof(frame)) {
-                perror("CAN Write error");
-                usleep(10000); // 短暫延遲後重試
-                continue;
-            }
-            usleep(20000);
+            // Read PSU mode 0：Normal Mode  1：Calibrate Mode
+            CAN_TX(READ_PSU_MODE, 2);
 
-            // 設定 CAN Frame(讀取校正種類)
-            frame.can_id = TX_ID | CAN_EFF_FLAG;
-            frame.can_dlc = 2;    // 資料長度
-            frame.data[0] = 0x11;
-            frame.data[1] = 0xD0;
-
-            // 發送資料(Send Key)
-            if (write(s, &frame, sizeof(frame)) != sizeof(frame)) {
-                perror("CAN Write error");
-                usleep(10000); // 短暫延遲後重試
-                continue;
-            }
-            // 接收資料(Cali_mode)
+            // Receive(Cali_mode)
             int read_bytes = read(s, &frame, sizeof(frame));
             if (read_bytes > 0) {
                 if((frame.data[0] == 0x11) && (frame.data[1] == 0xD0)){
@@ -226,7 +301,7 @@ void CAN_CALI(){
             } else if (read_bytes < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
                 perror("CAN Read error");
             }
-            usleep(20000); // 避免過度頻繁的輪詢
+            usleep(20000); // Delay 20ms
         }
         else if (Manual_Cali_step == 2){
             digitalWrite(LED_PIN, HIGH); // LED ON
@@ -236,18 +311,9 @@ void CAN_CALI(){
             digitalWrite(LED_PIN, LOW); // LED OFF
             printf("LED OFF\n");
             usleep(500000);
-            // 設定 CAN Frame(讀取儀器設定/數值紀錄控制)
-            frame.can_id = TX_ID | CAN_EFF_FLAG;
-            frame.can_dlc = 2;    // 資料長度
-            frame.data[0] = 0x01;
-            frame.data[1] = 0xD0;
+            // Read Cali Step
+            CAN_TX(CALI_STEP, 2);
 
-            // 發送資料
-            if (write(s, &frame, sizeof(frame)) != sizeof(frame)) {
-                perror("CAN Write error");
-                usleep(10000); // 短暫延遲後重試
-                continue;
-            }
             // 接收資料(Cali_Step)
             int read_bytes = read(s, &frame, sizeof(frame));
             if (read_bytes > 0) {
@@ -260,6 +326,7 @@ void CAN_CALI(){
                         Manual_Cali_step = 2;
                     }
                     else if(frame.data[2] == 0xFF){
+                        Cali_Status = FINISH;
                         printf("PASS\n");
                         break;
                     }
@@ -267,21 +334,22 @@ void CAN_CALI(){
             } else if (read_bytes < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
                 perror("CAN Read error");
             }
-            usleep(20000); // 避免過度頻繁的輪詢
+            usleep(20000); // delay 20ms
         }
     }
-    close(s); // 確保 CAN 套接字關閉
+    close(s);
 }
 
-void MOD_CALI(){
+void MOD_CALI(void){
     
 }
 
-void Manual_Calibration(){
-    int SVR_value = 2048;
+void Manual_Calibration(void){
     int polling_cnt = 0;
     uint8_t End_polling = 0;
     uint8_t Cali_type_polling = 0;
+    uint8_t receive_cnt = 0;
+    SVR_value = 2048;
     // Set keyboard device path
     const char *device = "/dev/input/event0";
     int fd = open(device, O_RDONLY | O_NONBLOCK);
@@ -291,14 +359,13 @@ void Manual_Calibration(){
     }
 
     // Set terminal properties to disable input echoing
-    struct termios oldt, newt;      
+    struct termios oldt, newt;
     tcgetattr(STDIN_FILENO, &oldt);           // Get current terminal settings
     newt = oldt;
     newt.c_lflag &= ~(ICANON | ECHO);         // Disable line buffering and echoing
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);  // Set new terminal settings
 
     struct input_event ev;
-    space_pressed = 0;
     printf("開始監控鍵盤輸入（使用上下左右鍵進行控制，按 Ctrl+C 結束）\n");
 
     while (1) {
@@ -309,7 +376,6 @@ void Manual_Calibration(){
             if (ev.type == EV_KEY) {
                 switch (ev.code) {
                     case KEY_SPACE:
-                    printf("SPACE");
                     // update adjustment(1:Coarse 0:Fine)
                     if (ev.value == 1) {
                         space_pressed = !space_pressed; //1:Coarse 0:Fine
@@ -342,7 +408,7 @@ void Manual_Calibration(){
                     case KEY_ENTER:
                     if (ev.value == 1) {
                         End_polling = 1;
-                        break; //Just break the switch case block, not the while block !!!!!!!!!!!!!!!!!!!
+                        break;
                     }
                 }
                 if(SVR_value < 0)
@@ -359,66 +425,65 @@ void Manual_Calibration(){
 
         if (polling_cnt >= 200) {
             polling_cnt = 0;
-            if (Cali_type_polling == 1) {    //Need polling
+            
+            if (Cali_type_polling == 1) {    //Need polling SVR value
                 if (communication_found == CANBUS) {
-                    frame.can_id = TX_ID | CAN_EFF_FLAG;
-                    frame.can_dlc = 4;    // 資料長度
-                    frame.data[0] = 0x02;
-                    frame.data[1] = 0xD0;
-                    frame.data[2] = SVR_value & 0xFF;        // Low byte
-                    frame.data[3] = (SVR_value >> 8) & 0x0F; // High byte
-                    // Send
-                    if (write(s, &frame, sizeof(frame)) != sizeof(frame)) {
-                        perror("CAN Write error");
-                        usleep(10000);
-                        continue;
-                    }
+                    //Polling SVR value
+                    CAN_TX(WRITE_SVR, 4);
                 } else if (communication_found == MODBUS) {
                     
                 }
             } else {
-                // 設定 CAN Frame(讀取校正種類)
-                frame.can_id = TX_ID | CAN_EFF_FLAG;
-                frame.can_dlc = 2;    // 資料長度
-                frame.data[0] = 0x10;
-                frame.data[1] = 0xD0;
-
-                // 發送資料(Send Cali_type)
-                if (write(s, &frame, sizeof(frame)) != sizeof(frame)) {
-                    perror("CAN Write error");
-                    usleep(10000); // 短暫延遲後重試
-                    continue;
-                }
-                // 接收資料(Cali_type)
-                int read_bytes = read(s, &frame, sizeof(frame));
-                if (read_bytes > 0) {
-                    if((frame.data[0] == 0x10) && (frame.data[1] == 0xD0)){
-                        //Here, read frame.data[2] as Cali_type.
-                        if ((frame.data[2] & 0xF1) != 0) {
-                            Cali_type_polling = 1;
-                        } else {
-                            Cali_type_polling = 0;
+                int read_bytes;
+                switch (receive_cnt)
+                {
+                case 0:
+                    // Read Calibration Type
+                    CAN_TX(CALIBRATION_TYPE, 2);
+                    // Reveice(Cali_type)
+                    read_bytes = read(s, &frame, sizeof(frame));
+                    if (read_bytes > 0) {
+                        if((frame.data[0] == 0x10) && (frame.data[1] == 0xD0)){
+                            PSU_Calibration_Type = frame.data[2];
+                            receive_cnt = 1;
                         }
+                    } else if (read_bytes < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+                        perror("CAN Read error");
                     }
-                } else if (read_bytes < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-                    perror("CAN Read error");
+                    break;
+
+                case 1:
+                    // Read Calibration point
+                    CAN_TX(CALIBRATION_POINT, 2);
+                    // Reveice(Cali_point)
+                    read_bytes = read(s, &frame, sizeof(frame));
+                    if (read_bytes > 0) {
+                        if((frame.data[0] == 0x14) && (frame.data[1] == 0xD0)){
+                            Cali_Type_Point = frame.data[2];
+                            printf("Cali_Type_Point = %x", Cali_Type_Point);
+                            receive_cnt = 2;
+                        }
+                    } else if (read_bytes < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+                        perror("CAN Read error");
+                    }
+                    break;
+                default:
+                    break;
+                }
+
+                if (((PSU_Calibration_Type & 0xF1) != 0) && (receive_cnt == 2)) 
+                {
+                    Cali_type_polling = 1;
+                } 
+                else 
+                {
+                    Cali_type_polling = 0;
                 }
             }
             if(End_polling == 1)
             {
                 if (communication_found == CANBUS) {
-                    frame.can_id = TX_ID | CAN_EFF_FLAG;
-                    frame.can_dlc = 4;    // Data length 
-                    frame.data[0] = 0x01;
-                    frame.data[1] = 0xD0;
-                    frame.data[2] = 01;        // Low byte
-                    frame.data[3] = 00; // High byte
-                    // Send
-                    if (write(s, &frame, sizeof(frame)) != sizeof(frame)) {
-                        perror("CAN Write error");
-                        usleep(10000);
-                        continue;
-                    }
+                    CAN_TX(CALI_STEP, 4);
                 } else if (communication_found == MODBUS) {
                     
                 }
@@ -434,44 +499,35 @@ void Manual_Calibration(){
     close(fd);
 }
 
-void flow_control_task(){
-
-    pthread_mutex_lock(&button_lock);
-    printf("[flow_control_thread]Waiting for button pressing...\n");
-    pthread_cond_wait(&button_cond, &button_lock);
-    pthread_mutex_unlock(&button_lock);
-    printf("[flow_control_thread]Start\n");    
-
+void* Cali_routine(void* arg) {
+    Parameter_Init();
     pthread_t can_thread, rs485_thread;
-    
-    // 初始化 Mutex
+
+    // Init Mutex
     pthread_mutex_init(&lock, NULL);
 
-    // 創建 CANBUS 與 RS485 執行緒
+    // Create CANBUS 、 RS485 polling thread
     pthread_create(&can_thread, NULL, can_polling, NULL);
     pthread_create(&rs485_thread, NULL, rs485_polling, NULL);
 
-    // 等待執行緒結束
+    // Wait thread end
     pthread_join(can_thread, NULL);
     pthread_join(rs485_thread, NULL);
 
-    // 根據結果輸出
     if (communication_found == CANBUS) {
         printf("Using CANBUS for communication\n");
-        pthread_cancel(rs485_thread); // 取消 RS485 輪詢
+        pthread_cancel(rs485_thread); // Cancel RS485 polling
     } else if (communication_found == MODBUS) {
         printf("Using MODBUS for communication\n");
-        pthread_cancel(can_thread); // 取消 CAN 輪詢
+        pthread_cancel(can_thread); // Cancel CAN polling
     } else {
         printf("No communication detected\n");
     }
 
     pthread_mutex_destroy(&lock);
 
-    // 設定 GPIO 17 為輸出模式
+    // Set GPIO 17 output mode
     pinMode(LED_PIN, OUTPUT);
-
-    
 
     if (communication_found == CANBUS) {
         CAN_CALI();
@@ -479,16 +535,51 @@ void flow_control_task(){
         MOD_CALI();
     }
     digitalWrite(LED_PIN, LOW); // LED OFF
+
+    return NULL;
 }
 
-int main(int argc, char *argv[]) {
-    
-    GtkApplication *app;
-    int status;
-    app = gtk_application_new("Meanwell.com", G_APPLICATION_FLAGS_NONE);
-    g_signal_connect(app, "activate", G_CALLBACK(on_activate), NULL);
-    status = g_application_run(G_APPLICATION(app), argc, argv);
-    g_object_unref(app);
-    
-    return 0;
+void Start_Cali_thread(void) {
+    // Start Communication Thread
+    pthread_create(&Cali_thread, NULL, Cali_routine, NULL);
+}
+
+void Stop_Cali_thread(void) {
+    // Stop Communication Thread
+    pthread_cancel(Cali_thread);
+    pthread_join(Cali_thread, NULL);
+}
+
+char* Get_Machine_Name(void) {
+    return machine_type;
+}
+
+uint8_t Get_Communication_Type(void) {
+    return communication_found;
+}
+
+uint8_t Get_Keyboard_Adjustment(void) {
+    return space_pressed;
+}
+
+uint8_t Get_PSU_Calibration_Type(void) {
+    return PSU_Calibration_Type;
+}
+
+uint8_t Get_Calibration_Status(void) {
+    return Cali_Status;
+}
+
+uint8_t Get_Calibration_Type_Point(void) {
+    return Cali_Type_Point;
+}
+
+void Parameter_Init(void) {
+    memset(machine_type, ' ', sizeof(char) * 12);
+    machine_type[12] = '\0';
+    communication_found = 0;
+    space_pressed = 0;
+    PSU_Calibration_Type = 0;
+    Cali_Status = 0;
+    Cali_Type_Point = 0;
 }
