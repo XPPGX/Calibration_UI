@@ -165,10 +165,11 @@ void CB_button_setting_click(GtkButton *button, gpointer user_data) {
 }
 
 gboolean CB_timer(){
-
-	//update Machine Type Label
+	
 	gtk_label_set_text(label_MT, Rcv_MachineType);
 	if(UI_Init_Flag == 0){
+		//update Machine Type Label
+		
 		
 		//update Communication Type Label
 		Rcv_CommInterface = Get_Communication_Type();
@@ -234,7 +235,7 @@ gboolean CB_timer(){
         gtk_label_set_markup(label_adjust_mode, "<span font='18' foreground='#D12E2E'><b>粗調</b></span>"); //just set text with some style
     }
     
-    // timer_counter ++;
+    timer_counter ++;
     Rcv_CaliStatus = Get_Calibration_Status();
     switch(Rcv_CaliStatus){
 		case FINISH:
@@ -249,10 +250,10 @@ gboolean CB_timer(){
 			break;
 	}
     
-    // if(timer_counter >= 10){
-	// 	timer_counter = 0;
-	// 	//~ printf("[Timer]Cali_Status = %d\n", Rcv_CaliStatus);
-	// }
+    if(timer_counter >= 10){
+		timer_counter = 0;
+		//~ printf("[Timer]Cali_Status = %d\n", Rcv_CaliStatus);
+	}
 	
 	return TRUE;
 }

@@ -523,12 +523,7 @@ void* Cali_routine(void* arg) {
     } else {
         printf("No communication detected\n");
     }
-    
-    pthread_mutex_lock(&UI_label_target_lock);
-    UI_label_target = UPDATE_LABEL_CI;
-    pthread_mutex_unlock(&UI_label_target_lock);
-    g_idle_add(update_label_text, NULL); //read "communication_found" in UI thread
-    
+
     pthread_mutex_destroy(&lock);
 
     // Set GPIO 17 output mode
