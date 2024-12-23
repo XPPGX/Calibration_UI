@@ -1,0 +1,80 @@
+@page "/cali"
+@rendermode InteractiveServer
+
+<div id="iije" class="gjs-grid-row">
+<div id="i9wi" class="gjs-grid-column">
+    <div id="ispn7" class="gjs-grid-row">
+    <div id="ikr4w" class="gjs-grid-column">
+        <div id="izga1" class="gjs-grid-row">
+        <div id="iww8i" class="gjs-grid-column">
+            <div id="ikllv"><b id="machine_name">機型名稱</b></div>
+        </div>
+        <div id="ia3sk" class="gjs-grid-column">
+            <div id="i3ou1">@text_machine_name</div>
+        </div>
+        </div>
+    </div>
+    <div id="ijz7k" class="gjs-grid-column">
+        <div id="ivlo9" class="gjs-grid-row">
+        <div id="if2yx" class="gjs-grid-column">
+            <div id="iqs3v"><b id="comm_interface">通訊介面</b></div>
+        </div>
+        <div id="idhji" class="gjs-grid-column">
+            <div id="ihp7y">@text_comm_interface</div>
+        </div>
+        </div>
+    </div>
+    <div id="iz3q1" class="gjs-grid-column">
+        <div id="id5kr" class="gjs-grid-row">
+        <div id="iq54l" class="gjs-grid-column">
+            <div id="irw9k"><b id="cali_type">校正種類</b></div>
+        </div>
+        <div id="idib6" class="gjs-grid-column">
+            <div id="ioyn5">@text_cali_type</div>
+        </div>
+        </div>
+    </div>
+    </div>
+    <div id="i2ng9" class="gjs-grid-row">
+    <div id="ig6u5" class="gjs-grid-column">
+        <div id="isox6" class="gjs-grid-row">
+        <div id="ilsgu" class="gjs-grid-column">
+            <div id="i91dq" class="gjs-grid-row">
+            <div id="is1cy" class="gjs-grid-column">
+                <div id="idl23"><b id="i7o82">@text_adjustment_mode</b></div>
+            </div>
+            <div id="iuu6c" class="gjs-grid-column">
+                <button type="button" id="zxczxc" @onclick="butFunc"><b id="iuedc">開始設定</b></button></div>
+            </div>
+        </div>
+        <div id="i3maw" class="gjs-grid-column"><label id="isxcn">校正點</label>
+            <div id="Cali_point"><b>-</b></div>
+        </div>
+        </div>
+    </div>
+    <div id="isn0n" class="gjs-grid-column">
+        <div id="i05am" class="gjs-grid-row">
+        <div id="iqw9h" class="gjs-grid-column"><label id="i3aqj">顯示結果</label></div>
+        <div id="i8ruk" class="gjs-grid-column">
+            <div id="result"><b>@text_result</b></div>
+        </div>
+        </div>
+    </div>
+    </div>
+</div>
+<div id="i4j4q" class="gjs-grid-column"></div>
+</div>
+
+
+@code{
+    private string text_machine_name    {get;set;}  = "-";
+    private string text_comm_interface  {get;set;}  = "-";
+    private string text_cali_type       {get;set;}  = "-";
+    private string text_result          {get;set;}  = "-";
+    private string text_adjustment_mode      {get;set;}  = "微調";
+
+    private void butFunc()
+    {
+        text_result = "Hello";
+    }
+}
