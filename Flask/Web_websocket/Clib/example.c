@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#define GPIO_PIN 1
+#define GPIO_PIN 0
 
 int led_status = 0;
 int my_func(int a, double b){
@@ -34,6 +34,7 @@ void blink_led(){
 }
 
 void* thread_task(void *arg){
+    init_gpio();
     while(1){
         sleep(1);
         blink_led();
