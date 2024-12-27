@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/xdd/project/BlazorHardware/Hardware_linkTest2/BlazorApp1/BlazorApp1.csproj": {}
+    "/home/xdd/project/Calibration_UI/BlazorServer/BlazorApp1/BlazorApp1.csproj": {}
   },
   "projects": {
-    "/home/xdd/project/BlazorHardware/Hardware_linkTest2/BlazorApp1/BlazorApp1.csproj": {
+    "/home/xdd/project/Calibration_UI/BlazorServer/BlazorApp1/BlazorApp1.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/xdd/project/BlazorHardware/Hardware_linkTest2/BlazorApp1/BlazorApp1.csproj",
+        "projectUniqueName": "/home/xdd/project/Calibration_UI/BlazorServer/BlazorApp1/BlazorApp1.csproj",
         "projectName": "BlazorApp1",
-        "projectPath": "/home/xdd/project/BlazorHardware/Hardware_linkTest2/BlazorApp1/BlazorApp1.csproj",
+        "projectPath": "/home/xdd/project/Calibration_UI/BlazorServer/BlazorApp1/BlazorApp1.csproj",
         "packagesPath": "/home/xdd/.nuget/packages/",
-        "outputPath": "/home/xdd/project/BlazorHardware/Hardware_linkTest2/BlazorApp1/obj/",
+        "outputPath": "/home/xdd/project/Calibration_UI/BlazorServer/BlazorApp1/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/xdd/.nuget/NuGet/NuGet.Config"
