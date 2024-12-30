@@ -167,7 +167,7 @@ def server_timers():
             c_lib_Cali.Stop_Cali_thread()
             print("Thread : Cali terminated.\n")
             print("Thread : ServerTimer Terminated.\n")
-
+            socketio.emit('update_terminate', {})
             break #terminate ServerTimer
         time.sleep(0.1)
 
