@@ -1,6 +1,12 @@
 # Cali_With_Flask_socketio
 ## Steps
 
+### Re-compile Cali.c
+> Go to "Clib" folder
+```
+$./compile.sh
+```
+
 ### Create a virtual environment name "test" 
 ```
 $virtualenv test

@@ -2,19 +2,18 @@ const socket = io.connect('http://localhost:5000');
 var Cali_Flag = 0; //0 means calibration has not start yet, 1 means calibration already started
 
 document.addEventListener("keydown", function(event){
-    if(Cali_Flag === 0){
-        if(event.key === "Space"){
-            //prevent rolling page
-            event.preventDefault(); 
-            
-            document.getElementById("UI_btnStartSetting").click();
-        }
+    if(event.key === ' '){ //key : SPACE
+        //prevent rolling page
+        event.preventDefault(); 
+        
+        document.getElementById("UI_btnStartSetting").click();
     }
 });
 
 
 document.getElementById('UI_btnStartSetting').onclick = function(){
-    if(Cali_Flag === 0){
+    console.log("Btn pressed\n");
+    if(Cali_Flag == 0){
         socket.emit('ui_start_cali');
         Cali_Flag = 1;
     }
