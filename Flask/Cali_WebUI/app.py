@@ -65,7 +65,6 @@ c_lib_Cali = ctypes.CDLL('./Clib/Cali.so')
 ##################################################
 # C_lib parameters declaration
 ##################################################
-
 c_lib_Cali.Get_Machine_Name.argtypes            = []
 c_lib_Cali.Get_Machine_Name.restype             = ctypes.c_char_p
 
@@ -86,6 +85,9 @@ c_lib_Cali.Get_Calibration_Type_Point.restype   = ctypes.c_uint8
 
 c_lib_Cali.Start_Cali_thread.argtypes           = []
 c_lib_Cali.Start_Cali_thread.restype            = None
+
+c_lib_Cali.Stop_Cali_thread.argtypes            = []
+c_lib_Cali.Stop_Cali_thread.restype             = None
 
 ##################################################
 # Functions implementation
@@ -161,6 +163,12 @@ def server_timers():
                 'socket_CaliStatus' : f'{time.time()}, {CaliStatus_str}'
             })
 
+        if(CaliStatus_uint8 == 1 or CaliStatus_uint8 == 2):
+            c_lib_Cali.Stop_Cali_thread()
+            print("Thread : Cali terminated.\n")
+            print("Thread : ServerTimer Terminated.\n")
+
+            break #terminate ServerTimer
         time.sleep(0.1)
 
 ##################################################
@@ -180,6 +188,8 @@ def handle_connect():
 
 @socketio.on('ui_start_cali')
 def handle_ui_start_cali():
+
+    
 
     thread = Thread(target=server_timers)
     thread.daemon = True
