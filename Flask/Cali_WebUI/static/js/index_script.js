@@ -37,5 +37,6 @@ socket.on('update_2nd_stage', function(data){
 
 socket.on('update_terminate', function(data){
     console.log(data)
+    setTimeout(() => {console.log("Wait 3 seconds");}, 3000);
     Cali_Flag = 0;
 })

@@ -171,9 +171,14 @@ def server_timers():
 
             #inform javascript
             socketio.emit('update_terminate', {})
-            
+            print("Wait 3 seconds\n") # For waiting can0 bus down and C_Cali_thread is truly terminated
+            time.sleep(3)
+
             #update flask variable
             UI_Init_Flag = 0
+            
+
+            
             break #terminate ServerTimer
         time.sleep(0.1)
 
