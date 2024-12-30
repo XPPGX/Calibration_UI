@@ -1,17 +1,23 @@
-const socket = io.connect('http://localhost:5000')
+const socket = io.connect('http://localhost:5000');
+var Cali_Flag = 0; //0 means calibration has not start yet, 1 means calibration already started
 
 document.addEventListener("keydown", function(event){
-    if(event.code === "Space"){
-    //prevent rolling page
-    event.preventDefault(); 
-    
-    document.getElementById("UI_btnStartSetting").click();
+    if(Cali_Flag === 0){
+        if(event.key === "Space"){
+            //prevent rolling page
+            event.preventDefault(); 
+            
+            document.getElementById("UI_btnStartSetting").click();
+        }
     }
 });
 
 
 document.getElementById('UI_btnStartSetting').onclick = function(){
-    socket.emit('ui_start_cali');
+    if(Cali_Flag === 0){
+        socket.emit('ui_start_cali');
+        Cali_Flag = 1;
+    }
 }
 
 socket.on('update_1st_stage', function(data){

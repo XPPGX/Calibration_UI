@@ -93,12 +93,11 @@ c_lib_Cali.Start_Cali_thread.restype            = None
 def server_timers():
     global UI_Init_Flag
     
-    ModelName_ptr = c_lib_Cali.Get_Machine_Name()
-
     while True:
         # socketio.emit('update', {'socket_CaliStatus' : f'update at {time.time()}'})
         if(UI_Init_Flag == 0):
             #Get ModelName string
+            ModelName_ptr = c_lib_Cali.Get_Machine_Name()
             ModelName_str = ModelName_ptr.decode("utf-8")
             if(ModelName_str == ""):
                 ModelName_str = "-"
@@ -181,25 +180,6 @@ def handle_connect():
 
 @socketio.on('ui_start_cali')
 def handle_ui_start_cali():
-#     UI_Init_Flag = 0
-    
-#     ModelName_ptr = c_lib_Cali.Get_Machine_Name()
-#     ModelName_str = "-"
-
-#     CommInterface_uint8 = 0
-#     CommInterface_str   = "-"
-
-#     CaliType_uint8      = 0
-#     CaliType_str        = "-"
-
-#     CaliPoint_uint8     = 0
-#     CaliPoint_str       = "-"
-
-#     AdjustMode_uint8    = 0
-#     AdjustMode_str      = "微調"
-
-#     CaliStatus_uint8    = 0
-#     CaliStatus_str      = "Running..."
 
     thread = Thread(target=server_timers)
     thread.daemon = True

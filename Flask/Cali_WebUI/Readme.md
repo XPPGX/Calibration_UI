@@ -1,11 +1,12 @@
-# Steps
+# Cali_With_Flask_socketio
+## Steps
 
-## Create a virtual environment name "test" 
+### Create a virtual environment name "test" 
 ```
 $virtualenv test
 ```
 
-## Activate the "test" virtual environment
+### Activate the "test" virtual environment
 ```
 $cd {path to test/test/bin}
 ```
@@ -14,19 +15,19 @@ $cd {path to test/test/bin}
 $source activate
 ```
 
-## Install all the libraries the project needed
+### Install all the libraries the project needed
 > Find requirements.txt, and use following command
 ```
 $pip install -r requirements.txt
 ```
 
-## Running the project
+### Running the project
 > Find "app.py", run the following command
 ```
 $python app.py
 ```
 
-## Check the website
+### Check the website
 Go to browser and use the URL
 ```
 localhost:5000
