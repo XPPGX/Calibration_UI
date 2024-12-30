@@ -199,12 +199,13 @@ def handle_connect():
 
 @socketio.on('ui_start_cali')
 def handle_ui_start_cali():
+    c_lib_Cali.Start_Cali_thread()
 
     thread = Thread(target=server_timers)
     thread.daemon = True
     thread.start()
     
-    c_lib_Cali.Start_Cali_thread()
+    
 
 ##################################################
 # main
