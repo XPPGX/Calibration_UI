@@ -189,8 +189,6 @@ def handle_connect():
 @socketio.on('ui_start_cali')
 def handle_ui_start_cali():
 
-    
-
     thread = Thread(target=server_timers)
     thread.daemon = True
     thread.start()

@@ -33,9 +33,9 @@ socket.on('update_2nd_stage', function(data){
     document.getElementById('UI_Cali_point').innerText    = data.socket_CaliPoint;
     document.getElementById('UI_AdjustMode').innerText    = data.socket_AdjustMode;
     document.getElementById('UI_Result').innerText        = data.socket_CaliStatus;
-    
 })
 
-// socket.on('update_terminate', function(data){
-//     console.log(data)
-// })
+socket.on('update_terminate', function(data){
+    console.log(data)
+    Cali_Flag = 0;
+})
