@@ -164,10 +164,16 @@ def server_timers():
             })
 
         if(CaliStatus_uint8 == 1 or CaliStatus_uint8 == 2):
+            #inform C_Cali_thread
             c_lib_Cali.Stop_Cali_thread()
             print("Thread : Cali terminated.\n")
             print("Thread : ServerTimer Terminated.\n")
+
+            #inform javascript
             socketio.emit('update_terminate', {})
+            
+            #update flask variable
+            UI_Init_Flag = 0
             break #terminate ServerTimer
         time.sleep(0.1)
 
