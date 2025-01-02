@@ -213,10 +213,14 @@ def handle_update_ui_1st_stage():
     global AdjustMode_str
     global CaliStatus_str
 
-    data = jsonify({'WebAPI_ModelName'      : f'Time = {time.time()}, {ModelName_str}',
-                    'WebAPI_CommInterface'  : f'Time = {time.time()}, {CommInterface_str}',
-                    'WebAPI_AdjustMode'     : f'Time = {time.time()}, {AdjustMode_str}',
-                    'WebAPI_CaliStatus'     : f'Time = {time.time()}, {CaliStatus_str}'})
+    # data = jsonify({'WebAPI_ModelName'      : f'Time = {time.time()}, {ModelName_str}',
+    #                 'WebAPI_CommInterface'  : f'Time = {time.time()}, {CommInterface_str}',
+    #                 'WebAPI_AdjustMode'     : f'Time = {time.time()}, {AdjustMode_str}',
+    #                 'WebAPI_CaliStatus'     : f'Time = {time.time()}, {CaliStatus_str}'})
+    data = jsonify({'WebAPI_ModelName'      : f'{ModelName_str}',
+                    'WebAPI_CommInterface'  : f'{CommInterface_str}',
+                    'WebAPI_AdjustMode'     : f'{AdjustMode_str}',
+                    'WebAPI_CaliStatus'     : f'{CaliStatus_str}'})
     return data
 
 @app.route('/api/update_ui_2nd_stage', methods=['GET'])

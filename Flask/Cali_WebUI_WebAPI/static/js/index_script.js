@@ -30,13 +30,13 @@ document.getElementById('UI_btnStartSetting').addEventListener('click', async fu
 
 async function update_ui_stage(){
     if(Cali_Flag == 1){
-        const stage_packet = await fetch('/api/stage_query')
-        if(!stage_packet.ok){
-            throw new Error("[Packet]was not ok");
-        }
-        const stage_JSON = await stage_packet.json();
-        UI_stage = stage_JSON.WebAPI_Stage;
-        console.log(`stage =  + ${UI_stage}`);
+        // const stage_packet = await fetch('/api/stage_query')
+        // if(!stage_packet.ok){
+        //     throw new Error("[Packet]was not ok");
+        // }
+        // const stage_JSON = await stage_packet.json();
+        // UI_stage = stage_JSON.WebAPI_Stage;
+        // console.log(`stage =  + ${UI_stage}`);
 
         switch(UI_stage){
             case 1:
@@ -51,6 +51,12 @@ async function update_ui_stage(){
                 document.getElementById('UI_CommInterface').innerText   = res1_data.WebAPI_CommInterface;
                 document.getElementById('UI_AdjustMode').innerText      = res1_data.WebAPI_AdjustMode;
                 document.getElementById('UI_Result').innerText          = res1_data.WebAPI_CaliStatus;
+
+                if(res1_data.WebAPI_CommInterface != "-"){
+                    setTimeout(() => {
+                        UI_stage = 2;
+                    }, 0);
+                }
                 break;
             case 2:
                 console.log("2nd\n")
