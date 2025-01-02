@@ -43,7 +43,7 @@ async function update_ui_stage(){
                 console.log("1st\n")
                 const response_1 = await fetch('/api/update_ui_1st_stage')
                 if(!response_1.ok){
-                    throw new Error("network response was not ok");
+                    throw new Error("1st network response was not ok");
                 }
                 const res1_data = await response_1.json();
 
@@ -53,10 +53,10 @@ async function update_ui_stage(){
                 document.getElementById('UI_Result').innerText          = res1_data.WebAPI_CaliStatus;
                 break;
             case 2:
-                console.log("1st\n")
-                const response_2 = await fetch('/api/update_ui_2st_stage')
+                console.log("2nd\n")
+                const response_2 = await fetch('/api/update_ui_2nd_stage')
                 if(!response_2.ok){
-                    throw new Error("network response was not ok");
+                    throw new Error("2nd network response was not ok");
                 }
                 const res2_data = await response_2.json();
 
