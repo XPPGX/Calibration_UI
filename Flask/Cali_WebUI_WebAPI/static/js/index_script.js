@@ -1,5 +1,12 @@
 // const socket = io.connect('http://localhost:5000');
-var Cali_Flag = 0; //0 means calibration has not start yet, 1 means calibration already started
+/**
+ * Cali_Flag :
+ * 0 means calibration has not start yet
+ * 1 means calibration already started
+ * 2 means calibration finish and the values still remain on the screen
+ */
+var Cali_Flag = 0; 
+
 var UI_stage = 1;
 
 document.addEventListener("keydown", function(event){
@@ -14,18 +21,26 @@ document.addEventListener("keydown", function(event){
 
 document.getElementById('UI_btnStartSetting').addEventListener('click', async function(){
     console.log("Btn pressed\n");
-    if(Cali_Flag == 0){
-        // socket.emit('ui_start_cali');
-        Cali_Flag = 1;
-        UI_stage = 1;
-        
-        const response = await fetch('/api/ui_start_cali', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body:JSON.stringify({})
-        });
-        
-
+    switch(Cali_Flag){
+        case 2:
+            document.getElementById('UI_ModelName').innerText = "-";
+            document.getElementById('UI_CommInterface').innerText = "-";
+            document.getElementById('UI_CaliType').innerText = "-";
+            document.getElementById('UI_Cali_point').innerText = "-";
+            document.getElementById('UI_AdjustMode').innerText = "微調";
+            document.getElementById('UI_Result' = "-");
+        case 0:
+            Cali_Flag = 1;
+            UI_stage = 1;
+            
+            const response = await fetch('/api/ui_start_cali', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body:JSON.stringify({})
+            });
+            break;
+        default:
+            break;
     }
 })
 
@@ -53,7 +68,7 @@ async function update_ui_stage(){
                 document.getElementById('UI_AdjustMode').innerText      = res1_data.WebAPI_AdjustMode;
                 document.getElementById('UI_Result').innerText          = res1_data.WebAPI_CaliStatus;
 
-                if(res1_data.WebAPI_CommInterface != "-"){
+                if(document.getElementById('UI_CommInterface').innerText != "-"){
                     setTimeout(() => {
                         UI_stage = 2;
                     }, 0);
@@ -72,10 +87,11 @@ async function update_ui_stage(){
                 document.getElementById('UI_AdjustMode').innerText      = res2_data.WebAPI_AdjustMode;
                 document.getElementById('UI_Result').innerText          = res2_data.WebAPI_CaliStatus;
                 
-                if(res2_data.WebAPI_CaliStatus == "FINISH" || res2_data.WebAPI_CaliStatus == "FAIL"){
+                if(document.getElementById('UI_Result').innerText == "FINISH" 
+                || document.getElementById('UI_Result').innerText == "FAIL"){
                     setTimeout(() => {
                         UI_stage = 3;
-                        Cali_Flag = 0;
+                        Cali_Flag = 2;
                     })
                 }
                 break;
