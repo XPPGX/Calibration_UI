@@ -193,7 +193,7 @@ def index():
 ##################################################
 @app.route('/api/ui_start_cali', methods=['POST'])
 def handle_ui_start_cali():
-    # c_lib_Cali.Start_Cali_thread()
+    c_lib_Cali.Start_Cali_thread()
 
     thread = Thread(target=server_timers)
     thread.daemon = True
