@@ -17,7 +17,8 @@ document.getElementById('UI_btnStartSetting').addEventListener('click', async fu
     if(Cali_Flag == 0){
         // socket.emit('ui_start_cali');
         Cali_Flag = 1;
-
+        UI_stage = 1;
+        
         const response = await fetch('/api/ui_start_cali', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -70,6 +71,13 @@ async function update_ui_stage(){
                 document.getElementById('UI_Cali_point').innerText      = res2_data.WebAPI_CaliPoint;
                 document.getElementById('UI_AdjustMode').innerText      = res2_data.WebAPI_AdjustMode;
                 document.getElementById('UI_Result').innerText          = res2_data.WebAPI_CaliStatus;
+                
+                if(res2_data.WebAPI_CaliStatus == "FINISH" || res2_data.WebAPI_CaliStatus == "FAIL"){
+                    setTimeout(() => {
+                        UI_stage = 3;
+                        Cali_Flag = 0;
+                    })
+                }
                 break;
                 
             default:
