@@ -230,10 +230,14 @@ def handle_update_ui_2nd_stage():
     global AdjustMode_str
     global CaliStatus_str
     
-    data = jsonify({'WebAPI_CaliType'       : f'Time = {time.time()}, {CaliType_str}',
-                    'WebAPI_CaliPoint'      : f'Time = {time.time()}, {CaliPoint_str}',
-                    'WebAPI_AdjustMode'     : f'Time = {time.time()}, {AdjustMode_str}',
-                    'WebAPI_CaliStatus'     : f'Time = {time.time()}, {CaliStatus_str}'})
+    # data = jsonify({'WebAPI_CaliType'       : f'Time = {time.time()}, {CaliType_str}',
+    #                 'WebAPI_CaliPoint'      : f'Time = {time.time()}, {CaliPoint_str}',
+    #                 'WebAPI_AdjustMode'     : f'Time = {time.time()}, {AdjustMode_str}',
+    #                 'WebAPI_CaliStatus'     : f'Time = {time.time()}, {CaliStatus_str}'})
+    data = jsonify({'WebAPI_CaliType'       : f'{CaliType_str}',
+                    'WebAPI_CaliPoint'      : f'{CaliPoint_str}',
+                    'WebAPI_AdjustMode'     : f'{AdjustMode_str}',
+                    'WebAPI_CaliStatus'     : f'{CaliStatus_str}'})
     return data
 
 
