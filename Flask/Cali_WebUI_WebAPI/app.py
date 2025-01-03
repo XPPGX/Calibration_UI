@@ -90,6 +90,8 @@ def server_timers():
     global CaliPoint_str
     global AdjustMode_str
     global CaliStatus_str
+    
+    #Initialize the strings
     if(UI_stage == 0):
         ModelName_str = "-"
         CommInterface_str = "-"
@@ -99,8 +101,10 @@ def server_timers():
         CaliStatus_str = "-"
         
         UI_stage = 1
+    
+    #This thread's main loop
     while True:
-        # socketio.emit('update', {'socket_CaliStatus' : f'update at {time.time()}'})
+        
         if(UI_stage == 1):
             #Get ModelName string
             ModelName_ptr = c_lib_Cali.Get_Machine_Name()
@@ -128,15 +132,7 @@ def server_timers():
             print(f'CaliStatus_str = {CaliStatus_str}')
 
             print("\n")
-            
-            # socketio.emit('update_1st_stage', {
-            #     'socket_ModelName' : f'{time.time()}, {ModelName_str}',
-            #     'socket_CommInterface' : f'{time.time()}, {CommInterface_str}',
-            #     'socket_AdjustMode' : f'{time.time()}, {AdjustMode_str}',
-            #     'socket_CaliStatus' : f'{time.time()}, {CaliStatus_str}'
-            # })
 
-            # UI_stage = 1
             if(CommInterface_str != "-"):
                 UI_stage = 2
                 print(UI_stage)
@@ -161,13 +157,6 @@ def server_timers():
             CaliStatus_str = cali_status_cases[CaliStatus_uint8]
             print(CaliStatus_str)
 
-            # socketio.emit('update_2nd_stage', {
-            #     'socket_CaliType' : f'{time.time()}, {CaliType_str}',
-            #     'socket_CaliPoint' : f'{time.time()}, {CaliPoint_str}',
-            #     'socket_AdjustMode' : f'{time.time()}, {AdjustMode_str}',
-            #     'socket_CaliStatus' : f'{time.time()}, {CaliStatus_str}'
-            # })
-
         if(CaliStatus_uint8 == 1 or CaliStatus_uint8 == 2):
             
             #inform C_Cali_thread
@@ -175,18 +164,8 @@ def server_timers():
             print("Thread : Cali terminated.\n")
             print("Thread : ServerTimer Terminated.\n")
 
-            #inform javascript
+            UI_stage = 0 # Waiting for button pressing of next time
 
-            # socketio.emit('update_terminate', {})
-
-            print("Wait 3 seconds\n") # For waiting can0 bus down and C_Cali_thread is truly terminated
-            time.sleep(3)
-
-            #update flask variable
-            UI_stage = 0
-            
-
-            
             break #terminate ServerTimer
         time.sleep(0.1)
 
@@ -223,10 +202,6 @@ def handle_update_ui_1st_stage():
     global AdjustMode_str
     global CaliStatus_str
 
-    # data = jsonify({'WebAPI_ModelName'      : f'Time = {time.time()}, {ModelName_str}',
-    #                 'WebAPI_CommInterface'  : f'Time = {time.time()}, {CommInterface_str}',
-    #                 'WebAPI_AdjustMode'     : f'Time = {time.time()}, {AdjustMode_str}',
-    #                 'WebAPI_CaliStatus'     : f'Time = {time.time()}, {CaliStatus_str}'})
     data = jsonify({'WebAPI_ModelName'      : f'{ModelName_str}',
                     'WebAPI_CommInterface'  : f'{CommInterface_str}',
                     'WebAPI_AdjustMode'     : f'{AdjustMode_str}',
@@ -240,10 +215,6 @@ def handle_update_ui_2nd_stage():
     global AdjustMode_str
     global CaliStatus_str
     
-    # data = jsonify({'WebAPI_CaliType'       : f'Time = {time.time()}, {CaliType_str}',
-    #                 'WebAPI_CaliPoint'      : f'Time = {time.time()}, {CaliPoint_str}',
-    #                 'WebAPI_AdjustMode'     : f'Time = {time.time()}, {AdjustMode_str}',
-    #                 'WebAPI_CaliStatus'     : f'Time = {time.time()}, {CaliStatus_str}'})
     data = jsonify({'WebAPI_CaliType'       : f'{CaliType_str}',
                     'WebAPI_CaliPoint'      : f'{CaliPoint_str}',
                     'WebAPI_AdjustMode'     : f'{AdjustMode_str}',

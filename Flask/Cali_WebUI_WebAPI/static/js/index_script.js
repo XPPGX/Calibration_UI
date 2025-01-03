@@ -7,10 +7,15 @@
  */
 var Cali_Flag = 0; 
 
+/**
+ * UI_stage :
+ * 1 means UI stage 1
+ * 2 means UI stage 2
+ */
 var UI_stage = 1;
 
 document.addEventListener("keydown", function(event){
-    if(event.key === ' '){ //key : SPACE
+    if(event.key === ' '){ //key == SPACE
         //prevent rolling page
         event.preventDefault(); 
         
@@ -46,13 +51,6 @@ document.getElementById('UI_btnStartSetting').addEventListener('click', async fu
 
 async function update_ui_stage(){
     if(Cali_Flag == 1){
-        // const stage_packet = await fetch('/api/stage_query')
-        // if(!stage_packet.ok){
-        //     throw new Error("[Packet]was not ok");
-        // }
-        // const stage_JSON = await stage_packet.json();
-        // UI_stage = stage_JSON.WebAPI_Stage;
-        // console.log(`stage =  + ${UI_stage}`);
 
         switch(UI_stage){
             case 1:
@@ -105,25 +103,3 @@ async function update_ui_stage(){
 document.addEventListener('DOMContentLoaded', () => {
     setInterval(update_ui_stage, 100);
 });
-
-// socket.on('update_1st_stage', function(data){
-//     console.log(data);
-//     document.getElementById('UI_ModelName').innerText = data.socket_ModelName;
-//     document.getElementById('UI_CommInterface').innerText = data.socket_CommInterface;
-//     document.getElementById('UI_AdjustMode').innerText = data.socket_AdjustMode
-//     document.getElementById('UI_Result').innerText = data.socket_CaliStatus;
-// });
-
-// socket.on('update_2nd_stage', function(data){
-//     console.log(data);
-//     document.getElementById('UI_CaliType').innerText      = data.socket_CaliType;
-//     document.getElementById('UI_Cali_point').innerText    = data.socket_CaliPoint;
-//     document.getElementById('UI_AdjustMode').innerText    = data.socket_AdjustMode;
-//     document.getElementById('UI_Result').innerText        = data.socket_CaliStatus;
-// })
-
-// socket.on('update_terminate', function(data){
-//     console.log(data)
-//     setTimeout(() => {console.log("Wait 3 seconds");}, 3000);
-//     Cali_Flag = 0;
-// })
