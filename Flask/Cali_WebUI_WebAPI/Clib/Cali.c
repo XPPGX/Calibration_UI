@@ -351,7 +351,7 @@ void Manual_Calibration(void){
     uint8_t receive_cnt = 0;
     SVR_value = 2048;
     // Set keyboard device path
-    const char *device = "/dev/input/event2"; //choose the eventX corresponding to the keyboard
+    const char *device = "/dev/input/event0"; //choose the eventX corresponding to the keyboard
     int fd = open(device, O_RDONLY | O_NONBLOCK);
     
     if (fd == -1) {
