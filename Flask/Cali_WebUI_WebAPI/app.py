@@ -9,7 +9,12 @@ from collections import defaultdict
 ##################################################
 # Global Variables
 ##################################################
-UI_stage = 1
+
+# UI_stage values description : 
+# 0 means need reset global strings,
+# 1 means Calibration running in stage 1
+# 2 means Calibration running in stage 2
+UI_stage = 0 
 
 ModelName_str = "-"
 CommInterface_str   = "-"
@@ -89,6 +94,16 @@ def server_timers():
     global CaliPoint_str
     global AdjustMode_str
     global CaliStatus_str
+
+    if(UI_stage == 0):
+        ModelName_str       = "-"
+        CommInterface_str   = "-"
+        CaliType_str        = "-"
+        CaliPoint_str       = "-"
+        AdjustMode_str      = "微調"
+        CaliStatus_str      = "-"
+        
+        UI_stage = 1
 
     while True:
         # socketio.emit('update', {'socket_CaliStatus' : f'update at {time.time()}'})
@@ -170,7 +185,6 @@ def server_timers():
             # socketio.emit('update_terminate', {})
 
             print("Wait 3 seconds\n") # For waiting can0 bus down and C_Cali_thread is truly terminated
-            time.sleep(3)
 
             #update flask variable
             UI_stage = 0
@@ -194,7 +208,6 @@ def index():
 @app.route('/api/ui_start_cali', methods=['POST'])
 def handle_ui_start_cali():
     c_lib_Cali.Start_Cali_thread()
-
     thread = Thread(target=server_timers)
     thread.daemon = True
     thread.start()
