@@ -19,12 +19,28 @@ document.getElementById('UI_btnStartSetting').onclick = function(){
     }
 }
 
+socket.on('update_init', function(){
+    document.getElementById('UI_ModelName').innerText = "-";
+    document.getElementById('UI_CommInterface').innerText = "-";
+    document.getElementById('UI_CaliType').innerText      = "-";
+    document.getElementById('UI_Cali_point').innerText    = "-";
+    document.getElementById('UI_AdjustMode').innerText = "微調";
+    document.getElementById('UI_Result').innerText = "-";
+});
+
 socket.on('update_1st_stage', function(data){
     console.log(data);
     document.getElementById('UI_ModelName').innerText = data.socket_ModelName;
     document.getElementById('UI_CommInterface').innerText = data.socket_CommInterface;
     document.getElementById('UI_AdjustMode').innerText = data.socket_AdjustMode
     document.getElementById('UI_Result').innerText = data.socket_CaliStatus;
+
+    if(document.getElementById('UI_Result').innerHTML == "FINISH"){
+        document.getElementById('UI_Result').classList.add('green_style');
+    }
+    else if(document.getElementById('UI_Result').innerHTML == "FAIL"){
+        document.getElementById('UI_Result').classList.add('red_style');
+    }
 });
 
 socket.on('update_2nd_stage', function(data){
@@ -33,6 +49,12 @@ socket.on('update_2nd_stage', function(data){
     document.getElementById('UI_Cali_point').innerText    = data.socket_CaliPoint;
     document.getElementById('UI_AdjustMode').innerText    = data.socket_AdjustMode;
     document.getElementById('UI_Result').innerText        = data.socket_CaliStatus;
+    if(document.getElementById('UI_Result').innerHTML == "FINISH"){
+        document.getElementById('UI_Result').classList.add('green_style');
+    }
+    else if(document.getElementById('UI_Result').innerHTML == "FAIL"){
+        document.getElementById('UI_Result').classList.add('red_style');
+    }
 })
 
 socket.on('update_terminate', function(data){

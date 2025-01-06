@@ -9,7 +9,7 @@ from collections import defaultdict
 ##################################################
 # Global Variables
 ##################################################
-UI_Init_Flag = 0
+UI_Stage = 0
 
 ModelName_ptr = ctypes.c_char_p
 ModelName_str = "-"
@@ -93,11 +93,30 @@ c_lib_Cali.Stop_Cali_thread.restype             = None
 # Functions implementation
 ##################################################
 def server_timers():
-    global UI_Init_Flag
-    
+    global UI_Stage
+
+    global ModelName_str
+    global CommInterface_str
+    global CaliType_str
+    global CaliPoint_str
+    global AdjustMode_str
+    global CaliStatus_str
+
+    if(UI_Stage == 0):
+        ModelName_str = "-"
+        CommInterface_str = "-"
+        CaliType_str = "-"
+        CaliPoint_str = "-"
+        AdjustMode_str = "微調"
+        CaliStatus_str = "-"
+        
+        UI_Stage = 1
+        
+        socketio.emit('update_init', {})
+
     while True:
         # socketio.emit('update', {'socket_CaliStatus' : f'update at {time.time()}'})
-        if(UI_Init_Flag == 0):
+        if(UI_Stage == 1):
             #Get ModelName string
             ModelName_ptr = c_lib_Cali.Get_Machine_Name()
             ModelName_str = ModelName_ptr.decode("utf-8")
@@ -131,10 +150,10 @@ def server_timers():
                 'socket_CaliStatus' : f'{CaliStatus_str}'
             })
 
-            # UI_Init_Flag = 1
+            # UI_Stage = 1
             if(CommInterface_str != "-"):
-                UI_Init_Flag = 1
-                print(UI_Init_Flag)
+                UI_Stage = 2
+                print(UI_Stage)
         else:
             #Get CaliType string
             CaliType_uint8 = c_lib_Cali.Get_PSU_Calibration_Type()
@@ -181,7 +200,7 @@ def server_timers():
             # time.sleep(3)
 
             #update flask variable
-            UI_Init_Flag = 0
+            UI_Stage = 0
             
 
             
