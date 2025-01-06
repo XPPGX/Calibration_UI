@@ -143,9 +143,10 @@ def server_timers():
                 UI_stage = 2
                 print(UI_stage)
             
-            if(CaliStatus_uint8 == 2): #FAIL
+            if(CaliStatus_str == "FAIL"): #FAIL
                 UI_stage = 0
                 c_lib_Cali.Stop_Cali_thread()
+                break
         else:
             #Get CaliType string
             CaliType_uint8 = c_lib_Cali.Get_PSU_Calibration_Type()
