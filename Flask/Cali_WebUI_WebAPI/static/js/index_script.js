@@ -14,6 +14,8 @@ var Cali_Flag = 0;
  */
 var UI_stage = 1;
 
+var UI_Result_color = '';
+
 document.addEventListener("keydown", function(event){
     if(event.key === ' '){ //key == SPACE
         //prevent rolling page
@@ -34,6 +36,11 @@ document.getElementById('UI_btnStartSetting').addEventListener('click', async fu
             document.getElementById('UI_Cali_point').innerText = "-";
             document.getElementById('UI_AdjustMode').innerText = "微調";
             document.getElementById('UI_Result').innerText = "-";
+
+            if(document.getElementById('UI_Result').classList.contains(UI_Result_color)){
+                document.getElementById('UI_Result').classList.remove(UI_Result_color);
+            }
+            
         case 0:
             Cali_Flag = 1;
             UI_stage = 1;
@@ -94,7 +101,8 @@ async function update_ui_stage(){
                 // }
 
                 if(document.getElementById('UI_Result').innerText == "FINISH"){
-                    document.getElementById('UI_Result').classList.add('green_style');
+                    UI_Result_color = 'green_style';
+                    document.getElementById('UI_Result').classList.add(UI_Result_color);
                     setTimeout(() => {
                         UI_stage = 3;
                         Cali_Flag = 2;
@@ -102,7 +110,8 @@ async function update_ui_stage(){
 
                 }
                 else if(document.getElementById('UI_Result').innerText == "FAIL"){
-                    document.getElementById('UI_Result').classList.add('red_style');
+                    UI_Result_color = 'red_style'
+                    document.getElementById('UI_Result').classList.add(UI_Result_color);
                     setTimeout(() => {
                         UI_stage = 3;
                         Cali_Flag = 2;
