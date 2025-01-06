@@ -43,8 +43,8 @@ document.getElementById('UI_btnStartSetting').addEventListener('click', async fu
             document.getElementById('UI_Cali_point').innerText = "-";
 
             document.getElementById('UI_AdjustMode').innerText = "微調";
-            if(document.getElementById('UI_AdjustMode').classList.contains(UI_AdjustMode_new_style)){
-                document.getElementById('UI_AdjustMode').classList.remove(UI_AdjustMode_new_style);
+            if(document.getElementById('UI_AdjustMode_div').classList.contains(UI_AdjustMode_new_style)){
+                document.getElementById('UI_AdjustMode_div').classList.remove(UI_AdjustMode_new_style);
             }
 
             document.getElementById('UI_Result').innerText = "-";
@@ -104,11 +104,11 @@ async function update_ui_stage(){
                 document.getElementById('UI_Result').innerText          = res2_data.WebAPI_CaliStatus;
                 
                 if(document.getElementById('UI_AdjustMode').innerText == "粗調"){
-                    document.getElementById('UI_AdjustMode').classList.add(UI_AdjustMode_new_style);
+                    document.getElementById('UI_AdjustMode_div').classList.add(UI_AdjustMode_new_style);
                 }
                 else if(document.getElementById('UI_AdjustMode').innerText == "微調"){
-                    if(document.getElementById('UI_AdjustMode').classList.contains(UI_AdjustMode_new_style)){
-                        document.getElementById('UI_AdjustMode').classList.remove(UI_AdjustMode_new_style);
+                    if(document.getElementById('UI_AdjustMode_div').classList.contains(UI_AdjustMode_new_style)){
+                        document.getElementById('UI_AdjustMode_div').classList.remove(UI_AdjustMode_new_style);
                     }
                 }
 
