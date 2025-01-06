@@ -114,24 +114,9 @@ async function update_ui_stage(){
                     }, 0);
                 }
                 
-                //If calibration failed in stage 1
-                if(document.getElementById('UI_Result').innerText == "FAIL"){
-                    UI_Result_color = UI_Result_color_map[document.getElementById('UI_Result').innerText];
-                    document.getElementById('UI_Result').classList.add(UI_Result_color);
-                    setTimeout(() => {
-                        UI_stage = 3;
-                        Cali_Flag = 2;
-                    });
-
-                    const tasks = document.querySelectorAll('.task-item');
-                    if(tasks.length > 1){
-                        const lastTask = tasks[tasks.length - 1];
-                        const lastTaskStatus = lastTask.querySelector('.task-status');
-                        lastTaskStatus.textContent = 'FAIL';
-                        lastTaskStatus.className = 'task-status status-fail';
-                    }
-                }
+                
                 break;
+                
             case 2:
                 console.log("2nd\n")
                 const response_2 = await fetch('/api/update_ui_2nd_stage')
@@ -192,13 +177,13 @@ async function update_ui_stage(){
                         Cali_Flag = 2;
                     });
 
-                    const tasks = document.querySelectorAll('.task-item');
-                    if(tasks.length > 1){
-                        const lastTask = tasks[tasks.length - 1];
-                        const lastTaskStatus = lastTask.querySelector('.task-status');
-                        lastTaskStatus.textContent = 'FAIL';
-                        lastTaskStatus.className = 'task-status status-fail';
-                    }
+                    // const tasks = document.querySelectorAll('.task-item');
+                    // if(tasks.length > 1){
+                    //     const lastTask = tasks[tasks.length - 1];
+                    //     const lastTaskStatus = lastTask.querySelector('.task-status');
+                    //     lastTaskStatus.textContent = 'FAIL';
+                    //     lastTaskStatus.className = 'task-status status-fail';
+                    // }
                 }
                 
                 break;
