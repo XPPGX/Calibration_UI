@@ -91,6 +91,12 @@ def server_timers():
     global AdjustMode_str
     global CaliStatus_str
     
+    single_task = {} #dictionary
+    tasks_list = []
+
+    old_CaliType_str = ""
+    old_CaliPoint_str = ""
+
     #Initialize the strings
     if(UI_stage == 0):
         ModelName_str = "-"
@@ -156,6 +162,16 @@ def server_timers():
             CaliStatus_uint8 = c_lib_Cali.Get_Calibration_Status()
             CaliStatus_str = cali_status_cases[CaliStatus_uint8]
             print(CaliStatus_str)
+            
+            #Add a task to the tasks_list 
+            if((old_CaliType_str != "-" and old_CaliPoint_str != CaliPoint_str) or (old_CaliType_str != CaliType_str)):
+                single_task['JSON_Content_Cali_Type'] = CaliType_str
+                single_task['JSON_Content_Cali_Point'] = CaliPoint_str
+                single_task['JSON_Content_Cali_Task_Status'] = "Running"
+                
+                tasks_list.append(single_task)
+                single_task.clear()
+            
 
         if(CaliStatus_uint8 == 1 or CaliStatus_uint8 == 2):
             

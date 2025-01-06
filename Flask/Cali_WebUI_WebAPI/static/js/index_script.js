@@ -134,25 +134,27 @@ async function update_ui_stage(){
                 let new_UI_CaliType_str = res2_data.WebAPI_CaliType;
                 let new_UI_Cali_Point_str = res2_data.WebAPI_CaliPoint;
 
-                //modify the status of last taskItem
-                const tasks = document.querySelectorAll('.task-item');
-                if(tasks.length > 1){
-                    const lastTask = tasks[tasks.length - 1];
-                    const lastTaskStatus = lastTask.querySelector('.task-status');
-                    lastTaskStatus.textContent = 'OK';
-                    lastTaskStatus.className = 'task-status status-ok';
-
-                }
-
+                
+                
+                //[Bug] If the cali point encountered with non-ordered sequence, the following process may show the wrong cali point on the web site
                 //Add a task that is consisted of calibration type and point.
                 if((old_UI_CaliType_str != "-" && old_UI_Cali_point_str != new_UI_Cali_Point_str) ||
                  (old_UI_CaliType_str != new_UI_CaliType_str)){
                     addTask(`${document.getElementById('UI_CaliType').innerText},  ${document.getElementById('UI_Cali_point').innerText}`);
+                    
+                    //modify the status of last taskItem to be OK
+                    const tasks = document.querySelectorAll('.task-item');
+                    if(tasks.length > 1){
+                        const lastTask = tasks[tasks.length - 2];
+                        const lastTaskStatus = lastTask.querySelector('.task-status');
+                        lastTaskStatus.textContent = 'OK';
+                        lastTaskStatus.className = 'task-status status-ok';
+                    }
                 }
                 
 
 
-
+                //Change the color of adjustment after pressing space key
                 if(document.getElementById('UI_AdjustMode').innerText == "粗調"){
                     document.getElementById('UI_AdjustMode_div').classList.add(UI_AdjustMode_new_style);
                 }
@@ -171,28 +173,16 @@ async function update_ui_stage(){
                         UI_stage = 3;
                         Cali_Flag = 2;
                     });
+
+                    const tasks = document.querySelectorAll('.task-item');
+                    if(tasks.length > 1){
+                        const lastTask = tasks[tasks.length - 1];
+                        const lastTaskStatus = lastTask.querySelector('.task-status');
+                        lastTaskStatus.textContent = 'FAIL';
+                        lastTaskStatus.className = 'task-status status-fail';
+                    }
                 }
                 
-
-
-                // if(document.getElementById('UI_Result').innerText == "FINISH"){
-                //     UI_Result_color = 'green_style';
-                //     document.getElementById('UI_Result').classList.add(UI_Result_color);
-                //     setTimeout(() => {
-                //         UI_stage = 3;
-                //         Cali_Flag = 2;
-                //     });
-
-                // }
-                // else if(document.getElementById('UI_Result').innerText == "FAIL"){
-                //     UI_Result_color = 'red_style'
-                //     document.getElementById('UI_Result').classList.add(UI_Result_color);
-                //     setTimeout(() => {
-                //         UI_stage = 3;
-                //         Cali_Flag = 2;
-                //     });
-                // }
-
                 break;
                 
             default:
