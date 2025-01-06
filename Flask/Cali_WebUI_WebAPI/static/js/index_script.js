@@ -25,25 +25,6 @@ var UI_Result_color_map = {
 
 const taskList = document.getElementById('taskList');
 
-function addTask(taskName){
-    const taskItem = document.createElement('div');
-    taskItem.className = 'task-item';
-
-    const taskNameSpan = document.createElement('span');
-    taskNameSpan.className = 'task-name';
-    taskNameSpan.textContent = taskName;
-
-    const taskStatusSpan = document.createElement('span');
-    taskStatusSpan.className = `task-status status-running`;
-    taskStatusSpan.textContent = 'Running';
-
-
-    taskItem.appendChild(taskNameSpan);
-    taskItem.appendChild(taskStatusSpan);
-
-    taskList.appendChild(taskItem);
-}
-
 
 document.addEventListener("keydown", function(event){
     if(event.key === ' '){ //key == SPACE
@@ -194,7 +175,38 @@ async function update_ui_stage(){
     }
 }
 
+function addTask(taskName){
+    const taskItem = document.createElement('div');
+    taskItem.className = 'task-item';
 
+    const taskNameSpan = document.createElement('span');
+    taskNameSpan.className = 'task-name';
+    taskNameSpan.textContent = taskName;
+
+    const taskStatusSpan = document.createElement('span');
+    taskStatusSpan.className = `task-status status-running`;
+    taskStatusSpan.textContent = 'Running';
+
+
+    taskItem.appendChild(taskNameSpan);
+    taskItem.appendChild(taskStatusSpan);
+
+    taskList.appendChild(taskItem);
+}
+
+
+document.getElementById('showTasksBtn').addEventListener('click', async function(){
+   taskList.classList.remove('hidden');
+   document.getElementById('showTasksBtn').classList.add('btn-active');
+   document.getElementById('showValuesBtn').classList.remove('btn-active');
+})
+
+
+document.getElementById('showValuesBtn').addEventListener('click', async function(){
+   taskList.classList.add('hidden');
+   document.getElementById('showValuesBtn').classList.add('btn-active');
+   document.getElementById('showTasksBtn').classList.remove('btn-active');
+})
 
 document.addEventListener('DOMContentLoaded', () => {
     setInterval(update_ui_stage, 100);
