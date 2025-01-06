@@ -95,7 +95,15 @@ async function update_ui_stage(){
                     }, 0);
                 }
                 
-                
+                if(document.getElementById('UI_Result').innerText == "FAIL"){
+                    UI_Result_color = UI_Result_color_map[document.getElementById('UI_Result').innerText];
+                    document.getElementById('UI_Result').classList.add(UI_Result_color);
+                    setTimeout(() => {
+                        UI_stage = 3;
+                        Cali_Flag = 2;
+                    });
+                }
+
                 break;
                 
             case 2:
