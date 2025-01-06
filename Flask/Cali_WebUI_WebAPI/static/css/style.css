@@ -182,6 +182,10 @@ body {
 	cursor: pointer;
 }
 
+.hidden{
+	display: none;
+}
+
 .switch-buttons .btn-active {
 	background-color: #007bff;
 	color: #fff;
