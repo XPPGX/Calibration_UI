@@ -85,13 +85,30 @@ async function update_ui_stage(){
                 document.getElementById('UI_AdjustMode').innerText      = res2_data.WebAPI_AdjustMode;
                 document.getElementById('UI_Result').innerText          = res2_data.WebAPI_CaliStatus;
                 
-                if(document.getElementById('UI_Result').innerText == "FINISH" 
-                || document.getElementById('UI_Result').innerText == "FAIL"){
+                // if(document.getElementById('UI_Result').innerText == "FINISH" 
+                // || document.getElementById('UI_Result').innerText == "FAIL"){
+                //     setTimeout(() => {
+                //         UI_stage = 3;
+                //         Cali_Flag = 2;
+                //     });
+                // }
+
+                if(document.getElementById('UI_Result').innerText == "FINISH"){
+                    document.getElementById('UI_Result').classList.add('green_style');
                     setTimeout(() => {
                         UI_stage = 3;
                         Cali_Flag = 2;
-                    })
+                    });
+
                 }
+                else if(document.getElementById('UI_Result').innerText == "FAIL"){
+                    document.getElementById('UI_Result').classList.add('red_style');
+                    setTimeout(() => {
+                        UI_stage = 3;
+                        Cali_Flag = 2;
+                    });
+                }
+
                 break;
                 
             default:
