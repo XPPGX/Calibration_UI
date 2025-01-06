@@ -134,10 +134,23 @@ async function update_ui_stage(){
                 let new_UI_CaliType_str = res2_data.WebAPI_CaliType;
                 let new_UI_Cali_Point_str = res2_data.WebAPI_CaliPoint;
 
+                //modify the status of last taskItem
+                const tasks = document.querySelectorAll('.task-item');
+                if(tasks.length > 1){
+                    const lastTask = tasks[tasks.length - 1];
+                    const lastTaskStatus = lastTask.querySelector('.task-status');
+                    lastTaskStatus.textContent = 'OK';
+                    lastTaskStatus.className = 'task-status status-ok';
+
+                }
+
+                //Add a task that is consisted of calibration type and point.
                 if((old_UI_CaliType_str != "-" && old_UI_Cali_point_str != new_UI_Cali_Point_str) ||
                  (old_UI_CaliType_str != new_UI_CaliType_str)){
                     addTask(`${document.getElementById('UI_CaliType').innerText},  ${document.getElementById('UI_Cali_point').innerText}`);
                 }
+                
+
 
 
                 if(document.getElementById('UI_AdjustMode').innerText == "粗調"){

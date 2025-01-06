@@ -442,7 +442,7 @@ body {
 	border-right-style: none;
 	border-bottom-style: none;
 	border-left-style: none;
-	font-size: 20px;
+	font-size: 30px;
 	position: static;
 	right: auto;
 	bottom: auto;
@@ -459,7 +459,7 @@ body {
 	border-right-width: 5px;
 	border-bottom-width: 5px;
 	border-left-width: 5px;
-	font-size: 20px;
+	font-size: 30px;
 }
 
 #UI_Result {
