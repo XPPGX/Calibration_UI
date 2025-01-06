@@ -3,16 +3,29 @@
 
 <head>
   <title>Home</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="robots" content="index,follow">
-  <meta name="generator" content="GrapesJS Studio">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="index,follow" />
+  <meta name="generator" content="GrapesJS Studio" />
   <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-  <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}">
-  <link rel="stylesheet" href="{{url_for('static', filename='css/color.css')}}">
+  <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}" />
+  <link rel="stylesheet" href="{{url_for('static', filename='css/color.css')}}" />
 </head>
 
 <body id="iau9">
+  <div id="i3g5nj" class="navbar">
+    <div data-gjs="navbar" id="iynb2b" class="navbar-container">
+      <div id="ihmou6" class="navbar-burger">
+        <div class="navbar-burger-line"></div>
+        <div class="navbar-burger-line"></div>
+        <div class="navbar-burger-line"></div>
+      </div>
+      <div data-gjs="navbar-items" class="navbar-items-c">
+        <nav id="ict774" class="navbar-menu"><a id="ikiyfr" href="" class="navbar-menu-link">校正頁面</a><a id="iaslty"
+            href="" class="navbar-menu-link">周邊儀器連接狀況</a></nav>
+      </div>
+    </div>
+  </div>
   <div id="iije" class="gjs-grid-row">
     <div id="i9wi" class="gjs-grid-column">
       <div id="ispn7" class="gjs-grid-row">
@@ -74,14 +87,20 @@
         </div>
       </div>
     </div>
-    <div id="i4j4q" class="gjs-grid-column"></div>
+    <div id="i4j4q" class="gjs-grid-column">
+      <div id="ipmbs9" class="gjs-grid-row">
+        <div id="iyfk8y" class="gjs-grid-column">
+          <div class="switch-buttons">
+            <button type="button" id="showTasksBtn" __nc="" class="btn-active">校正進度列表</button><button type="button" id="showValuesBtn">儀器讀值</button>
+          </div>
+          <div id="taskList" class="task-list-container">
+            <!-- 任務列表會動態加入內容 -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="{{url_for('static', filename='js/index_script.js')}}"></script>
   </div>
-
-  <script src="{{url_for('static', filename='js/index_script.js')}}"></script>
 </body>
 
 </html>
-
-
-
-

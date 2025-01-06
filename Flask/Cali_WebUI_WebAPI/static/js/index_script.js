@@ -23,6 +23,28 @@ var UI_Result_color_map = {
     "FAIL" : "red_style"
 };
 
+const taskList = document.getElementById('taskList');
+
+function addTask(taskName){
+    const taskItem = document.createElement('div');
+    taskItem.className = 'task-item';
+
+    const taskNameSpan = document.createElement('span');
+    taskNameSpan.className = 'task-name';
+    taskNameSpan.textContent = taskName;
+
+    const taskStatusSpan = document.createElement('span');
+    taskStatusSpan.className = `task-status status-running`;
+    taskStatusSpan.textContent = 'Running';
+
+
+    taskItem.appendChild(taskNameSpan);
+    taskItem.appendChild(taskStatusSpan);
+
+    taskList.appendChild(taskItem);
+}
+
+
 document.addEventListener("keydown", function(event){
     if(event.key === ' '){ //key == SPACE
         //prevent rolling page
@@ -35,6 +57,8 @@ document.addEventListener("keydown", function(event){
 
 document.getElementById('UI_btnStartSetting').addEventListener('click', async function(){
     console.log("Btn pressed\n");
+    let old_UI_CaliType_str;
+    let old_UI_Cali_point_str;
     switch(Cali_Flag){
         case 2:
             document.getElementById('UI_ModelName').innerText = "-";
@@ -98,11 +122,20 @@ async function update_ui_stage(){
                 }
                 const res2_data = await response_2.json();
 
+                
+                old_UI_CaliType_str = document.getElementById('UI_CaliType').innerText;
+                old_UI_Cali_point_str = document.getElementById('UI_Cali_point').innerText;
+
                 document.getElementById('UI_CaliType').innerText        = res2_data.WebAPI_CaliType;
                 document.getElementById('UI_Cali_point').innerText      = res2_data.WebAPI_CaliPoint;
                 document.getElementById('UI_AdjustMode').innerText      = res2_data.WebAPI_AdjustMode;
                 document.getElementById('UI_Result').innerText          = res2_data.WebAPI_CaliStatus;
                 
+                if(old_UI_CaliType_str != document.getElementById('UI_CaliType').innerText || old_UI_Cali_point_str != document.getElementById('UI_Cali_point').innerText){
+                    addTask(`${document.getElementById('UI_CaliType').innerText},  ${document.getElementById('UI_Cali_point').innerText}`);
+                }
+
+
                 if(document.getElementById('UI_AdjustMode').innerText == "粗調"){
                     document.getElementById('UI_AdjustMode_div').classList.add(UI_AdjustMode_new_style);
                 }
@@ -150,6 +183,8 @@ async function update_ui_stage(){
         }
     }
 }
+
+
 
 document.addEventListener('DOMContentLoaded', () => {
     setInterval(update_ui_stage, 100);
