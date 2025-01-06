@@ -131,7 +131,8 @@ async function update_ui_stage(){
                 document.getElementById('UI_AdjustMode').innerText      = res2_data.WebAPI_AdjustMode;
                 document.getElementById('UI_Result').innerText          = res2_data.WebAPI_CaliStatus;
                 
-                if(old_UI_CaliType_str != document.getElementById('UI_CaliType').innerText || old_UI_Cali_point_str != document.getElementById('UI_Cali_point').innerText){
+                if(old_UI_CaliType_str != "-" && 
+                    (old_UI_CaliType_str != document.getElementById('UI_CaliType').innerText || old_UI_Cali_point_str != document.getElementById('UI_Cali_point').innerText)){
                     addTask(`${document.getElementById('UI_CaliType').innerText},  ${document.getElementById('UI_Cali_point').innerText}`);
                 }
 

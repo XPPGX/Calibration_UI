@@ -144,11 +144,11 @@ body {
 }
 
 .task-name{
-	font-size : 16px;
+	font-size : 25px;
 }
 
 .task-status{
-	font-size: 14px;
+	font-size: 20px;
 	font-weight: bold;
 	padding: 5px 10px;
 	border-radius: 5px;
