@@ -125,10 +125,10 @@ def server_timers():
 
             print("\n")
             socketio.emit('update_1st_stage', {
-                'socket_ModelName' : f'{time.time()}, {ModelName_str}',
-                'socket_CommInterface' : f'{time.time()}, {CommInterface_str}',
-                'socket_AdjustMode' : f'{time.time()}, {AdjustMode_str}',
-                'socket_CaliStatus' : f'{time.time()}, {CaliStatus_str}'
+                'socket_ModelName' : f'{ModelName_str}',
+                'socket_CommInterface' : f'{CommInterface_str}',
+                'socket_AdjustMode' : f'{AdjustMode_str}',
+                'socket_CaliStatus' : f'{CaliStatus_str}'
             })
 
             # UI_Init_Flag = 1
@@ -157,11 +157,17 @@ def server_timers():
             print(CaliStatus_str)
 
             socketio.emit('update_2nd_stage', {
-                'socket_CaliType' : f'{time.time()}, {CaliType_str}',
-                'socket_CaliPoint' : f'{time.time()}, {CaliPoint_str}',
-                'socket_AdjustMode' : f'{time.time()}, {AdjustMode_str}',
-                'socket_CaliStatus' : f'{time.time()}, {CaliStatus_str}'
+                'socket_CaliType' : f'{CaliType_str}',
+                'socket_CaliPoint' : f'{CaliPoint_str}',
+                'socket_AdjustMode' : f'{AdjustMode_str}',
+                'socket_CaliStatus' : f'{CaliStatus_str}'
             })
+            # socketio.emit('update_2nd_stage', {
+            #     'socket_CaliType' : f'{time.time()}, {CaliType_str}',
+            #     'socket_CaliPoint' : f'{time.time()}, {CaliPoint_str}',
+            #     'socket_AdjustMode' : f'{time.time()}, {AdjustMode_str}',
+            #     'socket_CaliStatus' : f'{time.time()}, {CaliStatus_str}'
+            # })
 
         if(CaliStatus_uint8 == 1 or CaliStatus_uint8 == 2):
             #inform C_Cali_thread
@@ -171,8 +177,8 @@ def server_timers():
 
             #inform javascript
             socketio.emit('update_terminate', {})
-            print("Wait 3 seconds\n") # For waiting can0 bus down and C_Cali_thread is truly terminated
-            time.sleep(3)
+            # print("Wait 3 seconds\n") # For waiting can0 bus down and C_Cali_thread is truly terminated
+            # time.sleep(3)
 
             #update flask variable
             UI_Init_Flag = 0
