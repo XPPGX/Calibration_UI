@@ -130,9 +130,12 @@ async function update_ui_stage(){
                 document.getElementById('UI_Cali_point').innerText      = res2_data.WebAPI_CaliPoint;
                 document.getElementById('UI_AdjustMode').innerText      = res2_data.WebAPI_AdjustMode;
                 document.getElementById('UI_Result').innerText          = res2_data.WebAPI_CaliStatus;
-                
-                if(old_UI_CaliType_str != "-" && 
-                    (old_UI_CaliType_str != document.getElementById('UI_CaliType').innerText || old_UI_Cali_point_str != document.getElementById('UI_Cali_point').innerText)){
+
+                let new_UI_CaliType_str = res2_data.WebAPI_CaliType;
+                let new_UI_Cali_Point_str = res2_data.WebAPI_CaliPoint;
+
+                if((old_UI_CaliType_str != "-" && old_UI_Cali_point_str != new_UI_Cali_Point_str) ||
+                 (old_UI_CaliType_str != new_UI_CaliType_str)){
                     addTask(`${document.getElementById('UI_CaliType').innerText},  ${document.getElementById('UI_Cali_point').innerText}`);
                 }
 
