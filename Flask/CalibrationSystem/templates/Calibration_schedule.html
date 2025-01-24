@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="{{url_for('static', filename='js/Sortable.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/navbar.js')}}"></script>
+    <title>校正治具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-top: 100px; /* 留出空間給固定的navbar */
+            background: linear-gradient(135deg, #f0f8ff, #d3d3d3); /* 漸變背景色 */
+            height: 100%; /* 讓背景覆蓋整個螢幕 */
+        }
+        content {
+            display: flex;
+            padding: 20px;
+            font-size: 18px;
+        }
+
+        .calibration_selection{
+            display: flex;
+            justify-content: flex-start;
+            gap: 20px;
+        }
+        .content-row{
+            margin-left: 2%;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            position: relative;
+            gap:20px;
+            width: 100%;
+        }
+
+        .text-progress{
+            font-size: 30px;
+            font-weight: bold;
+            width: 200px;
+        }
+        .select_btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .table-container {
+            max-width: 60%;
+            margin-left: 5%;
+            margin-top: 100px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            padding: 20px;
+            
+            max-height: 300px;
+            overflow-y: auto;
+
+        }
+
+        table {
+            width: 100%; /* 表格寬度佔滿容器 */
+            border-collapse: collapse;
+            table-layout: fixed; /* 固定列寬，確保每個單元格寬度一致 */
+            font-size: 30px;
+        }
+
+        table th, table td {
+            display: table-cell;
+        }
+
+        thead {
+            background-color: #333;
+            color: #fff;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ccc;
+            width: 15%; /* 確保每個單元格寬度佔畫面的 15% */
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        th {
+            font-weight: bold;
+        }
+
+
+        th:nth-child(1), td:nth-child(1) {
+            width: 15%;
+        }
+        th:nth-child(2), th:nth-child(2){
+            width: 50%;
+        }
+        th:nth-child(3), th:nth-child(3){
+            width: 15%;
+        }
+        th:nth-child(4), th:nth-child(4){
+            width: 15%;
+        }
+        th:nth-child(5), th:nth-child(5){
+            width: 5%;
+        }
+
+
+        tbody tr:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+
+        
+        tbody tr:nth-child(even) {
+            background-color: #f1f1f1;
+        }
+
+        select{
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+
+        input{
+            width: 90%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        .add-row-button {
+            margin: 20px 0;
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .add-row-button:hover {
+            background-color: #45a049;
+        }
+
+        .custom-checkbox {
+            position: relative;
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+        }
+
+        .custom-checkbox input[type="checkbox"] {
+            position: absolute;
+            width: 0;
+            height: 0;
+            opacity: 0;
+        }
+
+        .custom-checkbox span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            border: 2px solid #007BFF;
+            border-radius: 4px; /* 圓角 */
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox span:after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background-color: #007BFF;
+            border-radius: 2px;
+            transform: scale(0) translate(-50%, -50%);
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox input[type="checkbox"]:checked + span {
+            background-color: #007BFF;
+            border-color: #007BFF;
+        }
+
+        .custom-checkbox input[type="checkbox"]:checked + span:after {
+            transform: scale(1) translate(-50%, -50%);
+        }
+
+        .selected-list {
+            width: 20%;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            height: 300px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .selected-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .selected-list li {
+            padding: 8px;
+            margin: 4px 0;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 1200px) {
+            body{
+                padding-top: 120px;
+            }
+            
+            #content{
+                flex-direction: column;
+            }
+            
+            table td:nth-child(2), /*第2 column*/
+            table td:nth-child(n+4), /*第4 column 後*/
+            table th:nth-child(2),
+            table th:nth-child(n+4) {
+                display: none;
+            }
+
+            tr.clickable-cell{
+                cursor: pointer;
+                background-color: #e0e0e0;
+            }
+
+            
+        }
+    </style>
+    <link rel="stylesheet" href="navbar.css">
+</head>
+<body>
+
+    <div id="navbar">
+        {% include 'navbar.html' %}
+    </div>
+    <input type="file" id="fileInput" style="display: none;" accept=".json"/>
+    <div id="content">
+        <div class="content-row">
+            <span class="text-progress">排程名稱：</span>
+            <span class="text-progress" id="scriptFileName"></span>
+            <button class="select_btn" id="btn_select_script">選擇腳本</button>
+            <!-- <button class="select_btn" id="btn_select_script">腳本編輯模式</button> -->
+        </div>
+        <div class="calibration_selection">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>序號</th>
+                            <th>校正點</th>
+                            <th>目標儀器</th>
+                            <th>關注值</th>
+                            <th>選擇</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableContainer">
+                        <!-- 動態新增的行將出現在這裡 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="selected-list">
+                <h3>已選擇的校正項目</h3>
+                <ul id="selectedItemsList">
+                    <!-- 這裡會顯示已選擇的校正順序與校正點 -->
+                </ul>
+            </div>
+        </div>
+        
+        <button class="add-row-button" id="addRowButton" onclick="addRow()">新增row</button>
+        <button class="add-row-button" id="addRowButton" onclick="SaveScriptSetting()">儲存排程設定</button>
+    </div>
+
+<script>
+    let rowCount = 0;
+    let scriptFileName; //the script file name with subname transmit to server to save the modified script.
+    let script_JSON_object;
+
+    const optionMap = {
+        DWAM : ["Irms", "Vrms", "W", "DCV"],
+        DMM : ["V", "I (Shunt V)"]
+    };
+    
+    const FileSelectorDialog = document.getElementById('fileInput');
+
+    document.addEventListener('DOMContentLoaded', function(){
+        initNavbar();
+    });
+
+    document.getElementById('btn_select_script').addEventListener('click', function(){
+        FileSelectorDialog.click();
+    });
+    
+    FileSelectorDialog.addEventListener('change', (event)=>{
+        const scriptName = document.getElementById('scriptFileName');
+        const scriptFile = event.target.files[0];
+
+        if(scriptFile.size === 0){
+            console.log("File is empty");
+        }
+
+        if(scriptFile){
+            console.log('File found');
+            scriptFileName = scriptFile.name;
+            let scriptName_without_subname;
+            
+            const dot_position = scriptFile.name.lastIndexOf(".");
+            
+            if(dot_position !== -1){
+                scriptName_without_subname = scriptFile.name.slice(0, dot_position);
+            }
+            
+            scriptName.innerText = `${scriptName_without_subname}`;
+            scriptFile_Handler(scriptFile);
+        }
+        else{
+            scriptName.innerText = "No files be selected.";
+        }
+    });
+
+    function scriptFile_Handler(_scriptFile){
+        const reader = new FileReader();
+        //Read Event
+        reader.onload = (e) => {
+            try{
+                //Get Json file in proper string form
+                script_JSON_object = JSON.parse(e.target.result);
+                console.log(script_JSON_object);
+                
+                //Get the outermost layer
+                // const CaliPoints_Info = Object.keys(script_JSON_object.CaliPoints_Info);
+                const CaliPoints_Info = script_JSON_object.CaliPoints_Info;
+                
+                
+                // const CaliPoints = Object.keys(script_JSON_object);
+                console.log(typeof(CaliPoints_Info));
+                Object.keys(CaliPoints_Info).forEach(cali_point_str =>{ //cali_point's type is string
+                    console.log(`${cali_point_str}:`, CaliPoints_Info[cali_point_str]);
+                    const cali_point_obj = CaliPoints_Info[cali_point_str];
+                    console.log(`${cali_point_str}.enable = ${cali_point_obj.enable}`);
+                    addRow(cali_point_str, cali_point_obj.enable);
+                })
+            }
+            catch(error){
+                console.log(error);
+            }
+        };
+        reader.onerror = (error) =>{
+            console.log("ERROR while read file.");
+        };
+        
+        reader.readAsText(_scriptFile); //This line is needed, it trigger the reader's onload event(the event of Read JSON)
+    }
+
+    function addRow(_cali_point, _selected_flag) {
+        var columnCount = 0;
+        rowCount++;
+        // Get table body
+        const tableBody = document.getElementById('tableContainer');
+
+        // Create new table row (tr)
+        const newRow = document.createElement('tr');
+
+        // 1st column (The order of calibraton points)
+        const orderCell = document.createElement('td');
+        orderCell.textContent = `${rowCount}`;
+        orderCell.setAttribute("rowNum", String(rowCount - 1));
+        orderCell.setAttribute("columnNum", String(columnCount++));
+        newRow.appendChild(orderCell);
+
+        // 2nd column (calibration point's name)
+        const pointCell = document.createElement('td');
+        pointCell.textContent = `${_cali_point}`;
+        pointCell.setAttribute("rowNum", String(rowCount - 1));
+        pointCell.setAttribute("columnNum", String(columnCount++));
+        newRow.appendChild(pointCell);
+        
+        //3rd column (Target equipment in corresponding calibration point)
+        const targetEquipmentCell = document.createElement('td'); //TE_Cell
+        targetEquipmentCell.setAttribute("rowNum", String(rowCount - 1));
+        targetEquipmentCell.setAttribute("columnNum", String(columnCount++));
+        const targetEquipmentSelect = document.createElement('select');
+        targetEquipmentSelect.onchange = function(){optionMapping(this);};
+        targetEquipmentSelect.style.fontSize = '18px';
+        const TE_Cell_option1 = createOptions('16px', 'NO', '尚未選擇');
+        const TE_Cell_option2 = createOptions('16px', 'DWAM', 'DWAM');
+        const TE_Cell_option3 = createOptions('16px', 'DMM', 'DMM');
+        targetEquipmentSelect.appendChild(TE_Cell_option1);
+        targetEquipmentSelect.appendChild(TE_Cell_option2);
+        targetEquipmentSelect.appendChild(TE_Cell_option3);
+        targetEquipmentCell.appendChild(targetEquipmentSelect);
+        newRow.appendChild(targetEquipmentCell);
+
+        // // 第4 column (Target value type in correspoing calibration point)
+        const targetValueTypeCell = document.createElement('td'); //TV_Cell
+        const TV_Cell_selector = document.createElement('select');
+        TV_Cell_selector.style.fontSize = '18px';
+        const noValueOption = createOptions('16px', 'NO', '先選目標儀器');
+        targetValueTypeCell.setAttribute("rowNum", String(rowCount - 1));
+        targetValueTypeCell.setAttribute("columnNum", String(columnCount++));
+        TV_Cell_selector.appendChild(noValueOption);
+        targetValueTypeCell.appendChild(TV_Cell_selector);
+        newRow.appendChild(targetValueTypeCell);
+
+        // 第5 column (選擇: 勾選方塊)
+        const checkboxCell = document.createElement('td');
+        const customCheckbox = document.createElement('label');
+        checkboxCell.setAttribute("rowNum", String(rowCount - 1));
+        checkboxCell.setAttribute("columnNum", String(columnCount++));
+        customCheckbox.className = 'custom-checkbox';
+        if(_selected_flag === false){
+            customCheckbox.innerHTML = `
+            <input type="checkbox" onchange="updateSelectedList()">
+            <span></span>`;    
+        }
+        else{
+            customCheckbox.innerHTML = `
+            <input type="checkbox" onchange="updateSelectedList()" checked>
+            <span></span>`;
+        }
+        
+        checkboxCell.appendChild(customCheckbox);
+        newRow.appendChild(checkboxCell);
+
+        // 將新行添加到表格
+        tableBody.appendChild(newRow);
+
+        // 更新所有行的順序
+        updateOrder();
+    }
+
+    // 初始化 SortableJS 
+    //(If drag operation is needed, uncomment below code)
+    const sortable = new Sortable(document.getElementById('tableContainer'), {
+        animation: 150, // 拖曳時的動畫效果
+        onEnd: updateOrder // 拖曳結束後更新順序
+    });
+
+    // 更新所有行的校正順序
+    function updateOrder() {
+        const rows = document.querySelectorAll('#tableContainer tr');
+        rows.forEach((row, index) => {
+            const orderCell = row.children[0]; // 第一列是校正順序
+            orderCell.textContent = `${index + 1}`;
+        });
+        updateSelectedList();
+    }
+
+    function updateSelectedList() {
+        const selectedItemsList = document.getElementById('selectedItemsList');
+        selectedItemsList.innerHTML = ''; // 清空目前清單
+
+        // 讀取所有已勾選的行並更新清單
+        const rows = document.querySelectorAll('#tableContainer tr');
+        let index = 1;
+        rows.forEach(row => {
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.checked) {
+                const order = row.children[0].textContent;  // 校正順序
+                const point = row.children[1].textContent;  // 校正點
+                const listItem = document.createElement('li');
+                listItem.textContent = `[${index}] 校正點: ${point}`;
+                selectedItemsList.appendChild(listItem);
+
+                index ++;
+            }
+        });
+    }
+
+    function createOptions(_font_size, _value, _showtext){
+        const temp_option = document.createElement('option');
+        temp_option.style.fontSize = _font_size;
+        temp_option.value = _value;
+        temp_option.textContent = _showtext;
+        return temp_option;
+    }
+
+    function getCellByRowAndCol(row, col){
+        return document.querySelector(`td[rowNum="${row}"][columnNum="${col}"]`);
+    }
+
+    function optionMapping(_selectElement){
+        let selectValue = _selectElement.value;
+        const predecessor_cell = _selectElement.closest("td");
+        let row = predecessor_cell.getAttribute("rowNum");
+        let col = predecessor_cell.getAttribute("columnNum");
+        console.log(`(${row}, ${col})`);
+        const corres_target_value_cell = getCellByRowAndCol(parseInt(row), parseInt(col) + 1);
+        console.log(corres_target_value_cell);
+        const corres_target_value_selector = corres_target_value_cell.querySelector("select");
+        console.log(corres_target_value_selector);
+        
+        corres_target_value_selector.innerHTML = "";
+        if(selectValue && optionMap[selectValue]){
+            optionMap[selectValue].forEach(option => {
+                const newOption = createOptions('16px', option, option);
+                corres_target_value_selector.appendChild(newOption);
+            });
+        }
+    }
+    
+    //Goal : Use a POST API to inform the server to save the modified script JSON file
+    function SaveScriptSetting(){
+        const table = document.getElementById("tableContainer");
+        const fixed_row_number = table.rows.length;
+        console.log(fixed_row_number);
+        script_JSON_object["Order"] = []; //Clean the "Order" list
+        
+        //Iterate each row in table
+        for(let i = 0 ; i < fixed_row_number ; i ++){
+            //[1st] get cell data in the current row
+            let row = table.rows[i];
+
+            let cali_point_str_cell = row.cells[1];
+            let targetEquipmentCell = row.cells[2];
+            let targetValueTypeCell = row.cells[3];
+            let checkbox_cell       = row.cells[4];
+
+            //cali_point_str
+            let cali_point_str = cali_point_str_cell.innerText;
+            console.log(`${cali_point_str}, ${typeof(cali_point_str)}`);
+
+            //targetEquipment_selected_str
+            let targetEquipment_select = targetEquipmentCell.querySelector("select");
+            let targetEquipment_selected_str = targetEquipment_select.value;
+            console.log(`${targetEquipment_selected_str}, ${typeof(targetEquipment_selected_str)}`);
+
+            //targetValue_selected_str
+            let targetValueType_select = targetValueTypeCell.querySelector("select");
+            let targetValueType_selected_str = targetValueType_select.value;
+            console.log(`${targetValueType_selected_str}, ${typeof(targetValueType_selected_str)}`);
+            
+            //check_status_bool
+            let checkbox = checkbox_cell.querySelector('input[type="checkbox"]');
+            let check_status_bool = checkbox.checked;
+            console.log(`${check_status_bool}, ${typeof(check_status_bool)}`);
+            
+            //[2nd] : Modify the content in script_JSON_object (This modify only in ram, not yet save to storage)
+            let cali_point_object = script_JSON_object["CaliPoints_Info"][`${cali_point_str}`]; //call by reference
+            if(check_status_bool){//If current CaliPoint is checked
+                if(targetEquipment_selected_str === "NO" || targetValueType_selected_str === "NO"){
+                    alert("尚有勾選的校正點未設定資訊");
+                    return;
+                }
+                //record the order by pushing the step_cmd of the current cali point into
+                //the list script_JSON_object["Order"]
+                let cali_point_corres_cmd = cali_point_object["step_cmd"];
+                console.log(`${cali_point_corres_cmd}, ${typeof(cali_point_corres_cmd)}`);
+                script_JSON_object["Order"].push(cali_point_corres_cmd);
+                console.log(script_JSON_object.Order);
+            }
+            cali_point_object["enable"] = check_status_bool;
+            console.log(`[Handling] ${cali_point_str}`);
+            cali_point_object["Target_Equipment"]["Equipment_Name"] = (targetEquipment_selected_str === "NO") ? "" : targetEquipment_selected_str;
+            cali_point_object["Target_Equipment"]["Value_Type"] = (targetValueType_selected_str === "NO") ? "" : targetValueType_selected_str;
+
+
+        }
+    
+        console.log(script_JSON_object);
+
+        const response = fetch('/api/START_CALI_PROCESS', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body:JSON.stringify({})
+        });
+        // for(let i = 0 ; i < fixed_row_number ; i ++){
+        //     let cali_point_str_cell = getCellByRowAndCol(i, 1);
+        //     let targetEquipmentCell = getCellByRowAndCol(i, 2);
+        //     let targetValueTypeCell = getCellByRowAndCol(i, 3);
+        //     let checkbox_cell = getCellByRowAndCol(i,4);
+            
+        //     //cali_point_str
+        //     let cali_point_str = cali_point_str_cell.innerText;
+        //     console.log(`${cali_point_str}, ${typeof(cali_point_str)}`);
+
+        //     //targetEquipment_selected_str
+        //     let targetEquipment_select = targetEquipmentCell.querySelector("select");
+        //     let targetEquipment_selected_str = targetEquipment_select.value;
+        //     console.log(`${targetEquipment_selected_str}, ${typeof(targetEquipment_selected_str)}`);
+
+        //     //targetValue_selected_str
+        //     let targetValueType_select = targetValueTypeCell.querySelector("select");
+        //     let targetValueType_selected_str = targetValueType_select.value;
+        //     console.log(`${targetValueType_selected_str}, ${typeof(targetValueType_selected_str)}`);
+            
+        //     //check_status_bool
+        //     let checkbox = checkbox_cell.querySelector('input[type="checkbox"]');
+        //     let check_status_bool = checkbox.checked;
+        //     console.log(`${check_status_bool}, ${typeof(check_status_bool)}`);
+            
+        //     //record the order by pushing the step_cmd of the current cali point into
+        //     //the list script_JSON_object["Order"]
+        //     if(check_status_bool){
+        //         let cali_point_corres_cmd = script_JSON_object["CaliPoints_Info"][`${cali_point_str}`]["step_cmd"];
+        //         console.log(`${cali_point_corres_cmd}, ${typeof(cali_point_corres_cmd)}`);
+        //         script_JSON_object["Order"].push(cali_point_corres_cmd);
+        //         console.log(script_JSON_object.Order);
+        //     }
+        //     //Modify the content in script_JSON_object
+
+            
+
+        //     // let checkbox = checkbox_cell.querySelector('input[type="checkbox"]');
+            
+        //     // cali_point_str = cali_point_str_cell.innerText;
+            
+        //     // console.log(cali_point_str);
+        //     // if(checkbox.checked){
+        //     //     console.log("checked");
+        //     // }
+        //     // else{
+        //     //     console.log("none checked");
+        //     // }
+            
+        // }
+
+
+        //2nd : Use a POST API to inform the server to save the modified script JSON file 
+        // try{
+        //     const response = await fetch('/api/save_modified_script',{
+        //         method: 'POST',
+        //         headers:{
+        //             'Content-Type': 'application/json',
+        //         },
+        //         // Send the JSON object within body
+        //         // body: JSON.stringify();
+        //     })
+        // }
+    }
+</script>
+
+</body>
+</html>

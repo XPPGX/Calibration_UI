@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="{{url_for('static', filename='js/Sortable.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/navbar.js')}}"></script>
+    <title>校正治具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-top: 100px; /* 留出空間給固定的navbar */
+            background: linear-gradient(135deg, #f0f8ff, #d3d3d3); /* 漸變背景色 */
+            height: 100%; /* 讓背景覆蓋整個螢幕 */
+        }
+        content {
+            display: flex;
+            padding: 20px;
+            font-size: 18px;
+        }
+
+        .calibration_selection{
+            display: flex;
+            justify-content: flex-start;
+            gap: 20px;
+        }
+        .content-row{
+            margin-left: 2%;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            position: relative;
+            gap:20px;
+            width: 100%;
+        }
+
+        .text-progress{
+            font-size: 30px;
+            font-weight: bold;
+            width: 200px;
+        }
+        .select_btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .table-container {
+            max-width: 60%;
+            margin-left: 5%;
+            margin-top: 100px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            padding: 20px;
+            
+            max-height: 300px;
+            overflow-y: auto;
+
+        }
+
+        table {
+            width: 100%; /* 表格寬度佔滿容器 */
+            border-collapse: collapse;
+            table-layout: fixed; /* 固定列寬，確保每個單元格寬度一致 */
+            font-size: 30px;
+        }
+
+        table th, table td {
+            display: table-cell;
+        }
+
+        thead {
+            background-color: #333;
+            color: #fff;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ccc;
+            width: 15%; /* 確保每個單元格寬度佔畫面的 15% */
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        th {
+            font-weight: bold;
+        }
+
+
+        th:nth-child(1), td:nth-child(1) {
+            width: 15%;
+        }
+        th:nth-child(2), th:nth-child(2){
+            width: 70%;
+        }
+        th:nth-child(3), th:nth-child(3){
+            width: 15%;
+        }
+
+
+        tbody tr:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+
+        
+        tbody tr:nth-child(even) {
+            background-color: #f1f1f1;
+        }
+
+        select{
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+
+        input{
+            width: 90%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        .add-row-button {
+            margin: 20px 0;
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .add-row-button:hover {
+            background-color: #45a049;
+        }
+
+        .custom-checkbox {
+            position: relative;
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+        }
+
+        .custom-checkbox input[type="checkbox"] {
+            position: absolute;
+            width: 0;
+            height: 0;
+            opacity: 0;
+        }
+
+        .custom-checkbox span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            border: 2px solid #007BFF;
+            border-radius: 4px; /* 圓角 */
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox span:after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background-color: #007BFF;
+            border-radius: 2px;
+            transform: scale(0) translate(-50%, -50%);
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox input[type="checkbox"]:checked + span {
+            background-color: #007BFF;
+            border-color: #007BFF;
+        }
+
+        .custom-checkbox input[type="checkbox"]:checked + span:after {
+            transform: scale(1) translate(-50%, -50%);
+        }
+
+        .selected-list {
+            width: 20%;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            height: 300px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .selected-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .selected-list li {
+            padding: 8px;
+            margin: 4px 0;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 1200px) {
+            body{
+                padding-top: 120px;
+            }
+            
+            #content{
+                flex-direction: column;
+            }
+            
+            table td:nth-child(2), /*第2 column*/
+            table td:nth-child(n+4), /*第4 column 後*/
+            table th:nth-child(2),
+            table th:nth-child(n+4) {
+                display: none;
+            }
+
+            tr.clickable-cell{
+                cursor: pointer;
+                background-color: #e0e0e0;
+            }
+
+            
+        }
+    </style>
+    <link rel="stylesheet" href="navbar.css">
+</head>
+<body>
+
+    <div id="navbar">
+        {% include 'navbar.html' %}
+    </div>
+
+    <div id="content">
+        <div class="content-row">
+            <span class="text-progress">排程名稱：</span>
+            <span class="text-progress"></span>
+            <button class="select_btn" id="btn_select_script">選擇腳本</button>
+            <!-- <button class="select_btn" id="btn_select_script">腳本編輯模式</button> -->
+        </div>
+        <div class="calibration_selection">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>序號</th>
+                            <th>校正點</th>
+                            <th>選擇</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableContainer">
+                        <!-- 動態新增的行將出現在這裡 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="selected-list">
+                <h3>已選擇的校正項目</h3>
+                <ul id="selectedItemsList">
+                    <!-- 這裡會顯示已選擇的校正順序與校正點 -->
+                </ul>
+            </div>
+        </div>
+        
+        <button class="add-row-button" id="addRowButton" onclick="addRow()">新增row</button>
+        <button class="add-row-button" id="addRowButton">確定</button>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function(){
+        initNavbar();
+    });
+
+    let rowCount = 0;
+
+    function addRow() {
+        // 獲取 table body
+        const tableBody = document.getElementById('tableContainer');
+
+        // 建立新的表格行 (tr)
+        const newRow = document.createElement('tr');
+
+        // 第一列 (校正順序)
+        const orderCell = document.createElement('td');
+        rowCount++;
+        orderCell.textContent = `${rowCount}`;
+        newRow.appendChild(orderCell);
+
+        // 第二列 (校正點)
+        const pointCell = document.createElement('td');
+        pointCell.textContent = `點 ${rowCount}`;
+        newRow.appendChild(pointCell);
+
+        // 第三列 (選擇: 勾選方塊)
+        const checkboxCell = document.createElement('td');
+        const customCheckbox = document.createElement('label');
+        customCheckbox.className = 'custom-checkbox';
+        customCheckbox.innerHTML = `
+            <input type="checkbox" onchange="updateSelectedList()">
+            <span></span>
+        `;
+        
+        checkboxCell.appendChild(customCheckbox);
+        newRow.appendChild(checkboxCell);
+
+        // 將新行添加到表格
+        tableBody.appendChild(newRow);
+
+        // 更新所有行的順序
+        updateOrder();
+    }
+
+    // 初始化 SortableJS
+    const sortable = new Sortable(document.getElementById('tableContainer'), {
+        animation: 150, // 拖曳時的動畫效果
+        onEnd: updateOrder // 拖曳結束後更新順序
+    });
+
+    // 更新所有行的校正順序
+    function updateOrder() {
+        const rows = document.querySelectorAll('#tableContainer tr');
+        rows.forEach((row, index) => {
+            const orderCell = row.children[0]; // 第一列是校正順序
+            orderCell.textContent = `${index + 1}`;
+        });
+        updateSelectedList();
+    }
+
+    function updateSelectedList() {
+        const selectedItemsList = document.getElementById('selectedItemsList');
+        selectedItemsList.innerHTML = ''; // 清空目前清單
+
+        // 讀取所有已勾選的行並更新清單
+        const rows = document.querySelectorAll('#tableContainer tr');
+        let index = 1;
+        rows.forEach(row => {
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.checked) {
+                const order = row.children[0].textContent;  // 校正順序
+                const point = row.children[1].textContent;  // 校正點
+                const listItem = document.createElement('li');
+                listItem.textContent = `順序: ${index}, 點: ${point}`;
+                selectedItemsList.appendChild(listItem);
+
+                index ++;
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

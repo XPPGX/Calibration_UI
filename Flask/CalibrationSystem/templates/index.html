@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <title>校正治具</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="{{url_for('static', filename='js/navbar.js')}}"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-top: 60px; /* 留出空間給固定的navbar */
+            background: linear-gradient(135deg, #f0f8ff, #d3d3d3); /* 漸變背景色 */
+            height: 100%; /* 讓背景覆蓋整個螢幕 */
+        }
+        /* 每一行設置 */
+        .row {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            position: relative;
+            gap:20px;
+            width: 100%;
+        }
+
+        .text {
+            padding: 5px;
+            color: white;
+        }
+        
+        .text.left{
+            width: 100px;
+            text-align: left;
+        }
+        .text.right{
+            width: 300px;
+            text-align: left;
+            border: 1px solid white;
+        }
+
+        #content{
+            display: flex;
+            padding: 20px;
+            font-size: 18px;
+        }
+        .left-container{
+            display: flex;
+            flex-direction: column;
+            width: 50%;
+            padding-right: 20px;
+        }
+        .top {
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* 增加間距 */
+        }
+        .right-container{
+            width: 40%;
+            padding-left: 15%;
+        }
+
+        /* .row .left{
+            flex: 3;
+        }
+        .row .right{
+            flex: 7;
+        } */
+        
+        button:hover,
+        button.space-hover{
+            background-color: gray;
+        }
+        
+
+        .button_manual_auto {
+            background-color: #5db860;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 25px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            width: 150px;
+            height: 50px;
+        }
+
+        .text_in_container {
+            font-size: 30px;
+            color: black;
+            margin-left: 10px; /* 按鈕和文字之間的距離 */
+        }
+
+        
+        
+        .button_start{
+            position: absolute;
+            top:0;
+            left:calc(50%);
+            background-color: #e4f584;
+            color: black;
+            border: none;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 35px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            width: 300px;
+            height: 100%;
+        }
+
+        .border_with_corner{
+            position: absolute;
+            top: 0;
+            left: calc(50%);
+            margin-left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 300px;
+            height: 50px;
+            border: 1px solid #000000;
+            border-radius: 10px;
+            background-color: #f4f4f4;
+        }
+
+        .text_coarsen_refine{
+            font-weight: bold;
+            font-size: 50px;
+            background-color: #d3d3d3;
+            border: 1px solid #000000;
+            border-radius: 10px;
+        }
+        .separator{
+            border-top: 2px solid #333;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .bottom{
+            display: flex;
+            flex-direction: column;
+            gap:10px;
+        }
+        .text_result{
+            margin-left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 300px;
+            border: 1px solid #000000;
+            border-radius: 10px;
+            background-color: #f4f4f4;
+            font-size: 50px;
+            font-weight: bold;
+        }
+
+        .text_equipment{
+           color: purple;    
+           font-weight: bold;
+        }
+        .row-equipment{
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            position: relative;
+            gap:20px;
+            width: 100%;
+        }
+        .row_equipment_border_with_corner{
+            /* position: absolute;
+            top: 0;
+            left: calc(30%); */
+            margin-left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            border: 1px solid #000000;
+            border-radius: 10px;
+            background-color: #f4f4f4;
+        }
+        .valueText{
+            width: 300px;
+        }
+        .row_equipment_Unit{
+            /* position: absolute;
+            top: 0;
+            left: calc(100%); */
+            margin-left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 10%;
+            height: 100%;
+            font-size: 24px;
+        }
+        .text-progress{
+            font-size: 30px;
+            color: black;
+            margin-left: 10px; /* 按鈕和文字之間的距離 */
+            margin-top: 60px;
+            font-weight: bold;
+        }
+
+        .task-list-container {
+            max-width: 100%;
+            margin-right: 10%;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            height: 300px;
+            width: 90%;
+            overflow-y: auto;
+        }
+
+        .task-item{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .task-item:last-child{
+            border-bottom: none;
+        }
+
+        .task-name{
+            font-size : 25px;
+        }
+
+        .task-status{
+            font-size: 20px;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: #fff;
+        }
+
+        .status-running{
+            background-color: #475569;
+        }
+
+        .status-ok{
+            background-color: #4caf50;
+        }
+
+        .status-fail{
+            background-color: #f44336;
+        }
+
+        .dialog-box {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            width: 300px;
+        }
+
+        /* 設置背景遮罩 */
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .dialog-box .row{
+            display: flex;
+            width: 100%;
+            justify-content: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .dialog-box .left{
+            display: flex;
+            flex: 4;
+            align-items: center;      /* 垂直置中 */
+            height: 100%;
+        }
+
+        .dialog-box .right{
+            display: flex;
+            flex: 6;
+            justify-content: center;  /* 水平置中 */
+            align-items: center;      /* 垂直置中 */
+            height: 100%;
+        }
+
+        .dialog-box button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .dialog-box button:hover {
+            background-color: #45a049;
+        }
+
+        @media (max-width: 1200px) {
+            body{
+                padding-top: 120px;
+            }
+            
+            #content{
+                flex-direction: column;
+            }
+            .left-container, .right-container{
+                width: 100%;
+                padding: 0;
+            }
+            .text_in_container{
+                width: 50%;
+            }
+            .border_with_corner{
+                font-size: 25px;
+            }
+            .button_start{
+                width:50%;
+                height: 100%;
+                font-size: 30px;
+                font-weight:bold;
+            }
+            .text_result{
+                width: 100%;
+            }
+            .row_equipment_border_with_corner{
+                left: calc(50%);
+                width: 30%;
+            }
+            .row_equipment_Unit{
+                left: calc(70%);
+            }
+            .task-list-container{
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="navbar">
+        {% include 'navbar.html' %}
+    </div>
+
+    <div id="content">
+        <div class="left-container">
+            <div class="top">
+                <button class="button_manual_auto">手動</button>
+                <div class="row">
+                    <span class="text_in_container">校正種類</span>
+                    <span class="text_in_container border_with_corner" id="UI_CaliType">-</span>
+                </div>
+                <div class="row">
+                    <span class="text_in_container">校正點</span>
+                    <span class="text_in_container border_with_corner" id="UI_CaliPoint">-</span>
+                </div>
+                <div class="row">
+                    <span class="text_coarsen_refine" id="UI_AdjustMode">粗調</span>
+                    <button class="button_start" id="UI_btnStartSetting">開始設定</button>
+                </div>
+            </div>
+            <div class="separator"></div>
+            <div class="bottom">
+                <span class="text_in_container">測試結果</span>
+                <span class="text_in_container text_result" id="UI_Result">-</span>
+            </div>
+        </div>
+        <div class="right-container">
+            <span class="text_in_container">當前儀器讀值</span>
+            
+            <div class="row-equipment">
+                <span class="text_in_container text_equipment">目標儀器</span>
+                <span class="text_in_container row_equipment_border_with_corner valueText">-</span>
+            </div>
+
+            <div class="row-equipment">
+                <span class="text_in_container text_equipment">校正範圍</span>
+                <span class="text_in_container row_equipment_border_with_corner valueText" id="UI_CaliRange">-</span>
+            </div>
+
+            <div class="row-equipment">
+                <span class="text_in_container text_equipment">當前讀值</span>
+                <span class="text_in_container row_equipment_border_with_corner valueText">-</span>
+            </div>
+
+            <span class="text-progress">測試進度訊息</span>
+            <div id="taskList" class="task-list-container">
+                <!-- 任務列表會動態加入內容 -->
+            </div>
+        </div>
+
+        <div class="dialog-overlay" id="dialog-overlay"></div>
+        <div class="dialog-box" id="dialog-box">
+            <div class="separator">交流電源設定</div>
+            <div class="row">
+                <span class="left" font-size="20px" font-weight="bold">輸出：</span>
+                <span class="right" id="UI_ACS_OUTPUT">-</span>
+            </div>
+            <div class="row">
+                <span class="left">頻率：</span>
+                <span class="right" id="UI_ACS_Freq">-</span>
+            </div>
+            <div class="row">
+                <span class="left">電壓：</span>
+                <span class="right" id="UI_ACS_VOLT">-</span>
+            </div>
+
+            <div class="separator">直流電源設定</div>
+            <div class="row">
+                <span class="left">輸出：</span>
+                <span class="right" id="UI_DCS_OUTPUT">-</span>
+            </div>
+            <div class="row">
+                <span class="left">電流：</span>
+                <span class="right" id="UI_DCS_CURR">-</span>
+            </div>
+            <div class="row">
+                <span class="left">電壓：</span>
+                <span class="right"  id="UI_DCS_VOLT">-</span>
+            </div>
+
+            <div class="separator">直流負載設定</div>
+            <div class="row">
+                <span class="left">啟動</span>
+                <span class="right" id="UI_LOAD_ONOFF">-</span>
+            </div>
+            <div class="row">
+                <span class="left">拉載電流</span>
+                <span class="right" id="UI_LOAD_CURR">-</span>
+            </div>
+            <button id="close-dialog">設定完成</button>
+        </div>
+    </div>
+</body>
+
+
+<script>
+    /**
+     * Cali_Flag :
+     * 0 means calibration has not start yet
+     * 1 means calibration already started
+     * 2 means calibration finish and the values still remain on the screen
+     */
+    var Cali_Flag = 0; 
+
+    /**
+     * UI_stage :
+     * 1 means UI stage 1
+     * 2 means UI stage 2
+     */
+    var UI_stage = 1;
+
+    /**
+     * Cali_High_limit, Cali_Low_limit
+     * == 0 means, there is no need to use range
+     * != 0 means, 
+     */
+    var Cali_High_limit = 0;
+    var Cali_Low_limit = 0;
+
+
+
+    var UI_AdjustMode_new_style = 'big_wood_style';
+    var UI_Result_color = '';
+    var UI_Result_color_map = {
+        "FINISH" : 'green_style',
+        "FAIL" : "red_style"
+    };
+
+
+    document.addEventListener('DOMContentLoaded', function(){
+        initNavbar();
+
+        setInterval(update_ui_stage, 100);
+    });
+    
+    document.addEventListener("keydown", function(event){
+        if(event.key === ' '){ //key == SPACE
+            //prevent rolling page
+            event.preventDefault(); 
+            
+            const button = document.getElementById("UI_btnStartSetting");
+            button.click();
+            button.classList.add('button.space-hover');
+
+            console.log("Space key pressed.\n");
+        }
+    });
+
+    // 關閉彈出框
+    document.getElementById('close-dialog').addEventListener('click', () => {
+        document.getElementById('dialog-box').style.display = 'none';
+        document.getElementById('dialog-overlay').style.display = 'none';
+    });
+    
+    document.getElementById('UI_btnStartSetting').addEventListener('click', async function(){
+        console.log("Btn pressed\n");
+
+        switch(Cali_Flag){
+            case 2:
+                document.getElementById('UI_ModelName').innerText = "-";
+                document.getElementById('UI_CommInterface').innerText = "-";
+                document.getElementById('UI_CaliType').innerText = "-";
+                document.getElementById('UI_CaliPoint').innerText = "-";
+
+                document.getElementById('UI_AdjustMode').innerText = "微調";
+                if(document.getElementById('UI_AdjustMode_div').classList.contains(UI_AdjustMode_new_style)){
+                    document.getElementById('UI_AdjustMode_div').classList.remove(UI_AdjustMode_new_style);
+                }
+
+                document.getElementById('UI_Result').innerText = "-";
+                if(document.getElementById('UI_Result').classList.contains(UI_Result_color)){
+                    document.getElementById('UI_Result').classList.remove(UI_Result_color);
+                }
+        
+            case 0:
+                Cali_Flag = 1;
+                UI_stage = 1;
+                
+                const response = await fetch('/api/START_CALI_PROCESS', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body:JSON.stringify({})
+                });
+                break;
+            default:
+                break;
+        }
+    })
+
+
+    async function update_ui_stage(){
+        if(Cali_Flag == 1){
+            switch(UI_stage){
+                case 1:
+                {
+                    console.log("1st\n")
+                    const response_1 = await fetch('/api/update_ui_1st_stage')
+                    if(!response_1.ok){
+                        throw new Error("1st network response was not ok");
+                    }
+                    const res1_data = await response_1.json();
+                    
+                    const UI_ModelName = document.getElementById('UI_ModelName');
+                    const UI_CommInterface = document.getElementById('UI_CommInterface');
+                    const UI_AdjustMode = document.getElementById('UI_AdjustMode');
+                    const UI_Result = document.getElementById('UI_Result');
+
+                    UI_ModelName.innerText       = res1_data.WebAPI_ModelName;
+                    UI_CommInterface.innerText   = res1_data.WebAPI_CommInterface;
+                    UI_AdjustMode.innerText      = res1_data.WebAPI_AdjustMode;
+                    UI_Result.innerText          = res1_data.WebAPI_CaliStatus;
+                    
+                    // Add new condition when judge if it's time to go to UI_stage2.
+                    if((UI_CommInterface.innerText != "-") && (UI_ModelName.innerText.length > 6)){
+                        setTimeout(() => {
+                            UI_stage = 2;
+                        }, 0);
+                    }
+                    
+                    if(UI_Result.innerText == "FAIL"){
+                        UI_Result_color = UI_Result_color_map[UI_Result.innerText];
+                        UI_Result.classList.add(UI_Result_color);
+                        setTimeout(() => {
+                            UI_stage = 3;
+                            Cali_Flag = 2;
+                        });
+                    }
+
+                    break;
+                }
+                case 2:
+                {
+                    console.log("2nd\n")
+                    const response_2 = await fetch('/api/update_ui_2nd_stage');
+                    if(!response_2.ok){
+                        throw new Error("2nd network response was not ok");
+                    }
+                    const res2_data = await response_2.json();
+
+                    
+                    const UI_CaliType = document.getElementById('UI_CaliType');
+                    const UI_CaliPoint = document.getElementById('UI_CaliPoint');
+                    const UI_AdjustMode = document.getElementById('UI_AdjustMode');
+                    const UI_Result = document.getElementById('UI_Result');
+                    
+                    old_UI_CaliType_str = UI_CaliType.innerText;
+                    old_UI_CaliPoint_str = UI_CaliPoint.innerText;
+                    
+                    UI_CaliType.innerText        = res2_data.WebAPI_CaliType;
+                    UI_CaliPoint.innerText      = res2_data.WebAPI_CaliPoint;
+                    UI_AdjustMode.innerText      = res2_data.WebAPI_AdjustMode;
+                    UI_Result.innerText          = res2_data.WebAPI_CaliStatus;
+                    
+
+                    let new_UI_CaliType_str = res2_data.WebAPI_CaliType;
+                    let new_UI_CaliPoint_str = res2_data.WebAPI_CaliPoint;
+
+                    
+                    
+                    
+                    //When switch to next calibration point
+                    if((old_UI_CaliType_str != "-" && old_UI_CaliPoint_str != new_UI_CaliPoint_str) ||
+                    (old_UI_CaliType_str != new_UI_CaliType_str)){
+                        //send GET API to get Calibration range
+                        console.log('3rd\n');
+                        const response_3 = await fetch('/api/cali_range');
+                        if(!response_3.ok){
+                            throw new Error("3rd network reponse was not ok");
+                        }
+                        const res3_data = await response_3.json();
+                        Cali_High_limit = res3_data.WebAPI_Cali_High_limit;
+                        Cali_Low_limit = res3_data.WebAPI_Cali_Low_limit;
+                        
+
+                        //send GET API to get equipment setting values.
+                        console.log('4th\n');
+                        const response_4 = await fetch('/api/equipment_setting');
+                        if(!response_4.ok){
+                            throw new Error("4th network response was not ok");
+                        }
+                        const res4_data = await response_4.json();
+                        let ACS_ONOFF = res4_data.WebAPI_ACS_ONOFF;
+                        let ACF = res4_data.WebAPI_ACF_value;
+                        let ACV = res4_data.WebAPI_ACV_value;
+                        let DCS_ONOFF = res4_data.WebAPI_DCS_ONOFF;
+                        let DCI = res4_data.WebAPI_DCI_value;
+                        let DCV = res4_data.WebAPI_DCV_value;
+                        let LOAD_ONOFF = res4_data.WebAPI_LOAD_ONOFF;
+                        let LOAD_CURR = res4_data.WebAPI_LOAD_CURR;
+                        
+                        //Showcase the setting the user need to do
+                        document.getElementById('dialog-box').style.display = 'block';
+                        document.getElementById('dialog-overlay').style.display = 'block';
+                        
+                    //      [Bug] If the cali point encountered with non-ordered sequence, the following process may show the wrong cali point on the web site
+                    //      Add a task that is consisted of calibration type and point.
+                    //      addTask(`${document.getElementById('UI_CaliType').innerText},  ${document.getElementById('UI_CaliPoint').innerText}`);
+                    //      //modify the status of last taskItem to be OK
+                    //      const tasks = document.querySelectorAll('.task-item');
+                    //      if(tasks.length > 1){
+                    //         const lastTask = tasks[tasks.length - 2];
+                    //         const lastTaskStatus = lastTask.querySelector('.task-status');
+                    //         lastTaskStatus.textContent = 'OK';
+                    //         lastTaskStatus.className = 'task-status status-ok';
+                    //     }
+                    }
+                    
+
+
+                    //Change the color of adjustment after pressing space key
+                    if(UI_AdjustMode.innerText == "粗調"){
+                        UI_AdjustMode.classList.add(UI_AdjustMode_new_style);
+                    }
+                    else if(UI_AdjustMode.innerText == "微調"){
+                        if(UI_AdjustMode.classList.contains(UI_AdjustMode_new_style)){
+                            UI_AdjustMode.classList.remove(UI_AdjustMode_new_style);
+                        }
+                    }
+
+                    
+                    if(UI_Result.innerText == "FINISH" || UI_Result.innerText == "FAIL"){
+                        UI_Result_color = UI_Result_color_map[UI_Result.innerText];
+                        UI_Result.classList.add(UI_Result_color);
+                        setTimeout(() => {
+                            UI_stage = 3;
+                            Cali_Flag = 2;
+                        });
+
+                        // const tasks = document.querySelectorAll('.task-item');
+                        // if(tasks.length > 1){
+                        //     const lastTask = tasks[tasks.length - 1];
+                        //     const lastTaskStatus = lastTask.querySelector('.task-status');
+                        //     lastTaskStatus.textContent = 'FAIL';
+                        //     lastTaskStatus.className = 'task-status status-fail';
+                        // }
+                    }
+                    
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+    }
+
+</script>
+
+</html>

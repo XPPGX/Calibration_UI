@@ -1,0 +1,134 @@
+.navbar {
+    max-width: 95%;
+    background-color: #333;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    margin: 0 auto;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    height: 60px; /* 預設高度 */
+}
+
+.navbar .brand {
+    font-size: 20px;
+    font-weight: bold;
+    white-space: nowrap; /* 防止文字換行 */
+    overflow: hidden; /* 隱藏超出部分 */
+    text-overflow: ellipsis; /* 加上省略號 */
+}
+
+.menu {
+    display: flex;
+    flex-direction: row;
+    font-size: 20px;
+    font-weight: bold;
+    z-index: 1002;
+}
+
+.menu a {
+    text-decoration: none;
+    color: black;
+    padding: 10px 15px;
+    margin: 0 5px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    background-color: white;
+}
+
+.menu a:hover {
+    background-color: #555;
+}
+
+.hamburger {
+    cursor: pointer;
+    width: 30px;
+    height: 25px;
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 1001;
+}
+
+.hamburger div {
+    background-color: white;
+    height: 3px;
+    border-radius: 2px;
+    transition: all 0.3s;
+}
+
+.row {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    gap:20px;
+    width: 100%;
+}
+
+.right{
+    height: 25px;
+}
+
+.text {
+    padding: 5px;
+    color: white;
+}
+
+.text.left{
+    width: 100px;
+    text-align: left;
+}
+.text.right{
+    width: 300px;
+    text-align: left;
+    border: 1px solid white;
+}
+
+/* .row .left{
+    flex: 3;
+}
+.row .right{
+    flex: 7;
+} */
+
+@media (max-width: 1200px) {
+    .navbar {
+        height: 90px;
+        padding: 20px 20px;
+    }
+    .menu {
+        display: none; /* 預設隱藏導航 */
+        flex-direction: column;
+        background-color: #333;
+        position: absolute;
+        top: 60px; /* 在navbar下方 */
+        left: 0;
+        width: 100%;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease-in-out; /* 平滑過渡效果 */
+        transform: translateY(-100%); /* 預設移出視窗 */
+    }
+
+    .menu.open {
+        display: flex;
+        transform: translateY(0); /* 顯示時移動到正常位置 */
+    }
+
+    .hamburger {
+        display: flex;
+    }
+
+    .brand {
+        font-size: 18px; /* 調整字體大小以適應小螢幕 */
+    }
+
+    
+}

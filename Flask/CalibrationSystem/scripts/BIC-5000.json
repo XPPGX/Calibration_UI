@@ -1,0 +1,62 @@
+{
+    "CaliPoints_Info":{
+        "ACI_DC_Offset_單相":{
+            "enable": false,
+            "step_cmd": "0x0001",
+            "Target_Equipment":{
+                "Equipment_Name" : "",
+                "Value_Type" : ""
+            }
+        },
+        "DCV+空載電流":{
+            "enable": false,
+            "step_cmd": "0x0002",
+            "Target_Equipment":{
+                "Equipment_Name" : "",
+                "Value_Type" : ""
+            }
+        },
+        "DC正向滿載電流":{  
+            "enable": false,
+            "step_cmd": "0x0003",
+            "Target_Equipment":{
+                "Equipment_Name" : "",
+                "Value_Type" : ""
+            }
+        },
+        "DC反向滿載電流":{
+            "enable": false,
+            "step_cmd": "0x0004",
+            "Target_Equipment":{
+                "Equipment_Name" : "",
+                "Value_Type" : ""
+            }
+        },
+        "ACV":{
+            "enable": false,
+            "step_cmd": "0x0005",
+            "Target_Equipment":{
+                "Equipment_Name" : "",
+                "Value_Type" : ""
+            }
+        },
+        "ACI輕載電流(2A)":{
+            "enable": false,
+            "step_cmd": "0x0006",
+            "Target_Equipment":{
+                "Equipment_Name" : "",
+                "Value_Type" : ""
+            }
+        },
+        
+        "ACI重載電流(22A)":{
+            "enable": false,
+            "step_cmd": "0x0007",
+            "Target_Equipment":{
+                "Equipment_Name" : "",
+                "Value_Type" : ""
+            }
+        }
+    },
+    "Order": []
+}

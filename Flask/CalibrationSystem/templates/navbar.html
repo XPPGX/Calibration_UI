@@ -1,0 +1,26 @@
+<link rel="stylesheet" href="{{url_for('static', filename='css/navbar.css')}}">
+
+<div class="navbar">
+    <div class="menu" id="menu">
+        <a href="{{url_for('index')}}">首頁</a>
+        <a href="{{url_for('equipment_detect')}}">儀器設定</a>
+        <a href="{{url_for('Calibration_schedule')}}">校正排程</a>
+    </div>
+    <div class="hamburger" id="hamburger">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <div class="brand">
+        <div class="row">
+            <div class="text left">機型名稱</div>
+            <div class="text right" id="UI_ModelName"></div>
+        </div>
+        <div class="row">
+            <div class="text left">通訊介面</div>
+            <div class="text right" id="UI_CommInterface"></div>
+        </div>
+    </div>
+</div>
+
+

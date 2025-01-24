@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校正治具</title>
+    <style>
+        .text-progress{
+            margin-top: 20px;
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .table-container {
+            max-width: 100%;
+            margin-top: 100px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%; /* 表格寬度佔滿容器 */
+            border-collapse: collapse;
+            table-layout: fixed; /* 固定列寬，確保每個單元格寬度一致 */
+        }
+
+        table th, table td {
+            display: table-cell;
+        }
+
+        thead {
+            background-color: #333;
+            color: #fff;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ccc;
+            width: 15%; /* 確保每個單元格寬度佔畫面的 15% */
+        }
+
+        th {
+            font-weight: bold;
+        }
+
+        tbody tr:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f1f1f1;
+        }
+
+        select{
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+
+        input{
+            width: 90%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+
+        .add-row-button {
+            margin: 20px 0;
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .add-row-button:hover {
+            background-color: #45a049;
+        }
+
+        .button-container{
+            display: flex; /* 使用 flexbox 排列 */
+            justify-content: space-between; /* 讓按鈕水平分散對齊 */
+            gap: 20px; /* 按鈕之間的間距 */
+            width: 100%; /* 讓容器寬度佔滿父元素 */
+        }
+
+        @media (max-width: 1200px) {
+            body{
+                padding-top: 120px;
+            }
+
+            table td:nth-child(2), /*第2 column*/
+            table td:nth-child(n+4), /*第4 column 後*/
+            table th:nth-child(2),
+            table th:nth-child(n+4) {
+                display: none;
+            }
+
+            /* 僅在手機屏幕下，行可點擊 */
+            tr.clickable-row{
+                cursor: pointer;
+                background-color: #e0e0e0; /* 改變背景顏色，讓點擊區域更明顯 */
+            }
+
+            .dialog-box {
+                display: none;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: white;
+                padding: 20px;
+                border: 1px solid #ccc;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+            }
+
+            .dialog-box button {
+                background-color: #4caf50;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                cursor: pointer;
+            }
+
+            .dialog-box button:hover {
+                background-color: #45a049;
+            }
+
+            /* 設置背景遮罩 */
+            .dialog-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="navbar"></div><!--navbar會插入到這裡-->
+<script>
+    // 動態加載 navbar.html
+    document.addEventListener('DOMContentLoaded', () => {
+            fetch('./navbar/navbar.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('navbar').innerHTML = data;
+                    import('./navbar/navbar.js').then(module => {
+                        module.initNavbar();
+                    })
+                })
+                .catch(error => console.error('Error loading navbar:', error));
+        });
+</script>
+
+<div id="content">
+    <span class="text-progress">當前儀器狀態</span>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>儀器類型</th>
+                    <th>代號</th>
+                    <th>儀器名稱</th>
+                    <th>介面</th>
+                    <th>通訊協定</th>
+                    <th>連接狀況</th>
+                </tr>
+            </thead>
+            <tbody id="tableContainer">
+                <!-- 動態新增的行將出現在這裡 -->
+            </tbody>
+        </table>
+        <div class="dialog-overlay" id="dialog-overlay"></div>
+        <div class="dialog-box" id="dialog-box">
+            <h2>詳細資訊</h2>
+            <p>這裡顯示更多內容...</p>
+            <button id="close-dialog">關閉</button>
+        </div>
+
+        <button class="add-row-button" id="addRowButton">搜尋新儀器</button>
+    </div>
+    <div class="button-container">
+        <button class="add-row-button" id="btn_Rescan">重新掃描設備</button>
+        <button class="add-row-button" id="btn_SaveSetting">儲存設定</button>
+    </div>
+</div>
+
+<script>
+    document.getElementById('addRowButton').addEventListener('click', () => {
+            addRow(['None', 'ACS', 'DMM', 'DCL', 'DCS'], '', '', '', '', ''); // 示例數值和選單選項
+        });
+
+    function addRow(options, value, unit) {
+        const tableContainer = document.getElementById('tableContainer');
+
+        // 創建一個新的 row
+        const row = document.createElement('tr');
+        row.classList.add('clickable-row'); // 添加 clickable-row 類別
+
+        // 創建下拉選單欄位
+        const selectCell = document.createElement('td');
+        const select = document.createElement('select');
+        options.forEach(option => {
+            const opt = document.createElement('option');
+            opt.value = option;
+            opt.textContent = option;
+            select.appendChild(opt);
+        });
+        selectCell.appendChild(select);
+
+        // 創建可輸入文字的欄位
+        const inputCell = document.createElement('td');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = value;
+        inputCell.appendChild(input);
+
+        // 創建單位欄位
+        const unitCell_1 = document.createElement('td');
+        unitCell_1.textContent = unit;
+
+        const unitCell_2 = document.createElement('td');
+        unitCell_2.textContent = unit;
+
+        const unitCell_3 = document.createElement('td');
+        unitCell_3.textContent = unit;
+
+        const unitCell_4 = document.createElement('td');
+        unitCell_4.textContent = unit;
+
+        // 將欄位加入行
+        row.appendChild(selectCell);
+        row.appendChild(inputCell);
+        row.appendChild(unitCell_1);
+        row.appendChild(unitCell_2);
+        row.appendChild(unitCell_3);
+        row.appendChild(unitCell_4);
+
+        // 將行加入表格容器
+        tableContainer.appendChild(row);
+    }
+
+    // 使行可點擊並彈出對話框 (僅在手機視圖下啟用)
+    function setupRowClickListener() {
+        const rows = document.querySelectorAll('.clickable-row');
+        rows.forEach(row => {
+            row.addEventListener('click', () => {
+                // 顯示彈出框和背景遮罩
+                document.getElementById('dialog-box').style.display = 'block';
+                document.getElementById('dialog-overlay').style.display = 'block';
+            });
+        });
+    }
+
+    // 檢查視窗尺寸並設置事件
+    window.addEventListener('resize', () => {
+        if (window.innerWidth <= 1200) {
+            setupRowClickListener(); // 手機視圖下設置行點擊事件
+        } else {
+            // 大屏幕不設置點擊事件
+            const rows = document.querySelectorAll('.clickable-row');
+            rows.forEach(row => row.removeEventListener('click', setupRowClickListener));
+        }
+    });
+
+    // 初始執行
+    if (window.innerWidth <= 1200) {
+        setupRowClickListener(); // 手機視圖下設置行點擊事件
+    }
+
+    // 關閉彈出框
+    document.getElementById('close-dialog').addEventListener('click', () => {
+        document.getElementById('dialog-box').style.display = 'none';
+        document.getElementById('dialog-overlay').style.display = 'none';
+    });
+</script>
+
+</body>
+</html>

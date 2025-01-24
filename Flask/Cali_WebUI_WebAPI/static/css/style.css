@@ -119,6 +119,8 @@ body {
 	margin: 5px 0;
 }
 
+
+/* Below : task_list css class */
 .task-list-container {
 	max-width: 600px;
 	margin: 0 auto;
@@ -181,6 +183,7 @@ body {
 	border-radius: 5px;
 	cursor: pointer;
 }
+/* Upon : task_list css class */
 
 .hidden{
 	display: none;
@@ -531,6 +534,9 @@ body {
 	font-size: 30px;
 }
 
+
+
+/* menu css class */
 @media (max-width:992px) {
 	.gjs-grid-row {
 		flex-direction: column;
@@ -560,4 +566,63 @@ body {
 	.navbar-menu-link {
 		display: block;
 	}
+}
+
+
+/* Table's css class */
+table {
+    width: 80%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 添加陰影 */
+	font-size: 30px;
+}
+
+table, th, td {
+    border: 1px solid #ddd; /* 淺灰色邊框 */
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    font-family: 'Arial', sans-serif;
+    color: #333; /* 字體顏色 */
+	font-size: 30px;
+}
+
+th {
+    background-color: #4CAF50; /* 頭部背景顏色 */
+    color: white;
+    font-size: 18px;
+}
+
+/* 偶數行背景顏色 */
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+/* 懸停行效果 */
+tr:hover {
+    background-color: #ddd;
+}
+
+/* 讓每行每兩個數值換行 */
+.row-values {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.row-values div {
+    width: 50%; /* 每個 div 占 50% 寬度 */
+    padding: 5px;
+    font-size: 25px;
+    color: #555;
+}
+
+/* 設置表格外觀 */
+table {
+    border-spacing: 0;
+    width: 80%;
+    max-width: 800px;
 }
