@@ -584,10 +584,10 @@
     
         console.log(script_JSON_object);
 
-        const response = fetch('/api/START_CALI_PROCESS', {
+        const response = fetch('/api/save_modified_script', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body:JSON.stringify({})
+            body:JSON.stringify(script_JSON_object)
         });
         // for(let i = 0 ; i < fixed_row_number ; i ++){
         //     let cali_point_str_cell = getCellByRowAndCol(i, 1);

@@ -304,9 +304,13 @@ def handle_update_ui_2nd_stage():
                     'WebAPI_CaliStatus'     : f'{CaliStatus_str}'})
     return data
 
-# @app.route('/api/save_modified_script', methods=['POST'])
-# def handle_save_modified_script():
-    
+@app.route('/api/save_modified_script', methods=['POST'])
+def handle_save_modified_script():
+    if request.is_json:
+        data = request.get_json()
+
+        print(data)
+        return jsonify({"message" : "JSON received", "data": data}), 200
 
 ##################################################
 # main
