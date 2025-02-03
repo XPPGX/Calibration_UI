@@ -53,8 +53,7 @@ CaliStatus_str      = "-"
 
 ScriptName_str = ""
 CurrentScript_dict = {}
-
-
+ScriptFolderPath_str = "./scripts"
 
 
 app = Flask(__name__)
@@ -242,8 +241,6 @@ def GetScript():
 
 
 
-
-
 ##################################################
 # Web page routes
 ##################################################
@@ -304,13 +301,50 @@ def handle_update_ui_2nd_stage():
                     'WebAPI_CaliStatus'     : f'{CaliStatus_str}'})
     return data
 
+@app.route('/api/get_script_file_names', methods=['GET'])
+def handle_get_script_file_names():
+    files = os.listdir(ScriptFolderPath_str)
+    print(files)
+    return jsonify({"files" : files})
+
+@app.route('/api/get_script_file_content', methods=['POST'])
+def handle_get_script_file_content():
+    try:
+        Rcv_Json_data = request.get_json()
+        script_File_Name = Rcv_Json_data.get('name', "File_Not_Found")
+        print(script_File_Name)
+        
+        script_File_Path = os.path.join(ScriptFolderPath_str, script_File_Name)
+        print(script_File_Path)
+
+        with open(script_File_Path, 'r') as file:
+            print("OPEN!!")
+            return json.load(file), 200
+    
+    except Exception as e:
+        return jsonify({'error' : str(e)}), 400
+    
+
 @app.route('/api/save_modified_script', methods=['POST'])
 def handle_save_modified_script():
     if request.is_json:
-        data = request.get_json()
+        Rcv_Json_data = request.get_json()
+        # Get script_File_Name
+        script_File_Name = Rcv_Json_data.get('script_File_Name', "File_Not_Found")
+        print(script_File_Name)
+        
+        #Get script_File_Path
+        script_File_Path = os.path.join(ScriptFolderPath_str, script_File_Name)
+        print(script_File_Path)
 
-        print(data)
-        return jsonify({"message" : "JSON received", "data": data}), 200
+        with open(script_File_Path + "test", "w", encoding="utf-8") as f:
+            json.dump(Rcv_Json_data, f, indent=4, ensure_ascii=False)
+
+        print(Rcv_Json_data)
+        
+        return jsonify({"message" : "JSON received", "data": Rcv_Json_data}), 200
+
+
 
 ##################################################
 # main
@@ -318,3 +352,4 @@ def handle_save_modified_script():
 if __name__ == '__main__':
     app.run(debug=True)
     # GetScript()
+    # ListScriptFiles()

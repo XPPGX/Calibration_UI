@@ -1,0 +1,66 @@
+{
+    "CaliPoints_Info": {
+        "ACI_DC_Offset_單相": {
+            "Target_Equipment": {
+                "Equipment_Name": "DMM",
+                "Value_Type": "I (Shunt V)"
+            },
+            "enable": true,
+            "step_cmd": "0x0001"
+        },
+        "ACI輕載電流(2A)": {
+            "Target_Equipment": {
+                "Equipment_Name": "DMM",
+                "Value_Type": "I (Shunt V)"
+            },
+            "enable": true,
+            "step_cmd": "0x0006"
+        },
+        "ACI重載電流(22A)": {
+            "Target_Equipment": {
+                "Equipment_Name": "DWAM",
+                "Value_Type": "DCV"
+            },
+            "enable": true,
+            "step_cmd": "0x0007"
+        },
+        "ACV": {
+            "Target_Equipment": {
+                "Equipment_Name": "",
+                "Value_Type": ""
+            },
+            "enable": false,
+            "step_cmd": "0x0005"
+        },
+        "DCV+空載電流": {
+            "Target_Equipment": {
+                "Equipment_Name": "",
+                "Value_Type": ""
+            },
+            "enable": false,
+            "step_cmd": "0x0002"
+        },
+        "DC反向滿載電流": {
+            "Target_Equipment": {
+                "Equipment_Name": "",
+                "Value_Type": ""
+            },
+            "enable": false,
+            "step_cmd": "0x0004"
+        },
+        "DC正向滿載電流": {
+            "Target_Equipment": {
+                "Equipment_Name": "",
+                "Value_Type": ""
+            },
+            "enable": false,
+            "step_cmd": "0x0003"
+        }
+    },
+    "Order": [
+        "0x0007",
+        "0x0001",
+        "0x0006"
+    ],
+    "script_File_Name": "BIC-5000.json"
+}
