@@ -350,12 +350,12 @@ def handle_scan_usb_devices():
     Device_info_to_Web_dict = {}
     EQ_type = ""
     for info in DeviceInfo_str_list:
-        split_info_str_list = info.split(",")
-
-        if(split_info_str_list[0] == "Chroma 51101-8"):
+        if(info == "Chroma 51101-8"):
             EQ_type = devices_JSON["Chroma 51101-8"]["EQ_TYPE"]
             Device_info_to_Web_dict["Chroma 51101-8"] = EQ_type
         else:
+            split_info_str_list = info.split(",")
+            
             mfr_name = split_info_str_list[0]
             print(mfr_name)
             model_name = split_info_str_list[1]
