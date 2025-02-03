@@ -1,0 +1,1 @@
+gcc -fPIC -shared -o Auto_Search_Device.so Auto_Search_Device.c -lwiringPi -pthread

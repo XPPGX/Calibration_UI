@@ -365,10 +365,10 @@
                 <button id="close-dialog_fine_setting">確定</button>
             </div>
 
-            <button class="add-row-button" id="addRowButton">搜尋新儀器</button>
+            <!-- <button class="add-row-button" id="addRowButton">搜尋新儀器</button> -->
         </div>
         <div class="button-container">
-            <button class="add-row-button" id="btn_Rescan">重新掃描設備</button>
+            <button class="add-row-button" id="btn_Rescan">搜尋儀器</button>
             <!--btn_Config only show when there are some equipments need additional setting-->
             <button class="add-row-button btn_config_disappr" id="btn_Config">設定</button> 
             <button class="add-row-button" id="btn_SaveSetting">儲存設定</button>
@@ -380,8 +380,14 @@
         initNavbar();
     });
 
-    document.getElementById('addRowButton').addEventListener('click', () => {
-            addRow(['None', 'ACS', 'DMM', 'DCL', 'DCS', 'DWAM'], '', 'chroma-51101-8', '', '', ''); // 示例數值和選單選項
+    // Use a POST API to inform server to call cali's function "scan_usb_devices"
+    document.getElementById('btn_Rescan').addEventListener('click', async () => {
+        const response1 = await fetch('/api/scan_usb_devices', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body:JSON.stringify({})
+        });
+        // addRow(['None', 'ACS', 'DMM', 'DCL', 'DCS', 'DWAM'], '', '', '', '', ''); // 示例數值和選單選項
     });
 
     function addRow(type, code_name, equip_name, port, protocol, connection) {

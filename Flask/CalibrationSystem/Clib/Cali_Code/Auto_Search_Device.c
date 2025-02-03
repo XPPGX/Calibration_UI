@@ -195,7 +195,8 @@ void scan_usb_devices() {
             } else {
                 printf("Failed to communicate with: %s\n", device_path);
             }
-        } else if (strncmp(entry->d_name, "ttyUSB", 6) == 0) {
+        }
+        else if (strncmp(entry->d_name, "ttyUSB", 6) == 0) {
             snprintf(device_path, sizeof(device_path), "/dev/%s", entry->d_name);
             printf("Device: %s\n", device_path);
             if (Device_ttyUSB(device_path) == 0) {

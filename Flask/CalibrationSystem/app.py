@@ -58,7 +58,7 @@ ScriptFolderPath_str = "./scripts"
 
 app = Flask(__name__)
 c_lib_Cali = ctypes.CDLL('./Clib/Cali.so')
-
+c_lib_Search_Device = ctypes.CDLL('./Clib/Cali_Code/Auto_Search_Device.so')
 ##################################################
 # C_lib parameters declaration
 ##################################################
@@ -85,6 +85,12 @@ c_lib_Cali.Start_Cali_thread.restype            = None
 
 c_lib_Cali.Stop_Cali_thread.argtypes            = []
 c_lib_Cali.Stop_Cali_thread.restype             = None
+
+c_lib_Search_Device.scan_usb_devices.argtypes   = []
+c_lib_Search_Device.scan_usb_devices.restype    = None
+
+c_lib_Search_Device.Get_Device_information      = []
+c_lib_Search_Device.Get_Device_information      = ctypes.c_char_p
 
 ##################################################
 # Server Functions
@@ -301,6 +307,22 @@ def handle_update_ui_2nd_stage():
                     'WebAPI_CaliStatus'     : f'{CaliStatus_str}'})
     return data
 
+@app.route('/api/scan_usb_devices', methods=['POST'])
+def handle_scan_usb_devices():
+    thread = Thread(target = c_lib_Search_Device.scan_usb_devices)
+    thread.daemon = True
+    thread.start()
+
+    DeviceName_str = ""
+    while(1):
+        DeviceName_ptr = c_lib_Search_Device.Get_Device_information()
+        DeviceName_str = DeviceName_ptr.decode("utf-8")
+        if(DeviceName_str != ""):
+            break
+    thread.join(timeout=5)
+    print(DeviceName_str)
+    
+
 @app.route('/api/get_script_file_names', methods=['GET'])
 def handle_get_script_file_names():
     files = os.listdir(ScriptFolderPath_str)
@@ -324,7 +346,6 @@ def handle_get_script_file_content():
     except Exception as e:
         return jsonify({'error' : str(e)}), 400
     
-
 @app.route('/api/save_modified_script', methods=['POST'])
 def handle_save_modified_script():
     if request.is_json:
@@ -349,6 +370,6 @@ def handle_save_modified_script():
 # main
 ##################################################
 if __name__ == '__main__':
-    # app.run(debug=True)
-    GetScript()
+    app.run(debug=True)
+    # GetScript()
     # ListScriptFiles()
