@@ -54,7 +54,7 @@ CaliStatus_str      = "-"
 ScriptName_str = ""
 CurrentScript_dict = {}
 ScriptFolderPath_str = "./scripts"
-
+DEVICE_JSON_FILE_PATH = "./DeviceConfig/DeviceConfig.json"
 
 app = Flask(__name__)
 c_lib_Cali = ctypes.CDLL('./Clib/Cali.so')
@@ -313,19 +313,61 @@ def handle_scan_usb_devices():
     thread.start()
     thread.join(timeout=5)
     
+    DeviceInfo_str_list = []
+    DeviceInfo_str = ""
     DeviceName_str = ""
+    
     count = 0
+    
+    #Get all devices' information from the Cali procedure
     while(1):
-        DeviceName_ptr = c_lib_Search_Device.Get_Device_information(count)
-        DeviceName_str = DeviceName_ptr.decode("utf-8")
-        print(DeviceName_str)
+        DeviceInfo_ptr = c_lib_Search_Device.Get_Device_information(count)
+        DeviceInfo_str = DeviceInfo_ptr.decode("utf-8")
+            
+        if(DeviceInfo_str == "Invalid Index" or DeviceInfo_str == ""):
+            break
+        else:
+            DeviceInfo_str_list.append(DeviceName_str)
 
         count = count + 1
+    
+    
+    #Load local deviceConfig json file
+    try:
+        with open(DEVICE_JSON_FILE_PATH, "r", encoding="utf-8") as file:
+            devices_JSON = json.load(file)
+    except FileNotFoundError:
+        print("Error : JSON file not found")
+    except json.JSONDecodeError:
+        print("Error : Json format error")
 
-        if(DeviceName_str == "Invalid Index"):
-            break
+    print(devices_JSON)
 
-    return jsonify({})
+    #Parse the devices' information
+    #Device_info_to_Web_dict = {
+        # "Chroma ATE, 66202" : "DWAM"
+    #}
+    Device_info_to_Web_dict = {}
+    EQ_type = ""
+    for info in DeviceInfo_str_list:
+        split_info_str_list = info.split(",")
+
+        if(split_info_str_list[0] == "Chroma 51101-8"):
+            EQ_type = devices_JSON["Chroma 51101-8"]["EQ_TYPE"]
+            Device_info_to_Web_dict["Chroma 51101-8"] = EQ_type
+        else:
+            mfr_name = split_info_str_list[0]
+            model_name = split_info_str_list[1]
+            serial_num = split_info_str_list[2]
+            EQ_type = devices_JSON[mfr_name][model_name]["EQ_TYPE"]
+
+            devices_JSON[mfr_name][model_name]["SerialNumber"].append(serial_num)
+
+            Device_info_to_Web_dict[mfr_name + "," + model_name]["EQ_TYPE"] = EQ_type
+            Device_info_to_Web_dict[mfr_name + "," + model_name]["Serial_Num"] = serial_num
+    
+    print(Device_info_to_Web_dict)
+    return jsonify(Device_info_to_Web_dict)
     
 
 @app.route('/api/get_script_file_names', methods=['GET'])
