@@ -230,8 +230,8 @@ def GetScript():
     try:
         with open(ScriptFilePath_str, "r") as script:
             CurrentScript_dict = json.load(script)
-            # print(CurrentScript_dict)
-            # print(CurrentScript_dict["ACV"]["enable"])
+            print(CurrentScript_dict)
+            print(CurrentScript_dict["ACV"]["enable"])
 
     except FileNotFoundError:
         print(f"[Error] File '{ScriptFilePath_str}' is not exist")
@@ -345,11 +345,10 @@ def handle_save_modified_script():
         return jsonify({"message" : "JSON received", "data": Rcv_Json_data}), 200
 
 
-
 ##################################################
 # main
 ##################################################
 if __name__ == '__main__':
-    app.run(debug=True)
-    # GetScript()
+    # app.run(debug=True)
+    GetScript()
     # ListScriptFiles()
