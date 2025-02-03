@@ -86,12 +86,11 @@ c_lib_Cali.Start_Cali_thread.restype            = None
 c_lib_Cali.Stop_Cali_thread.argtypes            = []
 c_lib_Cali.Stop_Cali_thread.restype             = None
 
-c_lib_Search_Device.scan_usb_devices.argtypes   = []
-c_lib_Search_Device.scan_usb_devices.restype    = None
+c_lib_Search_Device.scan_usb_devices.argtypes           = []
+c_lib_Search_Device.scan_usb_devices.restype            = None
 
-c_lib_Search_Device.Get_Device_information      = []
-c_lib_Search_Device.Get_Device_information      = ctypes.c_char_p
-
+c_lib_Search_Device.Get_Device_information.argtypes     = [ctypes.c_int]
+c_lib_Search_Device.Get_Device_information.restype      = ctypes.c_char_p
 ##################################################
 # Server Functions
 ##################################################
@@ -312,15 +311,21 @@ def handle_scan_usb_devices():
     thread = Thread(target = c_lib_Search_Device.scan_usb_devices)
     thread.daemon = True
     thread.start()
-
-    DeviceName_str = ""
-    while(1):
-        DeviceName_ptr = c_lib_Search_Device.Get_Device_information()
-        DeviceName_str = DeviceName_ptr.decode("utf-8")
-        if(DeviceName_str != ""):
-            break
     thread.join(timeout=5)
-    print(DeviceName_str)
+    
+    DeviceName_str = ""
+    count = 0
+    while(1):
+        DeviceName_ptr = c_lib_Search_Device.Get_Device_information(count)
+        DeviceName_str = DeviceName_ptr.decode("utf-8")
+        print(DeviceName_str)
+
+        count = count + 1
+
+        if(DeviceName_str == "Invalid Index"):
+            break
+
+    return jsonify({})
     
 
 @app.route('/api/get_script_file_names', methods=['GET'])

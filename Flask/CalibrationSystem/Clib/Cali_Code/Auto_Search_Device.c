@@ -3,7 +3,8 @@
 #include "Auto_Search_Device.h"
 
 /* Parameter -----------------------------------------------*/
-char Device_information[256];
+char Device_information[MAX_DEVICES][MAX_NAME_LENGTH];
+int device_count = 0;
 
 //--------------Meter 51101-8---------------//
 int init_serial(const char *portname) {
@@ -55,6 +56,17 @@ unsigned int CRC(unsigned char *start_of_packet, unsigned char *end_of_packet) {
     } while (char_ptr++ < end_of_packet);
 
     return crc;
+}
+
+void Store_Device_information(const char *device_name) {
+    if (device_count < MAX_DEVICES) {
+        strncpy(Device_information[device_count], device_name, MAX_NAME_LENGTH - 1);
+        Device_information[device_count][MAX_NAME_LENGTH - 1] = '\0';
+        printf("Stored Device[%d]: %s\n", device_count, Device_information[device_count]);
+        device_count++;
+    } else {
+        printf("Device storage full! Cannot store more devices.\n");
+    }
 }
 
 int send_packet(int fd, unsigned char *packet, int length) {
@@ -129,8 +141,7 @@ void Read_Packet(int fd, unsigned char command, char param, int response_length)
 
     if((response[1] == 0x50) && (response[2] == 0xA5))
     {
-        strcpy(Device_information, "Chroma 51101-8");
-        printf("Response from device: %s\n", Device_information);
+        Store_Device_information("Chroma 51101-8");
     }
 }
 //--------------Meter 51101-8---------------//
@@ -150,12 +161,13 @@ int Device_usbtmc(const char *device_path) {
     usleep(20000); // wait respone
 
     // read respone
-    ssize_t bytes_read = read(fd, Device_information, sizeof(Device_information) - 1);
+    ssize_t bytes_read = read(fd, Device_information[device_count], MAX_NAME_LENGTH - 1);
     close(fd);
 
     if (bytes_read > 0) {
-        Device_information[bytes_read] = '\0';
-        printf("Response from device: %s\n", Device_information);
+        Device_information[device_count][bytes_read] = '\0';
+        printf("Response from device: %s\n", Device_information[device_count]);
+        device_count++;
     }
     return 0;
 }
@@ -168,7 +180,7 @@ int Device_ttyUSB(const char *device_path) {
     }
 
     printf("\nRead Existence:\n");
-    Read_Packet(fd, 0x10, 0x00, 0);
+    Read_Packet(fd, GET_DEVICE_ADDRESS, 0x00, 0);
 
     close(fd);
     return 0;
@@ -195,8 +207,7 @@ void scan_usb_devices() {
             } else {
                 printf("Failed to communicate with: %s\n", device_path);
             }
-        }
-        else if (strncmp(entry->d_name, "ttyUSB", 6) == 0) {
+        } else if (strncmp(entry->d_name, "ttyUSB", 6) == 0) {
             snprintf(device_path, sizeof(device_path), "/dev/%s", entry->d_name);
             printf("Device: %s\n", device_path);
             if (Device_ttyUSB(device_path) == 0) {
@@ -209,8 +220,12 @@ void scan_usb_devices() {
     closedir(dir);
 }
 
-char* Get_Device_information(void) {
-    return Device_information;
+const char* Get_Device_information(int index) {
+    if (index >= 0 && index < device_count) {
+        return Device_information[index];
+    } else {
+        return "Invalid Index";
+    }
 }
 
 /*
@@ -218,6 +233,8 @@ int main() {
     printf("Starting USB device scan...\n");
     scan_usb_devices();
     printf("Scan complete.\n");
+    Get_Device_information(0);
+    Get_Device_information(1);
     return 0;
 }
 */
