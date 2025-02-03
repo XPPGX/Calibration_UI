@@ -357,6 +357,7 @@ def handle_scan_usb_devices():
             Device_info_to_Web_dict["Chroma 51101-8"] = EQ_type
         else:
             mfr_name = split_info_str_list[0]
+            print(mfr_name)
             model_name = split_info_str_list[1]
             serial_num = split_info_str_list[2]
             EQ_type = devices_JSON[mfr_name][model_name]["EQ_TYPE"]
