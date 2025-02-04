@@ -2,26 +2,26 @@
     "CaliPoints_Info": {
         "ACI_DC_Offset_單相": {
             "Target_Equipment": {
-                "Equipment_Name": "DMM",
-                "Value_Type": "I (Shunt V)"
+                "Equipment_Name": "DWAM1",
+                "Value_Type": "DCI"
             },
             "enable": true,
             "step_cmd": "0x0001"
         },
         "ACI輕載電流(2A)": {
             "Target_Equipment": {
-                "Equipment_Name": "DMM",
-                "Value_Type": "I (Shunt V)"
+                "Equipment_Name": "DMM1",
+                "Value_Type": "Ch1"
             },
             "enable": true,
             "step_cmd": "0x0006"
         },
         "ACI重載電流(22A)": {
             "Target_Equipment": {
-                "Equipment_Name": "DWAM",
-                "Value_Type": "DCV"
+                "Equipment_Name": "",
+                "Value_Type": ""
             },
-            "enable": true,
+            "enable": false,
             "step_cmd": "0x0007"
         },
         "ACV": {
@@ -58,9 +58,9 @@
         }
     },
     "Order": [
-        "0x0007",
+        "0x0006",
         "0x0001",
-        "0x0006"
+        "0xffff"
     ],
     "script_File_Name": "BIC-5000.json"
 }

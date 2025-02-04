@@ -216,8 +216,6 @@
                 cursor: pointer;
                 background-color: #e0e0e0;
             }
-
-            
         }
     </style>
 </head>
@@ -237,9 +235,8 @@
                         <th>儀器類型</th>
                         <th>代號</th>
                         <th>儀器名稱</th>
+                        <th>序列號</th>
                         <th>介面</th>
-                        <th>通訊協定</th>
-                        <th>連接狀況</th>
                     </tr>
                 </thead>
                 <tbody id="tableContainer">
@@ -258,11 +255,7 @@
                     <span class="right">d</span>
                 </div>
                 <div class="row">
-                    <span class="left">通訊協定：</span>
-                    <span class="right">d</span>
-                </div>
-                <div class="row">
-                    <span class="left">連接狀況：</span>
+                    <span class="left">序列號：</span>
                     <span class="right">d</span>
                 </div>
                 <button id="close-dialog">確定</button>
@@ -376,9 +369,70 @@
     </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function(){
+    document.addEventListener('DOMContentLoaded', async function(){
         initNavbar();
+        load_current_devices_setting();
     });
+
+    async function load_current_devices_setting(){
+        const response = await fetch('/api/get_devices_setting');
+        if(!response.ok){
+            throw new Error("0th network response was not ok");
+        }
+        const res_data = await response.json();
+        if(Object.keys(res_data).length === 0){
+            console.log("Current device setting is empty");
+        }
+        else{
+            console.log(res_data);
+            Object.keys(res_data).forEach(key => {
+                if(key == "Fine-setting"){
+                    // console.log(res_data["Fine-setting"]["Chroma 51101-8"]);
+                    for(let channel in res_data["Fine-setting"]["Chroma 51101-8"]){
+                        const tmp_object = res_data["Fine-setting"]["Chroma 51101-8"][channel];
+                        console.log(channel);
+                        console.log(tmp_object);
+                        
+                        let Channel_Mode_ID = "Ch" + tmp_object["Ch"].toString() + "_Mode";
+                        let data_target_ID = "input-" + tmp_object["Ch"].toString();
+                        let Channel_Mode = document.getElementById(Channel_Mode_ID);
+                        let data_target = document.getElementById(data_target_ID);
+                        
+                        //show default value
+                        Channel_Mode.value = tmp_object["Value_Type"];
+                        data_target.value = tmp_object["Shunt_Value"];
+                        // console.log(`${channel.Ch}, ${channel.Shunt_Value}, ${channel.Value_Type}`);
+                    }
+
+
+                    // for(let i = 0 ; i < 8 ; i ++){
+                    //     let Channel_Mode_ID = "Ch" + i.toString() + "_Mode";
+                    //     let data_target_ID = "input-" + i.toString();
+                    //     let Channel_Mode = document.getElementById(Channel_Mode_ID);
+                    //     let data_target = document.getElementById(data_target_ID);
+                        
+                    //     console.log(Channel_Mode_ID + "," + data_target_ID + " : " + Channel_Mode.value + ", " + data_target.value);
+                        
+                    //     if(Channel_Mode.value != "NO"){
+                    //         let tmp_json_object = {};
+                    //         tmp_json_object["Ch"] = i.toString();
+                    //         tmp_json_object["Value_Type"] = Channel_Mode.value;
+                    //         tmp_json_object["Shunt_Value"] = data_target.value;
+
+                    //         devices_setting["Fine-setting"]["Chroma 51101-8"].push(tmp_json_object);
+                    //     }
+                    // }
+                }
+                else{
+                    let tmp_code_name = key;
+                    let tmp_type = res_data[key]["Type"];
+                    let tmp_model_name = res_data[key]["ModelName"];
+                    let tmp_serial_num = res_data[key]["SerialNum"];
+                    addRow(tmp_type, tmp_code_name, tmp_model_name, tmp_serial_num, '');
+                }
+            })
+        }
+    }
 
     // Use a POST API to inform server to call cali's function "scan_usb_devices"
     document.getElementById('btn_Rescan').addEventListener('click', async () => {
@@ -387,32 +441,48 @@
             headers: {'Content-Type': 'application/json'},
             body:JSON.stringify({})
         });
-        // addRow(['None', 'ACS', 'DMM', 'DCL', 'DCS', 'DWAM'], '', '', '', '', ''); // 示例數值和選單選項
+        const res1_data = await response1.json();
+        console.log(res1_data);
+        
+        for(let model_name in res1_data){
+            let type = res1_data[model_name]["EQ_TYPE"];
+            let serial_num = res1_data[model_name]["Serial_Num"];
+            addRow(type, '', model_name, serial_num, '', '');
+        }
+
     });
 
-    function addRow(type, code_name, equip_name, port, protocol, connection) {
+    function addRow(type, code_name, equip_name, serial_num, protocol, port) {
         const tableContainer = document.getElementById('tableContainer');
 
         // 創建一個新的 row
         const row = document.createElement('tr');
         
 
-        // 創建下拉選單欄位
-        const selectCell = document.createElement('td');
-        const select = document.createElement('select');
-        type.forEach(option => {
-            const opt = document.createElement('option');
-            opt.code_name = option;
-            opt.textContent = option;
-            select.appendChild(opt);
-        });
-        selectCell.appendChild(select);
+        // row(cell_1) Type_Cell
+        const EQ_type_Cell = document.createElement('td');
+        EQ_type_Cell.textContent = type;
+        
+        // const selectCell = document.createElement('td');
+        // const select = document.createElement('select');
+        // type.forEach(option => {
+        //     const opt = document.createElement('option');
+        //     opt.code_name = option;
+        //     opt.textContent = option;
+        //     select.appendChild(opt);
+        // });
+        // selectCell.appendChild(select);
 
         // 創建可輸入文字的欄位
         const inputCell = document.createElement('td');
         const input = document.createElement('input');
         input.type = 'text';
-        input.value = code_name;
+        if(code_name == ''){
+            //Any detection has occured, Devices_setting is empty
+        }
+        else{
+            input.value = code_name;
+        }
         inputCell.appendChild(input);
 
         // 創建單位欄位
@@ -420,21 +490,17 @@
         unitCell_1.textContent = equip_name;
 
         const unitCell_2 = document.createElement('td');
-        unitCell_2.textContent = port;
+        unitCell_2.textContent = serial_num;
 
         const unitCell_3 = document.createElement('td');
-        unitCell_3.textContent = protocol;
-
-        const unitCell_4 = document.createElement('td');
-        unitCell_4.textContent = connection;
+        unitCell_3.textContent = port;
 
         // 將欄位加入行
-        row.appendChild(selectCell);
+        row.appendChild(EQ_type_Cell);
         row.appendChild(inputCell);
         row.appendChild(unitCell_1);
         row.appendChild(unitCell_2);
         row.appendChild(unitCell_3);
-        row.appendChild(unitCell_4);
 
 
         // 將行加入表格容器
@@ -456,7 +522,7 @@
     
     function need_fine_setting(equip_name){
         switch(equip_name){
-            case 'chroma-51101-8':
+            case 'Chroma 51101-8':
                 document.getElementById('btn_Config').style.display = 'block';
                 break;
 
@@ -475,6 +541,7 @@
     document.getElementById('close-dialog_fine_setting').addEventListener('click', () => {
         document.getElementById('dialog-overlay_fine_setting').style.display = 'none';
         document.getElementById('dialog-box_fine_setting').style.display = 'none';
+        
     })
 
 
@@ -491,15 +558,95 @@
             if(event.target.classList.contains('dialog-row-arrange_m_select')){
                 const targetId = event.target.getAttribute('data-target');
                 const inputField = document.getElementById(targetId);
-                
-                if(event.target.value != 'NO'){
+                inputField.value = "";
+
+                if(event.target.value == 'I'){
                     inputField.disabled = false;
                 }
                 else{
                     inputField.disabled = true;
                 }
+
             }
         })
+    })
+
+    // Send following things:
+    // 1. devices information with codename(user setting)
+    // 2. fine-setting
+    document.getElementById('btn_SaveSetting').addEventListener('click', async () => {
+        console.log("save btn!");
+        const table = document.getElementById("tableContainer");
+        const fixed_row_number = table.rows.length;
+        console.log(fixed_row_number);
+        
+
+        let devices_setting = {}
+        //Collect devices information
+        for(let i = 0 ; i < fixed_row_number ; i ++){
+            //[1st] get cell data in the current row
+            let row = table.rows[i];
+
+            let Type_cell = row.cells[0];
+            let CodeName_cell = row.cells[1];
+            let ModelName_cell = row.cells[2];
+            let SerialNum_cell = row.cells[3];
+            let Port_cell = row.cells[4];
+
+            //Type_cell_str
+            let type_cell_str = Type_cell.textContent;
+            console.log(type_cell_str);
+            
+            //CodeName_cell_str
+            let inputField = CodeName_cell.querySelector("input");
+            let CodeName_cell_str = inputField.value;
+            console.log(CodeName_cell_str);
+
+            //ModelName_cell_str
+            let ModelName_cell_str = ModelName_cell.textContent;
+            console.log(ModelName_cell_str);
+
+            //SerialNum_cell_str
+            let SerialNum_cell_str = SerialNum_cell.textContent;
+            console.log(SerialNum_cell_str);
+
+            devices_setting[CodeName_cell_str] = {};
+            devices_setting[CodeName_cell_str]["Type"] = type_cell_str;
+            devices_setting[CodeName_cell_str]["ModelName"] = ModelName_cell_str;
+            devices_setting[CodeName_cell_str]["SerialNum"] = SerialNum_cell_str;
+        }
+        
+        console.log(devices_setting);
+        // id="Ch0_Mode" data-target="input-0"
+        devices_setting["Fine-setting"] = {};
+        devices_setting["Fine-setting"]["Chroma 51101-8"] = [];
+        for(let i = 0 ; i < 8 ; i ++){
+            let Channel_Mode_ID = "Ch" + i.toString() + "_Mode";
+            let data_target_ID = "input-" + i.toString();
+            
+            let Channel_Mode = document.getElementById(Channel_Mode_ID);
+            let data_target = document.getElementById(data_target_ID);
+
+            console.log(Channel_Mode_ID + "," + data_target_ID + " : " + Channel_Mode.value + ", " + data_target.value);
+            
+            if(Channel_Mode.value != "NO"){
+                let tmp_json_object = {};
+                tmp_json_object["Ch"] = i.toString();
+                tmp_json_object["Value_Type"] = Channel_Mode.value;
+                tmp_json_object["Shunt_Value"] = data_target.value;
+
+                devices_setting["Fine-setting"]["Chroma 51101-8"].push(tmp_json_object);
+            }
+        }
+        
+        console.log(devices_setting);
+
+        const response1 = fetch('/api/save_devices_setting', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body:JSON.stringify(devices_setting)
+        });
+
     })
 </script>
 

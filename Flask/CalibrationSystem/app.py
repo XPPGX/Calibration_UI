@@ -53,8 +53,11 @@ CaliStatus_str      = "-"
 
 ScriptName_str = ""
 CurrentScript_dict = {}
+
 ScriptFolderPath_str = "./scripts"
 DEVICE_JSON_FILE_PATH = "./DeviceConfig/DeviceConfig.json"
+
+Devices_setting = {}
 
 app = Flask(__name__)
 c_lib_Cali = ctypes.CDLL('./Clib/Cali.so')
@@ -311,14 +314,14 @@ def handle_scan_usb_devices():
     thread = Thread(target = c_lib_Search_Device.scan_usb_devices)
     thread.daemon = True
     thread.start()
-    thread.join(timeout=5)
+    thread.join(timeout=10)
     
-    DeviceInfo_str_list = []
+    
     DeviceInfo_str = ""
     DeviceName_str = ""
     
     count = 0
-    
+    DeviceInfo_str_list = []
     #Get all devices' information from the Cali procedure
     while(1):
         DeviceInfo_ptr = c_lib_Search_Device.Get_Device_information(count)
@@ -327,10 +330,17 @@ def handle_scan_usb_devices():
         if(DeviceInfo_str == "Invalid Index" or DeviceInfo_str == ""):
             break
         else:
-            DeviceInfo_str_list.append(DeviceName_str)
+            DeviceInfo_str_list.append(DeviceInfo_str)
 
         count = count + 1
-    
+
+    #debug
+    # device_info_1 = "Chroma 51101-8"
+    # device_info_2 = "Chroma ATE,66202,662025001432,1.70"
+    # DeviceInfo_str_list.append(device_info_1)
+    # DeviceInfo_str_list.append(device_info_2)
+    # print(DeviceInfo_str_list)
+    ######
     
     #Load local deviceConfig json file
     try:
@@ -352,24 +362,40 @@ def handle_scan_usb_devices():
     for info in DeviceInfo_str_list:
         if(info == "Chroma 51101-8"):
             EQ_type = devices_JSON["Chroma 51101-8"]["EQ_TYPE"]
-            Device_info_to_Web_dict["Chroma 51101-8"] = EQ_type
+            Device_info_to_Web_dict["Chroma 51101-8"] = {}
+            Device_info_to_Web_dict["Chroma 51101-8"]["EQ_TYPE"] = EQ_type
+            Device_info_to_Web_dict["Chroma 51101-8"]["Serial_Num"] = ""
         else:
             split_info_str_list = info.split(",")
-            
+
             mfr_name = split_info_str_list[0]
             print(mfr_name)
             model_name = split_info_str_list[1]
+            print(model_name)
             serial_num = split_info_str_list[2]
+            print(serial_num)
             EQ_type = devices_JSON[mfr_name][model_name]["EQ_TYPE"]
 
             devices_JSON[mfr_name][model_name]["SerialNumber"].append(serial_num)
 
+            Device_info_to_Web_dict[mfr_name + "," + model_name] = {}
             Device_info_to_Web_dict[mfr_name + "," + model_name]["EQ_TYPE"] = EQ_type
             Device_info_to_Web_dict[mfr_name + "," + model_name]["Serial_Num"] = serial_num
     
     print(Device_info_to_Web_dict)
-    return jsonify(Device_info_to_Web_dict)
+    return jsonify(Device_info_to_Web_dict), 200
     
+@app.route('/api/save_devices_setting', methods=['POST'])
+def handle_save_devices_setting():
+    global Devices_setting
+    try:
+        Devices_setting = request.get_json()
+        json_str = json.dumps(Devices_setting, indent=4)
+        print(json_str)
+        return jsonify({}), 200
+    
+    except Exception as e:
+        return jsonify({'error' : str(e)}), 400
 
 @app.route('/api/get_script_file_names', methods=['GET'])
 def handle_get_script_file_names():
@@ -413,6 +439,12 @@ def handle_save_modified_script():
         
         return jsonify({"message" : "JSON received", "data": Rcv_Json_data}), 200
 
+@app.route('/api/get_devices_setting', methods=['GET'])
+def handle_get_devices_setting():
+    print("HELLO")
+    json_str = json.dumps(Devices_setting, indent=4)
+    print(json_str)
+    return jsonify(Devices_setting), 200
 
 ##################################################
 # main

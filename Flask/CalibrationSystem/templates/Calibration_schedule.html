@@ -382,13 +382,16 @@
     let scriptFileName; //the script file name with subname transmit to server to save the modified script.
     let script_JSON_object;
 
-    const optionMap = {
-        DWAM : ["Irms", "Vrms", "W", "DCV"],
-        DMM : ["V", "I (Shunt V)"]
+    let device_options = [];
+    
+    let optionMap = {
+        DWAM : ["Irms", "Vrms", "DCI", "DCV"],
+        DMM : []
     };
     
     const FileSelectorDialog = document.getElementById('fileInput');
 
+    //Menu bar
     document.addEventListener('DOMContentLoaded', function(){
         initNavbar();
     });
@@ -414,6 +417,35 @@
         const files = res_data.files;
         console.log(files);
         
+
+        //Get devices setting, put all CodeName in 3th column selection 
+        const response_1 = await fetch('/api/get_devices_setting');
+        if(!response_1.ok){
+            throw new Error("1st network response was not ok");
+        }
+        const Devices_setting = await response_1.json();
+        console.log(Devices_setting);
+        
+        Object.keys(Devices_setting).forEach(key => {
+            if(key == "Fine-setting"){
+                // console.log(typeof(Devices_setting["Fine-setting"]["Chroma 51101-8"]));
+                // Devices_setting["Fine-setting"]["Chroma 51101-8"].forEach(channel => {
+                //     console.log(`${channel.Ch}, ${channel.Value_Type}, ${channel.Shunt_Value}`);
+                // })
+                Devices_setting["Fine-setting"]["Chroma 51101-8"].forEach(channel => {
+                    optionMap.DMM.push(`Ch${channel.Ch}`);
+                })
+            }
+            else{
+                let device = key;
+                device_options.push(device);
+                console.log(key);
+            }
+        })
+        console.log(device_options);
+        console.log(optionMap.DMM);
+        
+
         files.forEach(file => {
             console.log(file);
             
@@ -429,7 +461,7 @@
             filebutton.textContent = tmp_scriptFileName;
             // filebutton.textContent = tmp_scriptFileName_swithoutSubName;
             filebutton.Full_scriptFileName = tmp_scriptFileName;
-
+            filebutton.without_scriptFileName = tmp_scriptFileName_withoutSubName;
             filebutton.classList.add('select_btn_Dialog');
             
             file_selector.appendChild(filebutton);
@@ -437,27 +469,27 @@
 
             //Click scriptFileName to select it (post an WEBAPI to inform server)
             filebutton.addEventListener('click', async () => {
-                const response_1 = await fetch('/api/get_script_file_content', {
+                const response_2 = await fetch('/api/get_script_file_content', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body:JSON.stringify({'name' : file})
                 });
                 
-                const res1_data = await response_1.json();
-                script_JSON_object = res1_data;
+                const res2_data = await response_2.json();
+                script_JSON_object = res2_data;
                 console.log(script_JSON_object);
 
                 scriptFileName = filebutton.Full_scriptFileName;
-
+                document.getElementById('scriptFileName').innerText = filebutton.without_scriptFileName;
                 const CaliPoints_Info = script_JSON_object.CaliPoints_Info;
                 
-                // const CaliPoints = Object.keys(script_JSON_object);
+                //Fill the table with the content in the selected script
                 console.log(typeof(CaliPoints_Info));
                 Object.keys(CaliPoints_Info).forEach(cali_point_str =>{ //cali_point's type is string
                     console.log(`${cali_point_str}:`, CaliPoints_Info[cali_point_str]);
                     const cali_point_obj = CaliPoints_Info[cali_point_str];
                     console.log(`${cali_point_str}.enable = ${cali_point_obj.enable}`);
-                    addRow(cali_point_str, cali_point_obj.enable);
+                    addRow(cali_point_str, device_options, cali_point_obj.enable, Devices_setting);
                 })
 
 
@@ -540,7 +572,7 @@
         reader.readAsText(_scriptFile); //This line is needed, it trigger the reader's onload event(the event of Read JSON)
     }
 
-    function addRow(_cali_point, _selected_flag) {
+    function addRow(_cali_point, _device_options, _selected_flag, _Devices_setting) {
         var columnCount = 0;
         rowCount++;
         // Get table body
@@ -568,14 +600,16 @@
         targetEquipmentCell.setAttribute("rowNum", String(rowCount - 1));
         targetEquipmentCell.setAttribute("columnNum", String(columnCount++));
         const targetEquipmentSelect = document.createElement('select');
-        targetEquipmentSelect.onchange = function(){optionMapping(this);};
+        targetEquipmentSelect.onchange = function(){optionMapping(this, _Devices_setting);};
         targetEquipmentSelect.style.fontSize = '18px';
         const TE_Cell_option1 = createOptions('16px', 'NO', '尚未選擇');
-        const TE_Cell_option2 = createOptions('16px', 'DWAM', 'DWAM');
-        const TE_Cell_option3 = createOptions('16px', 'DMM', 'DMM');
         targetEquipmentSelect.appendChild(TE_Cell_option1);
-        targetEquipmentSelect.appendChild(TE_Cell_option2);
-        targetEquipmentSelect.appendChild(TE_Cell_option3);
+        _device_options.forEach(device => {
+            const temp_value = _Devices_setting[device]["Type"];
+            console.log(temp_value);
+            const temp_option = createOptions('16px', device, device);
+            targetEquipmentSelect.appendChild(temp_option);
+        })
         targetEquipmentCell.appendChild(targetEquipmentSelect);
         newRow.appendChild(targetEquipmentCell);
 
@@ -667,8 +701,19 @@
         return document.querySelector(`td[rowNum="${row}"][columnNum="${col}"]`);
     }
 
-    function optionMapping(_selectElement){
+    function optionMapping(_selectElement, _Devices_setting){
+        //get the selectValue (is the CodeName of device)
         let selectValue = _selectElement.value;
+        
+        //get the selectValue_Type (is the device type of corresponding CodeName)
+        let selectValue_Type;
+        if(selectValue != "NO"){
+            selectValue_Type = _Devices_setting[selectValue].Type;
+            console.log("HI");
+            console.log(selectValue_Type);
+        }
+        
+        //get the cell corres_target_value_selector element
         const predecessor_cell = _selectElement.closest("td");
         let row = predecessor_cell.getAttribute("rowNum");
         let col = predecessor_cell.getAttribute("columnNum");
@@ -679,8 +724,8 @@
         console.log(corres_target_value_selector);
         
         corres_target_value_selector.innerHTML = "";
-        if(selectValue && optionMap[selectValue]){
-            optionMap[selectValue].forEach(option => {
+        if(selectValue_Type && optionMap[selectValue_Type]){
+            optionMap[selectValue_Type].forEach(option => {
                 const newOption = createOptions('16px', option, option);
                 corres_target_value_selector.appendChild(newOption);
             });
@@ -744,6 +789,8 @@
             
 
         }
+        //add the termination cali_point cmd("0xffff")
+        script_JSON_object["Order"].push("0xffff");
         
         script_JSON_object.script_File_Name = scriptFileName;
         console.log(script_JSON_object);
