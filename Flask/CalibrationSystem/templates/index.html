@@ -368,7 +368,7 @@
     <div id="content">
         <div class="left-container">
             <div class="top">
-                <button class="button_manual_auto">手動</button>
+                <button class="button_manual_auto" id="test_btn">手動</button>
                 <div class="row">
                     <span class="text_in_container">校正種類</span>
                     <span class="text_in_container border_with_corner" id="UI_CaliType">-</span>
@@ -508,6 +508,16 @@
 
             console.log("Space key pressed.\n");
         }
+    });
+
+    document.getElementById('test_btn').addEventListener('click', async () => {
+        console.log("GET_API");
+        const response = await fetch('/api/testing');
+        if(!response.ok){
+            throw new Error("network response was not ok");
+        }
+        const res_data = await response.json();
+        console.log(res_data);
     });
 
     // 關閉彈出框

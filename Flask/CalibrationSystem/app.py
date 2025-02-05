@@ -446,6 +446,17 @@ def handle_get_devices_setting():
     print(json_str)
     return jsonify(Devices_setting), 200
 
+
+##################################################
+# debug
+##################################################
+@app.route('/api/testing', methods=['GET'])
+def handle_testing():
+    json_Data = {}
+    json_Data["msg"] = "hello"
+    print(json_Data)
+    return jsonify(json_Data), 200
+
 ##################################################
 # main
 ##################################################

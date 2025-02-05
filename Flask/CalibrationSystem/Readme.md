@@ -10,6 +10,11 @@ $./compile.sh
 $./compile1.sh
 ```
 
+### Install virtaulenv
+```
+$pip install virtualenv
+```
+
 ### Create a virtual environment name "test" 
 ```
 $virtualenv test
@@ -17,12 +22,13 @@ $virtualenv test
 
 ### Activate the "test" virtual environment
 ```
-$cd {path to test/test/bin}
+$cd {the path to /test/bin}
 ```
-> Where {content} represents the "content" should be modified according to where the "test" folder located.
+> Where {content} represents the "content" should be modified according to the path where the "/test/bin" folder located.
 ```
 $source activate
 ```
+> Then, you will see the "(test)" before your command line in terminal.
 
 ### Install all the libraries the project needed
 > Find requirements.txt, and use following command
