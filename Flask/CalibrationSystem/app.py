@@ -405,7 +405,7 @@ def GetScript():
     
     global Cali_point_step_cmd_mapping
 
-    ModelName_str = "BIC-5000-24" #DEBUG
+    # ModelName_str = "BIC-5000-24" #DEBUG
 
     # Get the part of ModelName_str before the last "-"
     ScriptName_str, _, _ = ModelName_str.rpartition("-")
@@ -436,7 +436,7 @@ def getModelName():
     ModelName_str = ModelName_ptr.decode("utf-8")
     
     #DEBUG
-    ModelName_str = "BIC-5000-24"
+    # ModelName_str = "BIC-5000-24"
     return ModelName_str
 
 def getCommInterface():
@@ -444,7 +444,7 @@ def getCommInterface():
     CommInterface_str = comm_type_cases.get(CommInterface_uint8, "-") #"-" is default value
     
     #DEBUG
-    CommInterface_str = "CANBUS"
+    # CommInterface_str = "CANBUS"
     return CommInterface_str
 
 def getAdjustMode():
@@ -452,7 +452,7 @@ def getAdjustMode():
     AdjustMode_str = adjust_mode_cases[AdjustMode_uint8]
 
     #DEBUG
-    AdjustMode_str = adjust_mode_cases[0]
+    # AdjustMode_str = adjust_mode_cases[0]
     return AdjustMode_str
 
 def getCaliStatus():
@@ -460,7 +460,7 @@ def getCaliStatus():
     CaliStatus_str = cali_status_cases[CaliStatus_uint8]
     
     #DEBUG
-    CaliStatus_str = cali_status_cases[0]
+    # CaliStatus_str = cali_status_cases[0]
     return CaliStatus_str
 
 def SendCaliPointInfo(_step_cmd, _scaling_factor, _target, _usb_port):
