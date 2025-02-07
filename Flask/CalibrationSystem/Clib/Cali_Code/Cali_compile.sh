@@ -1,0 +1,1 @@
+gcc -shared -o Cali.so -fPIC Cali.c Canbus.c Modbus.c Auto_Search_Device.c Chroma_meter_51101_8.c -lwiringPi -pthread

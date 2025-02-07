@@ -7,14 +7,15 @@
 #define MOD_TX_ID 0xC0
 
 //----------------MOD Command-----------------//
-#define MOD_CALIBRATION             0xD000
-#define MOD_CALI_STEP               0xD001
+#define MOD_CALIBRATION_KEY         0xD000
+#define MOD_CALI_STATUS             0xD001
 #define MOD_WRITE_SVR               0xD002
-#define MOD_CALIBRATION_TYPE        0xD010
-#define MOD_READ_PSU_MODE           0xD011
-#define MOD_READ_HIGH_LIMIT         0xD012
-#define MOD_READ_LOW_LIMIT          0xD013
-#define MOD_CALIBRATION_POINT       0xD014
+#define MOD_CALIBRATION_POINT       0xD003
+#define MOD_CALI_RESULT             0xD004
+#define MOD_READ_PSU_MODE           0xD010
+#define MOD_READ_HIGH_LIMIT         0xD011
+#define MOD_READ_LOW_LIMIT          0xD012
+#define MOD_SVR_POLLING             0xD013
 #define MOD_AC_SOURCE_SET_B0B5      0xD020
 #define MOD_DC_SOURCE_SET_B0B5      0xD023
 #define MOD_DC_LOAD_SET_B0B5        0xD026

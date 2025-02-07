@@ -2,18 +2,20 @@
     "CaliPoints_Info": {
         "ACI_DC_Offset_單相": {
             "Target_Equipment": {
-                "Equipment_Name": "DWAM1",
-                "Value_Type": "DCI"
+                "Equipment_Name": "CC",
+                "Value_Type": "Ch1"
             },
             "enable": true,
+            "scaliing_factor": "NO",
             "step_cmd": "0x0001"
         },
         "ACI輕載電流(2A)": {
             "Target_Equipment": {
-                "Equipment_Name": "DMM1",
-                "Value_Type": "Ch1"
+                "Equipment_Name": "DD",
+                "Value_Type": "V,RMS"
             },
             "enable": true,
+            "scaliing_factor": "ACI",
             "step_cmd": "0x0006"
         },
         "ACI重載電流(22A)": {
@@ -22,6 +24,7 @@
                 "Value_Type": ""
             },
             "enable": false,
+            "scaliing_factor": "ACI",
             "step_cmd": "0x0007"
         },
         "ACV": {
@@ -30,6 +33,7 @@
                 "Value_Type": ""
             },
             "enable": false,
+            "scaliing_factor": "ACV",
             "step_cmd": "0x0005"
         },
         "DCV+空載電流": {
@@ -38,6 +42,7 @@
                 "Value_Type": ""
             },
             "enable": false,
+            "scaliing_factor": "DCV",
             "step_cmd": "0x0002"
         },
         "DC反向滿載電流": {
@@ -46,6 +51,7 @@
                 "Value_Type": ""
             },
             "enable": false,
+            "scaliing_factor": "DCI",
             "step_cmd": "0x0004"
         },
         "DC正向滿載電流": {
@@ -54,12 +60,13 @@
                 "Value_Type": ""
             },
             "enable": false,
+            "scaliing_factor": "DCI",
             "step_cmd": "0x0003"
         }
     },
     "Order": [
-        "0x0006",
         "0x0001",
+        "0x0006",
         "0xffff"
     ],
     "script_File_Name": "BIC-5000.json"

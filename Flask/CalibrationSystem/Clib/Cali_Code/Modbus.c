@@ -92,11 +92,11 @@ void Modbus_TxProcess_Write(uint16_t StartAddress)
     polling_command[3] = StartAddress & 0xFF;
 
      switch(StartAddress){
-        case MOD_CALIBRATION:
+        case MOD_CALIBRATION_KEY:
             polling_command[4] = 0x4D;
             polling_command[5] = 0x57;
         break;
-        case MOD_CALI_STEP:
+        case MOD_CALI_STATUS:
             polling_command[4] = 0x00;
             polling_command[5] = 0x01;
         break;

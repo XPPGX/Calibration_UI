@@ -1,0 +1,1 @@
+gcc -shared -o Auto_Search_Device.so -fPIC Auto_Search_Device.c Chroma_meter_51101_8.c -lwiringPi -pthread

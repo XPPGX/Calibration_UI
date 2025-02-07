@@ -29,14 +29,14 @@ void Canbus_Init(void)
     // 1. Create CAN Socket
     can_socket = socket(PF_CAN, SOCK_RAW, CAN_RAW);
     if (can_socket < 0) {
-        Cali_Status = FAIL; //CAN Socket error
+        Cali_Result = FAIL; //CAN Socket error
         pthread_exit(NULL);
     }
     // 2. Specify can0 device
     strcpy(ifr.ifr_name, "can0");
     if (ioctl(can_socket, SIOCGIFINDEX, &ifr) < 0)
     {
-        Cali_Status = FAIL; //CAN IOCTL error
+        Cali_Result = FAIL; //CAN IOCTL error
         close(can_socket);
         pthread_exit(NULL);
     }
@@ -44,7 +44,7 @@ void Canbus_Init(void)
     addr.can_family = AF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
     if (bind(can_socket, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        Cali_Status = FAIL; //CAN Bind error
+        Cali_Result = FAIL; //CAN Bind error
         close(can_socket);
         pthread_exit(NULL);
     }
@@ -72,7 +72,7 @@ void Canbus_TxProcess_Read(uint32_t CAN_Address)
         usleep(10000); //delay 10ms
         if(Retry_cnt >= 10)
         {
-            //Cali_Status = FAIL; //CAN Write error
+            //Cali_Result = FAIL; //CAN Write error
             break;
         }
     }
@@ -86,17 +86,25 @@ void Canbus_TxProcess_Write(uint32_t CAN_Address)
     frame.data[0] = CAN_Address;
     frame.data[1] = CAN_Address>>8;
     switch(CAN_Address){
-        case CAN_CALIBRATION:
+        case CAN_CALIBRATION_KEY:
             frame.data[2] = 0x57;
             frame.data[3] = 0x4D;
         break;
-        case CAN_CALI_STEP:
+        case CAN_CALI_STATUS:
             frame.data[2] = 0x01;     // Low byte
             frame.data[3] = 0x00;     // High byte
         break;
         case CAN_WRITE_SVR:
             frame.data[2] = SVR_value & 0xFF;        // Low byte
             frame.data[3] = (SVR_value >> 8) & 0x0F; // High byte
+        break;
+        case CAN_CALIBRATION_POINT:
+            frame.data[2] = UI_Calibration_Point & 0xFF;        // Low byte
+            frame.data[3] = (UI_Calibration_Point >> 8) & 0xFF; // High byte
+        break;
+        case CAN_CALI_RESULT:
+            frame.data[2] = 0xFF;       // Low byte
+            frame.data[3] = 0xFF;       // High byte
         break;
         default:
         break;
@@ -108,7 +116,7 @@ void Canbus_TxProcess_Write(uint32_t CAN_Address)
         usleep(10000); //delay 10ms
         if(Retry_cnt >= 10)
         {
-            Cali_Status = FAIL; //CAN Write error
+            Cali_Result = FAIL; //CAN Write error
             break;
         }
     }

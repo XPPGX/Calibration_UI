@@ -319,6 +319,56 @@
             background-color: #45a049;
         }
 
+
+        .custom-checkbox {
+            position: relative;
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+        }
+
+        .custom-checkbox input[type="checkbox"] {
+            position: absolute;
+            width: 0;
+            height: 0;
+            opacity: 0;
+        }
+
+        .custom-checkbox span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            border: 2px solid #007BFF;
+            border-radius: 4px; /* 圓角 */
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox span:after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background-color: #007BFF;
+            border-radius: 2px;
+            transform: scale(0) translate(-50%, -50%);
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox input[type="checkbox"]:checked + span {
+            background-color: #007BFF;
+            border-color: #007BFF;
+        }
+
+        .custom-checkbox input[type="checkbox"]:checked + span:after {
+            transform: scale(1) translate(-50%, -50%);
+        }
+
         @media (max-width: 1200px) {
             body{
                 padding-top: 120px;
@@ -368,11 +418,15 @@
     <div id="content">
         <div class="left-container">
             <div class="top">
-                <button class="button_manual_auto" id="test_btn">手動</button>
                 <div class="row">
-                    <span class="text_in_container">校正種類</span>
-                    <span class="text_in_container border_with_corner" id="UI_CaliType">-</span>
+                    <button class="button_manual_auto" id="test_btn">手動</button>
+                    <div>
+                        <input type="checkbox" class="custom-checkbox" id="UI_Re_cali_checkbox">
+                        <span class="text_in_container">重新校正</span>
+                    </div>
                 </div>
+                
+                
                 <div class="row">
                     <span class="text_in_container">校正點</span>
                     <span class="text_in_container border_with_corner" id="UI_CaliPoint">-</span>
@@ -393,7 +447,7 @@
             
             <div class="row-equipment">
                 <span class="text_in_container text_equipment">目標儀器</span>
-                <span class="text_in_container row_equipment_border_with_corner valueText">-</span>
+                <span class="text_in_container row_equipment_border_with_corner valueText" id="UI_Target_Equipment">-</span>
             </div>
 
             <div class="row-equipment">
@@ -403,7 +457,7 @@
 
             <div class="row-equipment">
                 <span class="text_in_container text_equipment">當前讀值</span>
-                <span class="text_in_container row_equipment_border_with_corner valueText">-</span>
+                <span class="text_in_container row_equipment_border_with_corner valueText" id="UI_DeviceReadValue">-</span>
             </div>
 
             <span class="text-progress">測試進度訊息</span>
@@ -462,7 +516,7 @@
      * Cali_Flag :
      * 0 means calibration has not start yet
      * 1 means calibration already started
-     * 2 means calibration finish and the values still remain on the screen
+     * 2 means calibration finish and the values still need remain on the screen
      */
     var Cali_Flag = 0; 
 
@@ -481,13 +535,14 @@
     var Cali_High_limit = 0;
     var Cali_Low_limit = 0;
 
-
-
+    var old_cali_point = "";
+    
     var UI_AdjustMode_new_style = 'big_wood_style';
     var UI_Result_color = '';
     var UI_Result_color_map = {
         "FINISH" : 'green_style',
-        "FAIL" : "red_style"
+        "FAIL" : "red_style",
+        "Not Completed" : "yellow_style"
     };
 
 
@@ -510,14 +565,15 @@
         }
     });
 
+    //DEBUG_TESTING
     document.getElementById('test_btn').addEventListener('click', async () => {
-        console.log("GET_API");
-        const response = await fetch('/api/testing');
-        if(!response.ok){
-            throw new Error("network response was not ok");
-        }
-        const res_data = await response.json();
-        console.log(res_data);
+        console.log("POST_API");
+
+        const response = await fetch('/api/Mock_enter_pressed', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body:JSON.stringify({"pressed" : 1})
+        });
     });
 
     // 關閉彈出框
@@ -530,6 +586,27 @@
         console.log("Btn pressed\n");
 
         switch(Cali_Flag){
+            case 0:
+                Cali_Flag = 1;
+                UI_stage = 1;
+                
+
+                let json_data = {};
+                json_data["Re_cali"] = false;
+                
+                let Re_cali_checkbox = document.getElementById("UI_Re_cali_checkbox");
+                if(Re_cali_checkbox.checked){
+                    console.log("checked");
+                    json_data["Re_cali"] = true;
+                }
+
+                const response = await fetch('/api/START_CALI_PROCESS', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body:JSON.stringify(json_data)
+                });
+                break;
+
             case 2:
                 document.getElementById('UI_ModelName').innerText = "-";
                 document.getElementById('UI_CommInterface').innerText = "-";
@@ -545,17 +622,6 @@
                 if(document.getElementById('UI_Result').classList.contains(UI_Result_color)){
                     document.getElementById('UI_Result').classList.remove(UI_Result_color);
                 }
-        
-            case 0:
-                Cali_Flag = 1;
-                UI_stage = 1;
-                
-                const response = await fetch('/api/START_CALI_PROCESS', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body:JSON.stringify({})
-                });
-                break;
             default:
                 break;
         }
@@ -567,7 +633,7 @@
             switch(UI_stage){
                 case 1:
                 {
-                    console.log("1st\n")
+                    console.log("1st\n");
                     const response_1 = await fetch('/api/update_ui_1st_stage')
                     if(!response_1.ok){
                         throw new Error("1st network response was not ok");
@@ -595,92 +661,78 @@
                         UI_Result_color = UI_Result_color_map[UI_Result.innerText];
                         UI_Result.classList.add(UI_Result_color);
                         setTimeout(() => {
-                            UI_stage = 3;
+                            UI_stage = 4;
                             Cali_Flag = 2;
                         });
                     }
 
                     break;
                 }
+
                 case 2:
                 {
-                    console.log("2nd\n")
-                    const response_2 = await fetch('/api/update_ui_2nd_stage');
-                    if(!response_2.ok){
+                    console.log("2nd\n");
+                    const response = await fetch('/api/update_ui_2nd_stage');
+                    if(!response.ok){
                         throw new Error("2nd network response was not ok");
                     }
-                    const res2_data = await response_2.json();
-
+                    const res_data = await response.json();
+                    console.log(res_data);
                     
-                    const UI_CaliType = document.getElementById('UI_CaliType');
-                    const UI_CaliPoint = document.getElementById('UI_CaliPoint');
-                    const UI_AdjustMode = document.getElementById('UI_AdjustMode');
+                    const UI_CaliPoint = document.getElementById("UI_CaliPoint");
+                    const UI_Target_Equipment = document.getElementById("UI_Target_Equipment");
+                    const UI_CaliRange = document.getElementById("UI_CaliRange");
                     const UI_Result = document.getElementById('UI_Result');
-                    
-                    old_UI_CaliType_str = UI_CaliType.innerText;
-                    old_UI_CaliPoint_str = UI_CaliPoint.innerText;
-                    
-                    UI_CaliType.innerText        = res2_data.WebAPI_CaliType;
-                    UI_CaliPoint.innerText      = res2_data.WebAPI_CaliPoint;
-                    UI_AdjustMode.innerText      = res2_data.WebAPI_AdjustMode;
-                    UI_Result.innerText          = res2_data.WebAPI_CaliStatus;
-                    
 
-                    let new_UI_CaliType_str = res2_data.WebAPI_CaliType;
-                    let new_UI_CaliPoint_str = res2_data.WebAPI_CaliPoint;
-
+                    console.log(res_data["WebAPI_CaliPoint"]);
+                    console.log(res_data["WebAPI_Equipment_Name"]);
+                    console.log(res_data["WebAPI_High_limit"]);
+                    console.log(res_data["WebAPI_Low_limit"]);
+                    console.log(res_data["WebAPI_CaliStatus"]);
+                    console.log(res_data["done"]);
                     
+                    UI_CaliPoint.innerText          = res_data["WebAPI_CaliPoint"];
+                    UI_Target_Equipment.innerText   = res_data["WebAPI_Equipment_Name"];
+                    UI_CaliRange.innerText          = res_data["WebAPI_High_limit"] + "~" + res_data["WebAPI_Low_limit"];
+                    UI_Result.innerText             = res_data["WebAPI_CaliStatus"];
                     
-                    
-                    //When switch to next calibration point
-                    if((old_UI_CaliType_str != "-" && old_UI_CaliPoint_str != new_UI_CaliPoint_str) ||
-                    (old_UI_CaliType_str != new_UI_CaliType_str)){
-                        //send GET API to get Calibration range
-                        console.log('3rd\n');
-                        const response_3 = await fetch('/api/cali_range');
-                        if(!response_3.ok){
-                            throw new Error("3rd network reponse was not ok");
-                        }
-                        const res3_data = await response_3.json();
-                        Cali_High_limit = res3_data.WebAPI_Cali_High_limit;
-                        Cali_Low_limit = res3_data.WebAPI_Cali_Low_limit;
-                        
-
-                        //send GET API to get equipment setting values.
-                        console.log('4th\n');
-                        const response_4 = await fetch('/api/equipment_setting');
-                        if(!response_4.ok){
-                            throw new Error("4th network response was not ok");
-                        }
-                        const res4_data = await response_4.json();
-                        let ACS_ONOFF = res4_data.WebAPI_ACS_ONOFF;
-                        let ACF = res4_data.WebAPI_ACF_value;
-                        let ACV = res4_data.WebAPI_ACV_value;
-                        let DCS_ONOFF = res4_data.WebAPI_DCS_ONOFF;
-                        let DCI = res4_data.WebAPI_DCI_value;
-                        let DCV = res4_data.WebAPI_DCV_value;
-                        let LOAD_ONOFF = res4_data.WebAPI_LOAD_ONOFF;
-                        let LOAD_CURR = res4_data.WebAPI_LOAD_CURR;
-                        
-                        //Showcase the setting the user need to do
-                        document.getElementById('dialog-box').style.display = 'block';
-                        document.getElementById('dialog-overlay').style.display = 'block';
-                        
-                    //      [Bug] If the cali point encountered with non-ordered sequence, the following process may show the wrong cali point on the web site
-                    //      Add a task that is consisted of calibration type and point.
-                    //      addTask(`${document.getElementById('UI_CaliType').innerText},  ${document.getElementById('UI_CaliPoint').innerText}`);
-                    //      //modify the status of last taskItem to be OK
-                    //      const tasks = document.querySelectorAll('.task-item');
-                    //      if(tasks.length > 1){
-                    //         const lastTask = tasks[tasks.length - 2];
-                    //         const lastTaskStatus = lastTask.querySelector('.task-status');
-                    //         lastTaskStatus.textContent = 'OK';
-                    //         lastTaskStatus.className = 'task-status status-ok';
-                    //     }
+                    //[BUG] when change to next cali point, server will return old point first
+                    if(old_cali_point != UI_CaliPoint.innerText && res_data["done"] == 1){
+                        UI_stage = 3;
+                        old_cali_point = UI_CaliPoint.innerText;
                     }
                     
+                    if(UI_Result.innerText == "FAIL"){
+                        UI_Result_color = UI_Result_color_map[UI_Result.innerText];
+                        UI_Result.classList.add(UI_Result_color);
+                        setTimeout(() => {
+                            UI_stage = 4;
+                            Cali_Flag = 2;
+                        });
+                    }
+                }
 
+                case 3:
+                {
+                    console.log("3rd\n");
 
+                    const response = await fetch('/api/update_ui_3rd_stage');
+                    if(!response.ok){
+                        throw new Error("2nd network response was not ok");
+                    }
+                    const res_data = await response.json();
+                    console.log(res_data);
+                
+                    const UI_AdjustMode = document.getElementById("UI_AdjustMode");
+                    const UI_DeviceReadValue = document.getElementById("UI_DeviceReadValue");
+                    const UI_Result = document.getElementById('UI_Result');
+                    let change_point_flag;
+
+                    UI_AdjustMode.innerText = res_data["WebAPI_AdjustMode"];
+                    UI_DeviceReadValue.innerText = res_data["WebAPI_Target_EQ_value"];
+                    UI_Result.innerText = res_data["WebAPI_CaliStatus"];
+                    change_point_flag = res_data["WebAPI_change_point_flag"];
+                    
                     //Change the color of adjustment after pressing space key
                     if(UI_AdjustMode.innerText == "粗調"){
                         UI_AdjustMode.classList.add(UI_AdjustMode_new_style);
@@ -691,12 +743,18 @@
                         }
                     }
 
+                    //Cali point changes to next
+                    console.log(`change_point_flag = ${change_point_flag}`);
+                    if(change_point_flag == 1){
+                        UI_stage = 2;
+                    }
                     
-                    if(UI_Result.innerText == "FINISH" || UI_Result.innerText == "FAIL"){
+
+                    if(UI_Result.innerText == "FINISH" || UI_Result.innerText == "FAIL" || UI_Result.innerText == "Not Complete"){
                         UI_Result_color = UI_Result_color_map[UI_Result.innerText];
                         UI_Result.classList.add(UI_Result_color);
                         setTimeout(() => {
-                            UI_stage = 3;
+                            UI_stage = 4;
                             Cali_Flag = 2;
                         });
 
@@ -709,8 +767,117 @@
                         // }
                     }
                     
-                    break;
                 }
+                // case 3:
+                // {
+                //     console.log("2nd\n")
+                //     const response_2 = await fetch('/api/update_ui_2nd_stage');
+                //     if(!response_2.ok){
+                //         throw new Error("2nd network response was not ok");
+                //     }
+                //     const res2_data = await response_2.json();
+
+                    
+                //     const UI_CaliType = document.getElementById('UI_CaliType');
+                //     const UI_CaliPoint = document.getElementById('UI_CaliPoint');
+                //     const UI_AdjustMode = document.getElementById('UI_AdjustMode');
+                //     const UI_Result = document.getElementById('UI_Result');
+                    
+                //     old_UI_CaliType_str = UI_CaliType.innerText;
+                //     old_UI_CaliPoint_str = UI_CaliPoint.innerText;
+                    
+                //     UI_CaliType.innerText        = res2_data.WebAPI_CaliType;
+                //     UI_CaliPoint.innerText       = res2_data.WebAPI_CaliPoint;
+                //     UI_AdjustMode.innerText      = res2_data.WebAPI_AdjustMode;
+                //     UI_Result.innerText          = res2_data.WebAPI_CaliStatus;
+                    
+
+                //     let new_UI_CaliType_str = res2_data.WebAPI_CaliType;
+                //     let new_UI_CaliPoint_str = res2_data.WebAPI_CaliPoint;
+
+                    
+                    
+                    
+                //     //When switch to next calibration point
+                //     if((old_UI_CaliType_str != "-" && old_UI_CaliPoint_str != new_UI_CaliPoint_str) ||
+                //     (old_UI_CaliType_str != new_UI_CaliType_str)){
+                //         //send GET API to get Calibration range
+                //         console.log('3rd\n');
+                //         const response_3 = await fetch('/api/cali_range');
+                //         if(!response_3.ok){
+                //             throw new Error("3rd network reponse was not ok");
+                //         }
+                //         const res3_data = await response_3.json();
+                //         Cali_High_limit = res3_data.WebAPI_Cali_High_limit;
+                //         Cali_Low_limit = res3_data.WebAPI_Cali_Low_limit;
+                        
+
+                //         //send GET API to get equipment setting values.
+                //         console.log('4th\n');
+                //         const response_4 = await fetch('/api/equipment_setting');
+                //         if(!response_4.ok){
+                //             throw new Error("4th network response was not ok");
+                //         }
+                //         const res4_data = await response_4.json();
+                //         let ACS_ONOFF = res4_data.WebAPI_ACS_ONOFF;
+                //         let ACF = res4_data.WebAPI_ACF_value;
+                //         let ACV = res4_data.WebAPI_ACV_value;
+                //         let DCS_ONOFF = res4_data.WebAPI_DCS_ONOFF;
+                //         let DCI = res4_data.WebAPI_DCI_value;
+                //         let DCV = res4_data.WebAPI_DCV_value;
+                //         let LOAD_ONOFF = res4_data.WebAPI_LOAD_ONOFF;
+                //         let LOAD_CURR = res4_data.WebAPI_LOAD_CURR;
+                        
+                //         //Showcase the setting the user need to do
+                //         document.getElementById('dialog-box').style.display = 'block';
+                //         document.getElementById('dialog-overlay').style.display = 'block';
+                        
+                //     //      [Bug] If the cali point encountered with non-ordered sequence, the following process may show the wrong cali point on the web site
+                //     //      Add a task that is consisted of calibration type and point.
+                //     //      addTask(`${document.getElementById('UI_CaliType').innerText},  ${document.getElementById('UI_CaliPoint').innerText}`);
+                //     //      //modify the status of last taskItem to be OK
+                //     //      const tasks = document.querySelectorAll('.task-item');
+                //     //      if(tasks.length > 1){
+                //     //         const lastTask = tasks[tasks.length - 2];
+                //     //         const lastTaskStatus = lastTask.querySelector('.task-status');
+                //     //         lastTaskStatus.textContent = 'OK';
+                //     //         lastTaskStatus.className = 'task-status status-ok';
+                //     //     }
+                //     }
+                    
+
+
+                //     //Change the color of adjustment after pressing space key
+                //     if(UI_AdjustMode.innerText == "粗調"){
+                //         UI_AdjustMode.classList.add(UI_AdjustMode_new_style);
+                //     }
+                //     else if(UI_AdjustMode.innerText == "微調"){
+                //         if(UI_AdjustMode.classList.contains(UI_AdjustMode_new_style)){
+                //             UI_AdjustMode.classList.remove(UI_AdjustMode_new_style);
+                //         }
+                //     }
+
+                    
+                //     if(UI_Result.innerText == "FINISH" || UI_Result.innerText == "FAIL"){
+                //         UI_Result_color = UI_Result_color_map[UI_Result.innerText];
+                //         UI_Result.classList.add(UI_Result_color);
+                //         setTimeout(() => {
+                //             UI_stage = 4;
+                //             Cali_Flag = 2;
+                //         });
+
+                //         // const tasks = document.querySelectorAll('.task-item');
+                //         // if(tasks.length > 1){
+                //         //     const lastTask = tasks[tasks.length - 1];
+                //         //     const lastTaskStatus = lastTask.querySelector('.task-status');
+                //         //     lastTaskStatus.textContent = 'FAIL';
+                //         //     lastTaskStatus.className = 'task-status status-fail';
+                //         // }
+                //     }
+                    
+                //     break;
+                // }
+                
                 default:
                     break;
             }

@@ -385,7 +385,7 @@
     let device_options = [];
     
     let optionMap = {
-        DWAM : ["Irms", "Vrms", "DCI", "DCV"],
+        DWAM : ["I,RMS", "V,RMS", "I,DC", "V,DC"],
         DMM : []
     };
     
@@ -484,6 +484,8 @@
                 const CaliPoints_Info = script_JSON_object.CaliPoints_Info;
                 
                 //Fill the table with the content in the selected script
+                const tableBody = document.getElementById('tableContainer');
+                tableBody.innerHTML = "";
                 console.log(typeof(CaliPoints_Info));
                 Object.keys(CaliPoints_Info).forEach(cali_point_str =>{ //cali_point's type is string
                     console.log(`${cali_point_str}:`, CaliPoints_Info[cali_point_str]);

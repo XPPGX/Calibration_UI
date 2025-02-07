@@ -272,10 +272,11 @@
                     
                     <select class="dialog-row-arrange_m_select" id="Ch0_Mode" data-target="input-0">
                         <option value="NO">--type--</option>
-                        <option value="V">V</option>
-                        <option value="I">I</option>
+                        <option value="VA10">VA10</option>
+                        <option value="VA480">VA480</option>
+                        <option value="IA3">IA3</option>
                     </select>
-                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt value" disabled id="input-0"/>
+                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt factor" disabled id="input-0"/>
                 </div>
 
                 <div class="row">
@@ -283,10 +284,11 @@
                     
                     <select class="dialog-row-arrange_m_select" id="Ch1_Mode" data-target="input-1">
                         <option value="NO">--type--</option>
-                        <option value="V">V</option>
-                        <option value="I">I</option>
+                        <option value="VA10">VA10</option>
+                        <option value="VA480">VA480</option>
+                        <option value="IA3">IA3</option>
                     </select>
-                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt value" disabled id="input-1"/>
+                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt factor" disabled id="input-1"/>
                 </div>
 
                 <div class="row">
@@ -294,10 +296,11 @@
                     
                     <select class="dialog-row-arrange_m_select" id="Ch2_Mode" data-target="input-2">
                         <option value="NO">--type--</option>
-                        <option value="V">V</option>
-                        <option value="I">I</option>
+                        <option value="VA10">VA10</option>
+                        <option value="VA480">VA480</option>
+                        <option value="IA3">IA3</option>
                     </select>
-                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt value" disabled id="input-2"/>
+                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt factor" disabled id="input-2"/>
                 </div>
 
                 <div class="row">
@@ -305,10 +308,11 @@
                     
                     <select class="dialog-row-arrange_m_select" id="Ch3_Mode" data-target="input-3">
                         <option value="NO">--type--</option>
-                        <option value="V">V</option>
-                        <option value="I">I</option>
+                        <option value="VA10">VA10</option>
+                        <option value="VA480">VA480</option>
+                        <option value="IA3">IA3</option>
                     </select>
-                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt value" disabled id="input-3"/>
+                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt factor" disabled id="input-3"/>
                 </div>
 
                 <div class="row">
@@ -316,10 +320,11 @@
                     
                     <select class="dialog-row-arrange_m_select" id="Ch4_Mode" data-target="input-4">
                         <option value="NO">--type--</option>
-                        <option value="V">V</option>
-                        <option value="I">I</option>
+                        <option value="VA10">VA10</option>
+                        <option value="VA480">VA480</option>
+                        <option value="IA3">IA3</option>
                     </select>
-                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt value" disabled id="input-4"/>
+                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt factor" disabled id="input-4"/>
                 </div>
 
                 <div class="row">
@@ -327,10 +332,11 @@
                     
                     <select class="dialog-row-arrange_m_select" id="Ch5_Mode" data-target="input-5">
                         <option value="NO">--type--</option>
-                        <option value="V">V</option>
-                        <option value="I">I</option>
+                        <option value="VA10">VA10</option>
+                        <option value="VA480">VA480</option>
+                        <option value="IA3">IA3</option>
                     </select>
-                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt value" disabled id="input-5"/>
+                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt factor" disabled id="input-5"/>
                 </div>
 
                 <div class="row">
@@ -338,10 +344,11 @@
                     
                     <select class="dialog-row-arrange_m_select" id="Ch6_Mode" data-target="input-6">
                         <option value="NO">--type--</option>
-                        <option value="V">V</option>
-                        <option value="I">I</option>
+                        <option value="VA10">VA10</option>
+                        <option value="VA480">VA480</option>
+                        <option value="IA3">IA3</option>
                     </select>
-                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt value" disabled id="input-6"/>
+                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt factor" disabled id="input-6"/>
                 </div>
 
                 <div class="row">
@@ -349,10 +356,11 @@
                     
                     <select class="dialog-row-arrange_m_select" id="Ch7_Mode" data-target="input-7">
                         <option value="NO">--type--</option>
-                        <option value="V">V</option>
-                        <option value="I">I</option>
+                        <option value="VA10">VA10</option>
+                        <option value="VA480">VA480</option>
+                        <option value="IA3">IA3</option>
                     </select>
-                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt value" disabled id="input-7"/>
+                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt factor" disabled id="input-7"/>
                 </div>
                 
                 <button id="close-dialog_fine_setting">確定</button>
@@ -369,6 +377,8 @@
     </div>
 
 <script>
+    let device_ModelName_USBport_mapping = {};
+
     document.addEventListener('DOMContentLoaded', async function(){
         initNavbar();
         load_current_devices_setting();
@@ -385,6 +395,10 @@
         }
         else{
             console.log(res_data);
+            
+            //reset mapping
+            device_ModelName_USBport_mapping = {};
+
             Object.keys(res_data).forEach(key => {
                 if(key == "Fine-setting"){
                     // console.log(res_data["Fine-setting"]["Chroma 51101-8"]);
@@ -429,11 +443,16 @@
                     let tmp_model_name = res_data[key]["ModelName"];
                     let tmp_serial_num = res_data[key]["SerialNum"];
                     addRow(tmp_type, tmp_code_name, tmp_model_name, tmp_serial_num, '');
+                    
+                    let tmp_usb_port = res_data[key]["USB_Port"];
+                    device_ModelName_USBport_mapping[tmp_model_name] = tmp_usb_port;
                 }
             })
         }
+        
+        console.log(device_ModelName_USBport_mapping);
     }
-
+    
     // Use a POST API to inform server to call cali's function "scan_usb_devices"
     document.getElementById('btn_Rescan').addEventListener('click', async () => {
         const response1 = await fetch('/api/scan_usb_devices', {
@@ -444,17 +463,24 @@
         const res1_data = await response1.json();
         console.log(res1_data);
         
+        const tableContainer = document.getElementById('tableContainer');
+        tableContainer.innerHTML = "";
+
         for(let model_name in res1_data){
             let type = res1_data[model_name]["EQ_TYPE"];
             let serial_num = res1_data[model_name]["Serial_Num"];
-            addRow(type, '', model_name, serial_num, '', '');
-        }
 
+            addRow(type, '', model_name, serial_num, '', '');
+
+            //temp store the mapping of devices' ModelName and USB_Port
+            let usb_port = res1_data[model_name]["USB_Port"];
+            device_ModelName_USBport_mapping[model_name] = usb_port;
+        }
+        console.log(device_ModelName_USBport_mapping);
     });
 
     function addRow(type, code_name, equip_name, serial_num, protocol, port) {
         const tableContainer = document.getElementById('tableContainer');
-
         // 創建一個新的 row
         const row = document.createElement('tr');
         
@@ -559,12 +585,12 @@
                 const targetId = event.target.getAttribute('data-target');
                 const inputField = document.getElementById(targetId);
                 inputField.value = "";
-
-                if(event.target.value == 'I'){
-                    inputField.disabled = false;
+                
+                if(event.target.value == 'NO'){
+                    inputField.disabled = true;
                 }
                 else{
-                    inputField.disabled = true;
+                    inputField.disabled = false;
                 }
 
             }
@@ -581,7 +607,7 @@
         console.log(fixed_row_number);
         
 
-        let devices_setting = {}
+        devices_setting = {}
         //Collect devices information
         for(let i = 0 ; i < fixed_row_number ; i ++){
             //[1st] get cell data in the current row
@@ -614,6 +640,7 @@
             devices_setting[CodeName_cell_str]["Type"] = type_cell_str;
             devices_setting[CodeName_cell_str]["ModelName"] = ModelName_cell_str;
             devices_setting[CodeName_cell_str]["SerialNum"] = SerialNum_cell_str;
+            devices_setting[CodeName_cell_str]["USB_Port"] = device_ModelName_USBport_mapping[ModelName_cell_str];
         }
         
         console.log(devices_setting);
