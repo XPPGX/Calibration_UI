@@ -510,7 +510,7 @@ def handle_START_CALI_PROCESS():
         c_lib_Cali.Check_UI_Reset_Cali(2)
         print(Re_Cali_Flag)
 
-    # c_lib_Cali.Start_Cali_thread()
+    c_lib_Cali.Start_Cali_thread()
 
     thread = Thread(target=server_timers)
     thread.daemon = True
