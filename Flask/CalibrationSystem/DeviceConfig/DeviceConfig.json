@@ -5,6 +5,12 @@
             "SerialNumber" : []
         }
     },
+    "Chroma ATE" : {
+        "66205" : {
+            "EQ_TYPE" : "DWAM",
+            "SerialNumber" : []
+        }
+    },
     "Chroma 51101-8" : {
         "EQ_TYPE" : "DMM",
         "SerialNumber" : []

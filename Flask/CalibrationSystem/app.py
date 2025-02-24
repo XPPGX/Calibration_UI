@@ -7,6 +7,7 @@ from threading import Thread
 from collections import defaultdict
 import os
 import json
+import math
 ##################################################
 # Global Variables
 ##################################################
@@ -36,7 +37,10 @@ cali_status_cases = defaultdict(lambda: "Running...",  ## Suitable for a large n
     {
         1 : "FINISH",
         2 : "Not Complete",
-        3 : "FAIL"
+        3 : "Device FAIL",
+        4 : "DUT FAIL",
+        5 : "Cali point FAIL",
+        6 : "Peripheral FAIL"
     }
 )
 
@@ -86,8 +90,8 @@ Devices_setting = {} #For current linked devices
 enter_pressed = 0
 
 app = Flask(__name__)
-c_lib_Cali = ctypes.CDLL('./Clib/Cali_Code/Cali.so')
-c_lib_Search_Device = ctypes.CDLL('./Clib/Cali_Code/Auto_Search_Device.so')
+c_lib_Cali = ctypes.CDLL('./Cali_Code/Cali.so')
+#c_lib_Search_Device = ctypes.CDLL('./Clib/Cali_Code/Auto_Search_Device.so')
 ##################################################
 # C_lib parameters declaration
 ##################################################
@@ -124,8 +128,20 @@ c_lib_Cali.Get_PSU_Cali_Point_High_Limit.restype            = ctypes.c_float
 c_lib_Cali.Get_PSU_Cali_Point_Low_Limit.argtypes            = []
 c_lib_Cali.Get_PSU_Cali_Point_Low_Limit.restype             = ctypes.c_float
 
+c_lib_Cali.Get_Device_Measured_Value.argtypes               = []
+c_lib_Cali.Get_Device_Measured_Value.restype                = ctypes.c_float
+
+c_lib_Cali.Get_Calibration_Point_Complete.argtypes          = []
+c_lib_Cali.Get_Calibration_Point_Complete.restype           = ctypes.c_uint8
+
+c_lib_Cali.Get_Valid_Measured_Value.argtypes                = []
+c_lib_Cali.Get_Valid_Measured_Value.restype                 = ctypes.c_uint8
+
 c_lib_Cali.Check_UI_Set_Cali_Point_Target.argtypes          = [ctypes.c_char_p]
 c_lib_Cali.Check_UI_Set_Cali_Point_Target.restype           = None
+
+c_lib_Cali.Check_Calibration_Point_Complete.argtypes          = [ctypes.c_uint8]
+c_lib_Cali.Check_Calibration_Point_Complete.restype           = None
 
 c_lib_Cali.Start_Cali_thread.argtypes                       = []
 c_lib_Cali.Start_Cali_thread.restype                        = None
@@ -133,11 +149,11 @@ c_lib_Cali.Start_Cali_thread.restype                        = None
 c_lib_Cali.Stop_Cali_thread.argtypes                        = []
 c_lib_Cali.Stop_Cali_thread.restype                         = None
 
-c_lib_Search_Device.scan_usb_devices.argtypes               = []
-c_lib_Search_Device.scan_usb_devices.restype                = None
+c_lib_Cali.scan_usb_devices.argtypes               = []
+c_lib_Cali.scan_usb_devices.restype                = None
 
-c_lib_Search_Device.Get_Device_information.argtypes         = [ctypes.c_int]
-c_lib_Search_Device.Get_Device_information.restype          = ctypes.c_char_p
+c_lib_Cali.Get_Device_information.argtypes         = [ctypes.c_int]
+c_lib_Cali.Get_Device_information.restype          = ctypes.c_char_p
 ##################################################
 # Server Functions
 ##################################################
@@ -204,7 +220,8 @@ def server_timers():
                 GetScript()
                 UI_stage = UI_STAGE_SEND_POINT
 
-            if(CaliStatus_str == "FAIL"):
+            if(CaliStatus_str == "Device FAIL" or CaliStatus_str == "DUT FAIL" 
+            or CaliStatus_str == "Cali point FAIL" or CaliStatus_str == "Peripheral FAIL"):
                 UI_stage = UI_STATE_SERVER_RESET
                 c_lib_Cali.Stop_Cali_thread()
                 break
@@ -253,34 +270,35 @@ def server_timers():
             print("========== UI_STAGE_READ_FIXED_CALI_POINT_INFO")
             current_cali_point_str      = Cali_point_step_cmd_mapping[current_cali_point_step_cmd] #Get Cali_point
             cali_point_object           = CurrentScript_dict["CaliPoints_Info"][current_cali_point_str]
-            current_scaling_factor_str  = cali_point_object["scaling_factor"] #Get Scaling_factor
-            if(current_scaling_factor_str == "NO"):
-                High_limit_str  = "None"
-                Low_limit_str   = "None"
+            #current_scaling_factor_str  = cali_point_object["scaling_factor"] #Get Scaling_factor
+            #if(current_scaling_factor_str == "NO"):
+            #    High_limit_str  = "None"
+            #    Low_limit_str   = "None"
                 
-                UI_stage = UI_STAGE_READ_DYANAMIC_VALUES
+            #    UI_stage = UI_STAGE_READ_DYANAMIC_VALUES
+            #else:
+            tmp_Upper_Bound = c_lib_Cali.Get_PSU_Cali_Point_High_Limit()
+            tmp_Lower_Bound = c_lib_Cali.Get_PSU_Cali_Point_Low_Limit()
+            if math.isclose(tmp_Upper_Bound, 0.0, abs_tol=1e-6) or math.isclose(tmp_Lower_Bound, 0.0, abs_tol=1e-6):
+                # Any one of the bound didn't get the value from Cali_Thread
+                High_limit_str  = "-"
+                Low_limit_str   = "-"
             else:
-                tmp_Upper_Bound = c_lib_Cali.Get_PSU_Cali_Point_High_Limit()
-                tmp_Lower_Bound = c_lib_Cali.Get_PSU_Cali_Point_Low_Limit()
-                if(tmp_Upper_Bound == 0 or tmp_Lower_Bound == 0):
-                    # Any one of the bound didn't get the value from Cali_Thread
-                    High_limit_str  = "-"
-                    Low_limit_str   = "-"
-                else:
-                    # Both of the bounds got the value from Cali_Thread
-                    High_limit_str  = str(tmp_Upper_Bound)
-                    Low_limit_str   = str(tmp_Lower_Bound)
-                    UI_stage = UI_STAGE_READ_DYANAMIC_VALUES
+                # Both of the bounds got the value from Cali_Thread
+                High_limit_str  = f"{tmp_Upper_Bound:.3f}"
+                Low_limit_str   = f"{tmp_Lower_Bound:.3f}"
+                UI_stage = UI_STAGE_READ_DYANAMIC_VALUES
 
             CaliPoint_str = current_cali_point_str
             TargetEquipment_str = CurrentScript_dict["CaliPoints_Info"][CaliPoint_str]["Target_Equipment"]["Equipment_Name"]
             
-            print("test")
+            #print("test")
             print(f'{CaliPoint_str},{TargetEquipment_str},{Low_limit_str},{High_limit_str}')
             
             CaliStatus_str = getCaliStatus()
             
-            if(CaliStatus_str == "FAIL"):
+            if(CaliStatus_str == "Device FAIL" or CaliStatus_str == "DUT FAIL" 
+            or CaliStatus_str == "Cali point FAIL" or CaliStatus_str == "Peripheral FAIL"):
                 UI_stage = UI_STATE_SERVER_RESET
                 c_lib_Cali.Stop_Cali_thread()
                 break
@@ -288,24 +306,30 @@ def server_timers():
         elif(UI_stage == UI_STAGE_READ_DYANAMIC_VALUES):
             print("========== UI_STAGE_READ_DYANAMIC_VALUES")
             AdjustMode_str = getAdjustMode()
-            TargetEquipment_Value_str = str(Mock_equipment_value()) #Debug
+            TargetEquipment_Value_Bound = c_lib_Cali.Get_Device_Measured_Value() #str(Mock_equipment_value()) #Debug
+            TargetEquipment_Value_str = f"{TargetEquipment_Value_Bound:.3f}"
             CaliStatus_str = getCaliStatus()
+            CaliPointComplete_uint8 = c_lib_Cali.Get_Calibration_Point_Complete()
             
             print(f'{AdjustMode_str}, {TargetEquipment_Value_str}, {CaliStatus_str}')
-            if(enter_pressed == 1):
-                enter_pressed = 0
+            if(CaliPointComplete_uint8 == 1):
+                c_lib_Cali.Check_Calibration_Point_Complete(0)
                 current_cali_point_count = current_cali_point_count + 1
                 change_to_next_cali_point_flag = 1
                 UI_stage = UI_STAGE_SEND_POINT
             
-            if(CaliStatus_str == "FAIL"):
+            if(CaliStatus_str == "Device FAIL" or CaliStatus_str == "DUT FAIL" 
+            or CaliStatus_str == "Cali point FAIL" or CaliStatus_str == "Peripheral FAIL"):
                 UI_stage = UI_STATE_SERVER_RESET
                 c_lib_Cali.Stop_Cali_thread()
                 break
 
         elif(UI_stage == UI_STAGE_CHECK_FINISH):
             print("========== UI_STAGE_CHECK_FINISH")
-            if(CaliStatus_str == "FINISH" or CaliStatus_str == "Not Completed" or CaliStatus_str == "FAIL"):
+            CaliStatus_str = getCaliStatus()
+            if(CaliStatus_str == "FINISH" or CaliStatus_str == "Not Complete" 
+            or CaliStatus_str == "Device FAIL" or CaliStatus_str == "DUT FAIL" 
+            or CaliStatus_str == "Cali point FAIL" or CaliStatus_str == "Peripheral FAIL"):
                 c_lib_Cali.Stop_Cali_thread()
                 print("Thread : Cali terminated.\n")
                 print("Thread : ServerTimer Terminated.\n")
@@ -546,15 +570,15 @@ def handle_update_ui_2nd_stage():
     tmp_done = 0
     global CurrentScript_dict
     
-    tmp_scaling_factor_str = CurrentScript_dict["CaliPoints_Info"][CaliPoint_str]["scaling_factor"]
+    #tmp_scaling_factor_str = CurrentScript_dict["CaliPoints_Info"][CaliPoint_str]["scaling_factor"]
     tmp_equipment_name_str = CurrentScript_dict["CaliPoints_Info"][CaliPoint_str]["Target_Equipment"]["Equipment_Name"]
-    if(tmp_scaling_factor_str == "NO"):
-        #For current cali point, there is no need of scaling_facotr
-        tmp_done = 1
-    else:
+    #if(tmp_scaling_factor_str == "NO"):
+    #    #For current cali point, there is no need of scaling_facotr
+    #    tmp_done = 1
+    #else:
         #For current cali point, the scaling_factor is needed
-        if(High_limit_str != "-" and Low_limit_str != "-"):
-            tmp_done = 1
+    if(High_limit_str != "-" and Low_limit_str != "-"):
+        tmp_done = 1
     
     
 
@@ -588,11 +612,11 @@ def handle_scan_usb_devices():
     DeviceInfo_str_list = []
 
     #debug
-    debug = 1
+    debug = 0
 
     #Real mode
     if(debug == 0):
-        thread = Thread(target = c_lib_Search_Device.scan_usb_devices)
+        thread = Thread(target = c_lib_Cali.scan_usb_devices)
         thread.daemon = True
         thread.start()
         thread.join(timeout=10)
@@ -604,7 +628,7 @@ def handle_scan_usb_devices():
         count = 0
         #Get all devices' information from the Cali procedure
         while(1):
-            DeviceInfo_ptr = c_lib_Search_Device.Get_Device_information(count)
+            DeviceInfo_ptr = c_lib_Cali.Get_Device_information(count)
             DeviceInfo_str = DeviceInfo_ptr.decode("utf-8")
                 
             if(DeviceInfo_str == "Invalid Index" or DeviceInfo_str == ""):

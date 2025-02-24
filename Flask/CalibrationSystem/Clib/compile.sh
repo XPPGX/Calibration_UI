@@ -1,0 +1,1 @@
+gcc -fPIC -shared -o Cali.so Cali.c -lwiringPi -pthread

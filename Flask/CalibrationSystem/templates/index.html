@@ -693,7 +693,7 @@
                     
                     UI_CaliPoint.innerText          = res_data["WebAPI_CaliPoint"];
                     UI_Target_Equipment.innerText   = res_data["WebAPI_Equipment_Name"];
-                    UI_CaliRange.innerText          = res_data["WebAPI_High_limit"] + "~" + res_data["WebAPI_Low_limit"];
+                    UI_CaliRange.innerText          = res_data["WebAPI_Low_limit"] + "~" + res_data["WebAPI_High_limit"];
                     UI_Result.innerText             = res_data["WebAPI_CaliStatus"];
                     
                     //[BUG] when change to next cali point, server will return old point first
