@@ -870,19 +870,18 @@
         
         //If the pass_or_not_flag == 0, then we try to login with password
         if(pass_or_not_flag == 0){
-            pass_or_not_flag = Admin_Check();
+            pass_or_not_flag = await Admin_Check();
         }
-        
-        //After logining or the flag == 1, we can truely save the content on the UI
+
+        //After logining or the flag is 1 already, we can truely save the content on the UI
         if(pass_or_not_flag == 1){
             save_script_handler();
-
             //reset the counter
             const response = await fetch('/api/token_counter_reset', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body:JSON.stringify({})
-            }); 
+            });
         }
     }
     function save_script_handler(){

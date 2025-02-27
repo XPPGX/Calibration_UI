@@ -96,11 +96,12 @@ Password.add("admin")
 pass_or_not_flag = 0
 token_second_counter = 0
 TOKEN_ALIVE_TIME = 10 # in second
+
 app = Flask(__name__)
 c_lib_Cali = ctypes.CDLL('./Cali_Code/Cali.so')
 #c_lib_Search_Device = ctypes.CDLL('./Clib/Cali_Code/Auto_Search_Device.so')
 
-Debug_MODE = 1
+DEBUG_MODE = 0 #DEBUG_MODE == 1, means it can run without any device ; DEBUG_MODE = 0 means it needs devices to run
 Debug_Enter_pressed = 0
 
 ##################################################
@@ -474,7 +475,7 @@ def reset_pass_or_not_flag_thread():
     pass_or_not_flag = 0
 
 def getModelName():
-    if(Debug_MODE == 0):
+    if(DEBUG_MODE == 0):
         ModelName_ptr = c_lib_Cali.Get_Machine_Name()
         ModelName_str = ModelName_ptr.decode("utf-8")
         return ModelName_str
@@ -483,7 +484,7 @@ def getModelName():
         return ModelName_str
     
 def getCommInterface():
-    if(Debug_MODE == 0):
+    if(DEBUG_MODE == 0):
         CommInterface_uint8 = c_lib_Cali.Get_Communication_Type()
         CommInterface_str = comm_type_cases.get(CommInterface_uint8, "-") #"-" is default value
         return CommInterface_str
@@ -492,7 +493,7 @@ def getCommInterface():
         return CommInterface_str
     
 def getAdjustMode():
-    if(Debug_MODE == 0):
+    if(DEBUG_MODE == 0):
         AdjustMode_uint8 = c_lib_Cali.Get_Keyboard_Adjustment()
         AdjustMode_str = adjust_mode_cases[AdjustMode_uint8]
         return AdjustMode_str
@@ -501,7 +502,7 @@ def getAdjustMode():
         return AdjustMode_str
 
 def getCaliStatus():
-    if(Debug_MODE == 0):
+    if(DEBUG_MODE == 0):
         CaliStatus_uint8 = c_lib_Cali.Get_Calibration_Status()
         CaliStatus_str = cali_status_cases[CaliStatus_uint8]
         return CaliStatus_str
@@ -515,19 +516,19 @@ def getCaliStatus():
         return CaliStatus_str
     
 def getUpperBound():
-    if(Debug_MODE == 0):
+    if(DEBUG_MODE == 0):
         return c_lib_Cali.Get_PSU_Cali_Point_High_Limit()
     else:
         return 100
     
 def getLowerBound():
-    if(Debug_MODE == 0):
+    if(DEBUG_MODE == 0):
         return c_lib_Cali.Get_PSU_Cali_Point_Low_Limit()
     else:
         return 50
 
 def getDeviceMeasureValue():
-    if(Debug_MODE == 0):
+    if(DEBUG_MODE == 0):
         return c_lib_Cali.Get_Device_Measured_Value()
     else:
         return random.uniform(1, 100)
@@ -535,7 +536,7 @@ def getDeviceMeasureValue():
 
 def getCalibrationPointComplete():
    
-    if(Debug_MODE == 0):
+    if(DEBUG_MODE == 0):
         return c_lib_Cali.Get_Calibration_Point_Complete()
     
     else:

@@ -42,10 +42,10 @@
         },
         "DCV+空載電流": {
             "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": "先選目標儀器"
+                "Equipment_Name": "BB",
+                "Value_Type": "Ch0"
             },
-            "enable": false,
+            "enable": true,
             "scaling_factor": "DCV",
             "step_cmd": "0x0002",
             "unit": "V"
@@ -53,7 +53,7 @@
         "DC反向滿載電流": {
             "Target_Equipment": {
                 "Equipment_Name": "",
-                "Value_Type": "先選目標儀器"
+                "Value_Type": ""
             },
             "enable": false,
             "scaling_factor": "DCI",
@@ -62,10 +62,10 @@
         },
         "DC正向滿載電流": {
             "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": "先選目標儀器"
+                "Equipment_Name": "AA",
+                "Value_Type": "I,RMS"
             },
-            "enable": false,
+            "enable": true,
             "scaling_factor": "DCI",
             "step_cmd": "0x0003",
             "unit": "A"
@@ -74,6 +74,8 @@
     "Order": [
         "0x0001",
         "0x0006",
+        "0x0002",
+        "0x0003",
         "0xffff"
     ],
     "script_File_Name": "BIC-5K.json"
