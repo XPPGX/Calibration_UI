@@ -88,7 +88,7 @@
             background-color: #fff;
         }
         .add-row-button {
-            margin: 20px 0;
+            margin: 20px;
             display: inline-block;
             padding: 10px 20px;
             background-color: #4caf50;
@@ -236,7 +236,7 @@
                         <th>代號</th>
                         <th>儀器名稱</th>
                         <th>序列號</th>
-                        <th>介面</th>
+                        <th>細部調整</th>
                     </tr>
                 </thead>
                 <tbody id="tableContainer">
@@ -371,7 +371,7 @@
         <div class="button-container">
             <button class="add-row-button" id="btn_Rescan">搜尋儀器</button>
             <!--btn_Config only show when there are some equipments need additional setting-->
-            <button class="add-row-button btn_config_disappr" id="btn_Config">設定</button> 
+            <!-- <button class="add-row-button btn_config_disappr" id="btn_Config">設定</button>  -->
             <button class="add-row-button" id="btn_SaveSetting">儲存設定</button>
         </div>
     </div>
@@ -381,10 +381,19 @@
 
     document.addEventListener('DOMContentLoaded', async function(){
         initNavbar();
-        load_current_devices_setting();
+        load_current_devices_setting().then(result => {
+            // if(result == 0){
+            //     console.log("load non-saved devices info");
+            //     load_previous_non_saved_info();
+            // }
+            // else{
+            //     console.log("load saved devices info");
+            // }
+        })
     });
 
     async function load_current_devices_setting(){
+        let loading_flag = 0; //0 means no saved data ; 1 means there is saved data
         const response = await fetch('/api/get_devices_setting');
         if(!response.ok){
             throw new Error("0th network response was not ok");
@@ -392,6 +401,7 @@
         const res_data = await response.json();
         if(Object.keys(res_data).length === 0){
             console.log("Current device setting is empty");
+            loading_flag = 0;
         }
         else{
             console.log(res_data);
@@ -401,7 +411,6 @@
 
             Object.keys(res_data).forEach(key => {
                 if(key == "Fine-setting"){
-                    // console.log(res_data["Fine-setting"]["Chroma 51101-8"]);
                     for(let channel in res_data["Fine-setting"]["Chroma 51101-8"]){
                         const tmp_object = res_data["Fine-setting"]["Chroma 51101-8"][channel];
                         console.log(channel);
@@ -415,27 +424,7 @@
                         //show default value
                         Channel_Mode.value = tmp_object["Value_Type"];
                         data_target.value = tmp_object["Shunt_Value"];
-                        // console.log(`${channel.Ch}, ${channel.Shunt_Value}, ${channel.Value_Type}`);
                     }
-
-
-                    // for(let i = 0 ; i < 8 ; i ++){
-                    //     let Channel_Mode_ID = "Ch" + i.toString() + "_Mode";
-                    //     let data_target_ID = "input-" + i.toString();
-                    //     let Channel_Mode = document.getElementById(Channel_Mode_ID);
-                    //     let data_target = document.getElementById(data_target_ID);
-                        
-                    //     console.log(Channel_Mode_ID + "," + data_target_ID + " : " + Channel_Mode.value + ", " + data_target.value);
-                        
-                    //     if(Channel_Mode.value != "NO"){
-                    //         let tmp_json_object = {};
-                    //         tmp_json_object["Ch"] = i.toString();
-                    //         tmp_json_object["Value_Type"] = Channel_Mode.value;
-                    //         tmp_json_object["Shunt_Value"] = data_target.value;
-
-                    //         devices_setting["Fine-setting"]["Chroma 51101-8"].push(tmp_json_object);
-                    //     }
-                    // }
                 }
                 else{
                     let tmp_code_name = key;
@@ -448,11 +437,40 @@
                     device_ModelName_USBport_mapping[tmp_model_name] = tmp_usb_port;
                 }
             })
+            loading_flag = 1;
         }
         
         console.log(device_ModelName_USBport_mapping);
+        return loading_flag;
     }
     
+    async function load_previous_non_saved_info(){
+        const response = await fetch('/api/get_non_saved_device_info');
+        if(!response.ok){
+            throw new Error("0th network response was not ok");
+        }
+        const res_data = await response.json();
+        if(Object.keys(res_data).length === 0){
+            console.log("Current device setting is empty");
+            loading_flag = 0;
+        }
+        else{
+            const tableContainer = document.getElementById('tableContainer');
+            tableContainer.innerHTML = "";
+
+            for(let model_name in res_data){
+                let type = res_data[model_name]["EQ_TYPE"];
+                let serial_num = res_data[model_name]["Serial_Num"];
+
+                addRow(type, '', model_name, serial_num, '', '');
+
+                //temp store the mapping of devices' ModelName and USB_Port
+                let usb_port = res_data[model_name]["USB_Port"];
+                device_ModelName_USBport_mapping[model_name] = usb_port;
+            }
+            console.log(device_ModelName_USBport_mapping);
+        }
+    }
     // Use a POST API to inform server to call cali's function "scan_usb_devices"
     document.getElementById('btn_Rescan').addEventListener('click', async () => {
         const response1 = await fetch('/api/scan_usb_devices', {
@@ -542,14 +560,23 @@
             }
         })
         
-
         need_fine_setting(equip_name);
     }
     
     function need_fine_setting(equip_name){
+        const table = document.getElementById("tableContainer");
+        const fixed_row_number = table.rows.length;
+        console.log(fixed_row_number);
+        const row = table.rows[fixed_row_number - 1]; //Get the row of the equipment that needs to fine-setting
         switch(equip_name){
-            case 'Chroma 51101-8':
-                document.getElementById('btn_Config').style.display = 'block';
+            case 'Chroma,51101-8':
+                // document.getElementById('btn_Config').style.display = 'block';
+                let cell = row.cells[4];
+                let button = document.createElement("button");
+                button.textContent = "設定";
+                button.onclick = show_fine_setting_dialog;
+                button.classList.add("add-row-button");
+                cell.appendChild(button); 
                 break;
 
             default:
@@ -564,14 +591,20 @@
     });
     
 
-    document.getElementById('close-dialog_fine_setting').addEventListener('click', () => {
-        document.getElementById('dialog-overlay_fine_setting').style.display = 'none';
-        document.getElementById('dialog-box_fine_setting').style.display = 'none';
-        
+    document.getElementById("dialog-overlay_fine_setting").addEventListener('click', () => {
+        close_fine_setting_dialog();
     })
 
+    document.getElementById('close-dialog_fine_setting').addEventListener('click', () => {
+        close_fine_setting_dialog();
+    })
 
-    document.getElementById('btn_Config').addEventListener('click', () => {
+    function close_fine_setting_dialog(){
+        document.getElementById('dialog-overlay_fine_setting').style.display = 'none';
+        document.getElementById('dialog-box_fine_setting').style.display = 'none';
+    }
+
+    function show_fine_setting_dialog(){
         console.log("HI");
 
 
@@ -595,7 +628,32 @@
 
             }
         })
-    })
+    }
+    // document.getElementById('btn_Config').addEventListener('click', () => {
+    //     console.log("HI");
+
+
+    //     document.getElementById('dialog-overlay_fine_setting').style.display = 'block';
+    //     document.getElementById('dialog-box_fine_setting').style.display = 'block';
+
+    //     document.getElementById('RCV_EquipName').innerText = 'chroma-51101-8';
+
+    //     document.addEventListener('change', function(event){
+    //         if(event.target.classList.contains('dialog-row-arrange_m_select')){
+    //             const targetId = event.target.getAttribute('data-target');
+    //             const inputField = document.getElementById(targetId);
+    //             inputField.value = "";
+                
+    //             if(event.target.value == 'NO'){
+    //                 inputField.disabled = true;
+    //             }
+    //             else{
+    //                 inputField.disabled = false;
+    //             }
+
+    //         }
+    //     })
+    // })
 
     // Send following things:
     // 1. devices information with codename(user setting)

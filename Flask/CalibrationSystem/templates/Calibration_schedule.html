@@ -331,7 +331,7 @@
     <div id="navbar">
         {% include 'navbar.html' %}
     </div>
-    <input type="file" id="fileInput" style="display: none;" accept=".json"/>
+
     <div id="content">
         <div class="content-row">
             <span class="text-progress">排程名稱：</span>
@@ -383,37 +383,141 @@
     let script_JSON_object;
 
     let device_options = [];
-    
     let optionMap = {
         DWAM : ["I,RMS", "V,RMS", "I,DC", "V,DC"],
         DMM : []
     };
-    
-    const FileSelectorDialog = document.getElementById('fileInput');
+
+    const YES = 1;
+    const NO = 0;
+    let selectFile_Device_NotMatch_Alert_Flag = NO;
 
     //Menu bar
     document.addEventListener('DOMContentLoaded', function(){
         initNavbar();
+        Init_Load_Current_Script_Data();
     });
 
     document.getElementById('btn_select_script').addEventListener('click', function(){
-        // FileSelectorDialog.click();
         openFileSelector();
     });
     
+    async function Init_Load_Current_Script_Data(){
+        const response = await fetch('/api/init_load_cali_points');
+        if(!response.ok){
+            throw new Error("[Init]network response was not ok");
+        }
+        tmp_JSON_object = await response.json();
+        script_JSON_object = tmp_JSON_object["CaliPoint"]
+        const step_cmd_mapping = tmp_JSON_object["step_cmd_mapping"]
+
+        if(Object.keys(script_JSON_object).length > 0){
+            let FileName = script_JSON_object["script_File_Name"];
+            let FileName_WithoutSubName = FileName.substring(0, FileName.lastIndexOf(".")) || FileName;
+
+            document.getElementById("scriptFileName").innerText = FileName_WithoutSubName;
+
+            console.log(script_JSON_object);
+            const CaliPoints_Info = script_JSON_object.CaliPoints_Info;
+            const Order = script_JSON_object.Order;
+            //Get devices setting, put all CodeName in 3th column selection 
+            const response_1 = await fetch('/api/get_devices_setting');
+            if(!response_1.ok){
+                throw new Error("1st network response was not ok");
+            }
+            const Devices_setting = await response_1.json();
+            console.log(Devices_setting);
+            //According to the devices setting, put all options to "target value"
+            device_options = []
+            optionMap.DMM = []
+            Object.keys(Devices_setting).forEach(key => {
+                if(key == "Fine-setting"){
+                    Devices_setting["Fine-setting"]["Chroma 51101-8"].forEach(channel => {
+                        optionMap.DMM.push(`Ch${channel.Ch}`);
+                    })
+                }
+                else{
+                    let device = key;
+                    device_options.push(device);
+                    console.log(key);
+                }
+            })
+            console.log(device_options);
+            console.log(optionMap.DMM);
+
+            //Check if the CodeName is in the Devices_setting
+            selectFile_Device_NotMatch_Alert_Flag = NO;
+            check_Device_and_Script_Match(CaliPoints_Info, Devices_setting);
+
+            /*
+             * Fill the table with the content in the selected script
+             * [Note] The appearance of the sequence of each CaliPoint,
+             * should remain the same as we used in last time
+             */
+            const tableBody = document.getElementById('tableContainer');
+            tableBody.innerHTML = "";
+            console.log(typeof(CaliPoints_Info));
+            rowCount = 0;
+            let sequence_cali_point_str_arr = Get_Sequence_by_Order(Order, step_cmd_mapping);
+
+            sequence_cali_point_str_arr.forEach((cali_point_str, index) =>{
+                console.log(`${cali_point_str}:`, CaliPoints_Info[cali_point_str]);
+                const cali_point_obj = CaliPoints_Info[cali_point_str];
+                console.log("====0.0===");
+                console.log(cali_point_obj);
+                console.log(`${cali_point_str}.enable = ${cali_point_obj.enable}`);
+                addRow(cali_point_str, device_options, cali_point_obj, Devices_setting);
+            })
+
+            // Object.keys(CaliPoints_Info).forEach(cali_point_str =>{ //cali_point's type is string
+            //     console.log(`${cali_point_str}:`, CaliPoints_Info[cali_point_str]);
+            //     const cali_point_obj = CaliPoints_Info[cali_point_str];
+            //     console.log("====0.0===");
+            //     console.log(cali_point_obj);
+            //     console.log(`${cali_point_str}.enable = ${cali_point_obj.enable}`);
+            //     addRow(cali_point_str, device_options, cali_point_obj, Devices_setting);
+            // })
+        }
+    }
+
+    function Get_Sequence_by_Order(_Order, _step_cmd_mapping){
+        let tmp_cali_point_str_arr = [];
+        let tmp_Order = [..._Order]; // Copy the data in _Order to tmp_Order
+        tmp_Order.pop(); //delete "0xffff"
+
+        console.log("Ordered : ");
+        tmp_Order.forEach((step_cmd, index) => {
+            let tmp_cali_point_str = _step_cmd_mapping[step_cmd];
+            console.log(`push ${tmp_cali_point_str}`);
+            tmp_cali_point_str_arr.push(tmp_cali_point_str);
+        })
+
+        console.log(_step_cmd_mapping);
+        console.log("Non Ordered : ");
+        Object.keys(_step_cmd_mapping).forEach(step_cmd => {
+            if(tmp_Order.includes(step_cmd)){
+
+            }
+            else{
+                console.log(`push ${_step_cmd_mapping[step_cmd]}`);
+                tmp_cali_point_str_arr.push(_step_cmd_mapping[step_cmd]);
+            }
+        })
+
+        return tmp_cali_point_str_arr;
+    }
+
     //Server transimit "existing script files" to Web for user selecting
     async function openFileSelector(){
         const file_selector = document.getElementById("file_selector");
         file_selector.innerHTML = "";
-
+        //Get all names of the script files
         const response = await fetch('/api/get_script_file_names');
         if(!response.ok){
             throw new Error("1st network response was not ok");
         }
-        
         const res_data = await response.json();
         console.log(res_data);
-        
         const files = res_data.files;
         console.log(files);
         
@@ -425,13 +529,11 @@
         }
         const Devices_setting = await response_1.json();
         console.log(Devices_setting);
-        
+        //According to the devices setting, put all options to "target value"
+        device_options = []
+        optionMap.DMM = []
         Object.keys(Devices_setting).forEach(key => {
             if(key == "Fine-setting"){
-                // console.log(typeof(Devices_setting["Fine-setting"]["Chroma 51101-8"]));
-                // Devices_setting["Fine-setting"]["Chroma 51101-8"].forEach(channel => {
-                //     console.log(`${channel.Ch}, ${channel.Value_Type}, ${channel.Shunt_Value}`);
-                // })
                 Devices_setting["Fine-setting"]["Chroma 51101-8"].forEach(channel => {
                     optionMap.DMM.push(`Ch${channel.Ch}`);
                 })
@@ -445,12 +547,11 @@
         console.log(device_options);
         console.log(optionMap.DMM);
         
-
+        //Let each file becomes a button
         files.forEach(file => {
             console.log(file);
-            
             const filebutton = document.createElement('button');
-            
+
             let tmp_scriptFileName = file;
             let tmp_scriptFileName_withoutSubName;
             const dot_position = tmp_scriptFileName.lastIndexOf(".");
@@ -458,40 +559,45 @@
                 tmp_scriptFileName_withoutSubName = tmp_scriptFileName.slice(0, dot_position);
             }
             
-            filebutton.textContent = tmp_scriptFileName;
-            // filebutton.textContent = tmp_scriptFileName_swithoutSubName;
+            filebutton.textContent = tmp_scriptFileName_withoutSubName;
             filebutton.Full_scriptFileName = tmp_scriptFileName;
             filebutton.without_scriptFileName = tmp_scriptFileName_withoutSubName;
             filebutton.classList.add('select_btn_Dialog');
-            
             file_selector.appendChild(filebutton);
-            
 
-            //Click scriptFileName to select it (post an WEBAPI to inform server)
+            //Click scriptFileName to select it (post an WebAPI to inform server)
             filebutton.addEventListener('click', async () => {
                 const response_2 = await fetch('/api/get_script_file_content', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body:JSON.stringify({'name' : file})
                 });
-                
                 const res2_data = await response_2.json();
+
+                console.log("====0..0====");
                 script_JSON_object = res2_data;
                 console.log(script_JSON_object);
 
                 scriptFileName = filebutton.Full_scriptFileName;
                 document.getElementById('scriptFileName').innerText = filebutton.without_scriptFileName;
                 const CaliPoints_Info = script_JSON_object.CaliPoints_Info;
-                
+
+                //Check if the CodeName is in the Devices_setting
+                selectFile_Device_NotMatch_Alert_Flag = NO;
+                check_Device_and_Script_Match(CaliPoints_Info, Devices_setting);
+
                 //Fill the table with the content in the selected script
                 const tableBody = document.getElementById('tableContainer');
                 tableBody.innerHTML = "";
                 console.log(typeof(CaliPoints_Info));
+                rowCount = 0;
                 Object.keys(CaliPoints_Info).forEach(cali_point_str =>{ //cali_point's type is string
                     console.log(`${cali_point_str}:`, CaliPoints_Info[cali_point_str]);
                     const cali_point_obj = CaliPoints_Info[cali_point_str];
+                    console.log("====0.0===");
+                    console.log(cali_point_obj);
                     console.log(`${cali_point_str}.enable = ${cali_point_obj.enable}`);
-                    addRow(cali_point_str, device_options, cali_point_obj.enable, Devices_setting);
+                    addRow(cali_point_str, device_options, cali_point_obj, Devices_setting);
                 })
 
 
@@ -504,7 +610,31 @@
         document.getElementById('dialog-box').style.display = 'block';
         document.getElementById('dialog-overlay').style.display = 'block';
     }
-    
+
+    function check_Device_and_Script_Match(_CaliPoints_Info, _Devices_setting){
+        if(selectFile_Device_NotMatch_Alert_Flag == NO){
+            let tmp_EQ_Name = "";
+            Object.keys(_CaliPoints_Info).forEach(cali_point_str => {
+                const cali_point_obj = _CaliPoints_Info[cali_point_str];
+                if(cali_point_obj.Target_Equipment?.Equipment_Name){ //If the value is exist, then this cali_point has default value
+                    tmp_EQ_Name = cali_point_obj.Target_Equipment.Equipment_Name;
+                    console.log(`EQ_Name = ${tmp_EQ_Name}`);
+                    if(tmp_EQ_Name in _Devices_setting){
+
+                    }
+                    else{
+                        selectFile_Device_NotMatch_Alert_Flag = YES;
+                    }
+                }
+            })
+            
+            if(selectFile_Device_NotMatch_Alert_Flag == YES){
+                alert("當前儀器不匹配腳本, 請重新選擇「目標儀器」與「關注值」, 或重新搜尋儀器");
+                return;
+            }
+        }
+    }
+
     function selectFile(fileName){
         closeFileDialog();
     }
@@ -513,68 +643,12 @@
         document.getElementById('tmp_fileDialog').remove();
     }
 
-    FileSelectorDialog.addEventListener('change', (event)=>{
-        const scriptName = document.getElementById('scriptFileName');
-        const scriptFile = event.target.files[0];
+    document.getElementById('dialog-overlay').addEventListener('click', () => {
+        document.getElementById('dialog-box').style.display = 'none';
+        document.getElementById('dialog-overlay').style.display = 'none';
+    })
 
-        if(scriptFile.size === 0){
-            console.log("File is empty");
-        }
-
-        if(scriptFile){
-            console.log('File found');
-            scriptFileName = scriptFile.name;
-            let scriptName_without_subname;
-            
-            const dot_position = scriptFile.name.lastIndexOf(".");
-            
-            if(dot_position !== -1){
-                scriptName_without_subname = scriptFile.name.slice(0, dot_position);
-            }
-            
-            scriptName.innerText = `${scriptName_without_subname}`;
-            scriptFile_Handler(scriptFile);
-        }
-        else{
-            scriptName.innerText = "No files be selected.";
-        }
-    });
-
-    function scriptFile_Handler(_scriptFile){
-        const reader = new FileReader();
-        //Read Event
-        reader.onload = (e) => {
-            try{
-                //Get Json file in proper string form
-                script_JSON_object = JSON.parse(e.target.result);
-                console.log(script_JSON_object);
-                
-                //Get the outermost layer
-                // const CaliPoints_Info = Object.keys(script_JSON_object.CaliPoints_Info);
-                const CaliPoints_Info = script_JSON_object.CaliPoints_Info;
-                
-                
-                // const CaliPoints = Object.keys(script_JSON_object);
-                console.log(typeof(CaliPoints_Info));
-                Object.keys(CaliPoints_Info).forEach(cali_point_str =>{ //cali_point's type is string
-                    console.log(`${cali_point_str}:`, CaliPoints_Info[cali_point_str]);
-                    const cali_point_obj = CaliPoints_Info[cali_point_str];
-                    console.log(`${cali_point_str}.enable = ${cali_point_obj.enable}`);
-                    addRow(cali_point_str, cali_point_obj.enable);
-                })
-            }
-            catch(error){
-                console.log(error);
-            }
-        };
-        reader.onerror = (error) =>{
-            console.log("ERROR while read file.");
-        };
-        
-        reader.readAsText(_scriptFile); //This line is needed, it trigger the reader's onload event(the event of Read JSON)
-    }
-
-    function addRow(_cali_point, _device_options, _selected_flag, _Devices_setting) {
+    function addRow(_cali_point, _device_options, _cali_point_obj, _Devices_setting) {
         var columnCount = 0;
         rowCount++;
         // Get table body
@@ -597,7 +671,7 @@
         pointCell.setAttribute("columnNum", String(columnCount++));
         newRow.appendChild(pointCell);
         
-        //3rd column (Target equipment in corresponding calibration point)
+        // 3rd column (Target equipment in corresponding calibration point)
         const targetEquipmentCell = document.createElement('td'); //TE_Cell
         targetEquipmentCell.setAttribute("rowNum", String(rowCount - 1));
         targetEquipmentCell.setAttribute("columnNum", String(columnCount++));
@@ -612,10 +686,11 @@
             const temp_option = createOptions('16px', device, device);
             targetEquipmentSelect.appendChild(temp_option);
         })
+
         targetEquipmentCell.appendChild(targetEquipmentSelect);
         newRow.appendChild(targetEquipmentCell);
-
-        // // 第4 column (Target value type in correspoing calibration point)
+    
+        // 第4 column (Target value type in correspoing calibration point)
         const targetValueTypeCell = document.createElement('td'); //TV_Cell
         const TV_Cell_selector = document.createElement('select');
         TV_Cell_selector.style.fontSize = '18px';
@@ -626,13 +701,22 @@
         targetValueTypeCell.appendChild(TV_Cell_selector);
         newRow.appendChild(targetValueTypeCell);
 
+        // Handle the default values of Target_Equipment and Target_value_type
+        if(_cali_point_obj.Target_Equipment?.Equipment_Name && selectFile_Device_NotMatch_Alert_Flag == NO){ //If the value is exist, then this cali_point has default value
+            targetEquipmentSelect.value = _cali_point_obj.Target_Equipment.Equipment_Name;
+            if(_cali_point_obj.Target_Equipment?.Value_Type){
+                let default_ValueType = _cali_point_obj.Target_Equipment?.Value_Type;
+                Assign_Default_Value_Type(targetEquipmentSelect.value, TV_Cell_selector, _Devices_setting, default_ValueType);
+            }
+        }
+
         // 第5 column (選擇: 勾選方塊)
         const checkboxCell = document.createElement('td');
         const customCheckbox = document.createElement('label');
         checkboxCell.setAttribute("rowNum", String(rowCount - 1));
         checkboxCell.setAttribute("columnNum", String(columnCount++));
         customCheckbox.className = 'custom-checkbox';
-        if(_selected_flag === false){
+        if(_cali_point_obj.enable === false){
             customCheckbox.innerHTML = `
             <input type="checkbox" onchange="updateSelectedList()">
             <span></span>`;    
@@ -651,6 +735,32 @@
 
         // 更新所有行的順序
         updateOrder();
+    }
+
+    function Assign_Default_Value_Type(_targetEquipmentSelect_value, _TV_Cell_selector, _Devices_setting, _default_ValueType){
+
+        _TV_Cell_selector.innerHTML = "";
+
+        let selectValue_Type;
+        if(_targetEquipmentSelect_value != "NO"){
+            //if the select_value is not exist in the devices_setting, it will trigger an alarm
+            //to show that the file doesn't not match the devices this time.
+            if(_targetEquipmentSelect_value in _Devices_setting){
+                selectValue_Type = _Devices_setting[_targetEquipmentSelect_value].Type;
+                console.log(selectValue_Type);
+            }
+        }
+
+        if(selectValue_Type && optionMap[selectValue_Type]){
+            optionMap[selectValue_Type].forEach(option => {
+                const newOption = createOptions('16px', option, option);
+                _TV_Cell_selector.appendChild(newOption);
+            });
+
+            if(_default_ValueType){
+                _TV_Cell_selector.value = _default_ValueType;
+            }
+        }
     }
 
     // 初始化 SortableJS 
@@ -710,9 +820,13 @@
         //get the selectValue_Type (is the device type of corresponding CodeName)
         let selectValue_Type;
         if(selectValue != "NO"){
+            console.log(`[optionMapping] : ${selectValue}`);
             selectValue_Type = _Devices_setting[selectValue].Type;
             console.log("HI");
             console.log(selectValue_Type);
+        }
+        else{
+            selectValue_Type = "先選目標儀器";
         }
         
         //get the cell corres_target_value_selector element
@@ -725,20 +839,57 @@
         const corres_target_value_selector = corres_target_value_cell.querySelector("select");
         console.log(corres_target_value_selector);
         
+
         corres_target_value_selector.innerHTML = "";
+        if(!(optionMap[selectValue_Type])){
+            const newOption = createOptions('16px', selectValue_Type, selectValue_Type);
+            corres_target_value_selector.appendChild(newOption);
+            return;
+        }
+
         if(selectValue_Type && optionMap[selectValue_Type]){
             optionMap[selectValue_Type].forEach(option => {
                 const newOption = createOptions('16px', option, option);
                 corres_target_value_selector.appendChild(newOption);
             });
+            return;
         }
     }
     
     //Goal : Use a POST API to inform the server to save the modified script JSON file
-    function SaveScriptSetting(){
+    async function SaveScriptSetting(){
+        //First, check if the pass_or_not_flag is still effect or not
+        let tmp_JSON_object;
+        let pass_or_not_flag = 0;
+        const response = await fetch('/api/check_pass_or_not_flag');
+        if(!response.ok){
+            throw new Error("[Check_PASS]network response was not ok");
+        }
+        tmp_JSON_object = await response.json();
+        pass_or_not_flag = tmp_JSON_object["Pass_Flag"];
+        
+        //If the pass_or_not_flag == 0, then we try to login with password
+        if(pass_or_not_flag == 0){
+            pass_or_not_flag = Admin_Check();
+        }
+        
+        //After logining or the flag == 1, we can truely save the content on the UI
+        if(pass_or_not_flag == 1){
+            save_script_handler();
+
+            //reset the counter
+            const response = await fetch('/api/token_counter_reset', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body:JSON.stringify({})
+            }); 
+        }
+    }
+    function save_script_handler(){
         const table = document.getElementById("tableContainer");
         const fixed_row_number = table.rows.length;
         console.log(fixed_row_number);
+
         script_JSON_object["Order"] = []; //Clean the "Order" list
         
         //Iterate each row in table
@@ -788,13 +939,11 @@
             console.log(`[Handling] ${cali_point_str}`);
             cali_point_object["Target_Equipment"]["Equipment_Name"] = (targetEquipment_selected_str === "NO") ? "" : targetEquipment_selected_str;
             cali_point_object["Target_Equipment"]["Value_Type"] = (targetValueType_selected_str === "NO") ? "" : targetValueType_selected_str;
-            
-
         }
         //add the termination cali_point cmd("0xffff")
         script_JSON_object["Order"].push("0xffff");
         
-        script_JSON_object.script_File_Name = scriptFileName;
+        // script_JSON_object.script_File_Name = scriptFileName;
         console.log(script_JSON_object);
 
         const response = fetch('/api/save_modified_script', {
@@ -802,70 +951,28 @@
             headers: {'Content-Type': 'application/json'},
             body:JSON.stringify(script_JSON_object)
         });
-        // for(let i = 0 ; i < fixed_row_number ; i ++){
-        //     let cali_point_str_cell = getCellByRowAndCol(i, 1);
-        //     let targetEquipmentCell = getCellByRowAndCol(i, 2);
-        //     let targetValueTypeCell = getCellByRowAndCol(i, 3);
-        //     let checkbox_cell = getCellByRowAndCol(i,4);
-            
-        //     //cali_point_str
-        //     let cali_point_str = cali_point_str_cell.innerText;
-        //     console.log(`${cali_point_str}, ${typeof(cali_point_str)}`);
-
-        //     //targetEquipment_selected_str
-        //     let targetEquipment_select = targetEquipmentCell.querySelector("select");
-        //     let targetEquipment_selected_str = targetEquipment_select.value;
-        //     console.log(`${targetEquipment_selected_str}, ${typeof(targetEquipment_selected_str)}`);
-
-        //     //targetValue_selected_str
-        //     let targetValueType_select = targetValueTypeCell.querySelector("select");
-        //     let targetValueType_selected_str = targetValueType_select.value;
-        //     console.log(`${targetValueType_selected_str}, ${typeof(targetValueType_selected_str)}`);
-            
-        //     //check_status_bool
-        //     let checkbox = checkbox_cell.querySelector('input[type="checkbox"]');
-        //     let check_status_bool = checkbox.checked;
-        //     console.log(`${check_status_bool}, ${typeof(check_status_bool)}`);
-            
-        //     //record the order by pushing the step_cmd of the current cali point into
-        //     //the list script_JSON_object["Order"]
-        //     if(check_status_bool){
-        //         let cali_point_corres_cmd = script_JSON_object["CaliPoints_Info"][`${cali_point_str}`]["step_cmd"];
-        //         console.log(`${cali_point_corres_cmd}, ${typeof(cali_point_corres_cmd)}`);
-        //         script_JSON_object["Order"].push(cali_point_corres_cmd);
-        //         console.log(script_JSON_object.Order);
-        //     }
-        //     //Modify the content in script_JSON_object
-
-            
-
-        //     // let checkbox = checkbox_cell.querySelector('input[type="checkbox"]');
-            
-        //     // cali_point_str = cali_point_str_cell.innerText;
-            
-        //     // console.log(cali_point_str);
-        //     // if(checkbox.checked){
-        //     //     console.log("checked");
-        //     // }
-        //     // else{
-        //     //     console.log("none checked");
-        //     // }
-            
-        // }
-
-
-        //2nd : Use a POST API to inform the server to save the modified script JSON file 
-        // try{
-        //     const response = await fetch('/api/save_modified_script',{
-        //         method: 'POST',
-        //         headers:{
-        //             'Content-Type': 'application/json',
-        //         },
-        //         // Send the JSON object within body
-        //         // body: JSON.stringify();
-        //     })
-        // }
     }
+
+    async function Admin_Check(){
+        let password = prompt("Input password");
+        if(password == ""){
+            alert("password is empty, please retry it!!");
+            return 0;
+        }
+
+        let tmp_json_obj = {};
+        const response = await fetch('/api/check_passwd', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body:JSON.stringify({'passwd' : password})
+        });
+        const res_data = await response.json();
+        console.log("======PASS_OR_NOT======");
+        console.log(res_data["Pass_Flag"]);
+
+        return res_data["Pass_Flag"];
+    }
+
 </script>
 
 </body>

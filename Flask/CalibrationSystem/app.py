@@ -8,6 +8,7 @@ from collections import defaultdict
 import os
 import json
 import math
+import random
 ##################################################
 # Global Variables
 ##################################################
@@ -77,21 +78,31 @@ TargetEquipment_Value_str = "-"
 
 #Script
 ScriptName_str = ""
-CurrentScript_dict = {} #For calibration
+CurrentScript_dict = {} # Data is from the script file that we select
 ScriptFolderPath_str = "./scripts"
 ScriptFilePath_str = ""
-Cali_point_step_cmd_mapping = {}
+Cali_point_step_cmd_mapping = {} # Data is from the "CurrentScript_dict". Its mapping is like "0x0001" : "ACI_DC_Offset_單相"
+LAST_USED_SCRIPT_FILE_PATH = "./Last_used_script.json"
 
 #Devices_setting
+Device_info_to_Web_dict = {}
 DEVICE_JSON_FILE_PATH = "./DeviceConfig/DeviceConfig.json"
+FINE_SETTING_JSON_FILE_PATH = "./DeviceConfig/Fine_setting.json"
 Devices_setting = {} #For current linked devices
 
-#Enter
-enter_pressed = 0
-
+#Password
+Password = set()
+Password.add("admin")
+pass_or_not_flag = 0
+token_second_counter = 0
+TOKEN_ALIVE_TIME = 10 # in second
 app = Flask(__name__)
 c_lib_Cali = ctypes.CDLL('./Cali_Code/Cali.so')
 #c_lib_Search_Device = ctypes.CDLL('./Clib/Cali_Code/Auto_Search_Device.so')
+
+Debug_MODE = 1
+Debug_Enter_pressed = 0
+
 ##################################################
 # C_lib parameters declaration
 ##################################################
@@ -179,8 +190,6 @@ def server_timers():
     global current_cali_point_step_cmd
     global change_to_next_cali_point_flag
 
-    global enter_pressed
-    
     single_task = {} #dictionary
     tasks_list = []
 
@@ -195,29 +204,28 @@ def server_timers():
         AdjustMode_str = "微調"
         CaliStatus_str = "-"
         ScriptName_str = ""
-        TargetEquipment_Name_str = "-"
         current_cali_point_count = 0
         current_cali_point_step_cmd = ""
-        enter_pressed = 0
 
         UI_stage = UI_STAGE_POLLING
 
     while True:
-        if(UI_stage == UI_STAGE_POLLING) :
+        if(UI_stage == UI_STAGE_POLLING):
             print("========== UI_STAGE_POLLING")
             # Get DUT ModelName, CommInterface
             ModelName_str       = getModelName()
             CommInterface_str   = getCommInterface()
             AdjustMode_str      = getAdjustMode()
             CaliStatus_str      = getCaliStatus()
-        
+            
             print(f"ModelName = {ModelName_str}")
             print(f'CommInterface_str = {CommInterface_str}')
             print(f'CaliStatus_str = {CaliStatus_str}')
             print(f'AdjustMode_str = {AdjustMode_str}')
 
             if(CommInterface_str != "-" and len(ModelName_str) > 6):
-                GetScript()
+                # GetScript()
+                
                 UI_stage = UI_STAGE_SEND_POINT
 
             if(CaliStatus_str == "Device FAIL" or CaliStatus_str == "DUT FAIL" 
@@ -259,7 +267,7 @@ def server_timers():
                 SendCaliPointInfo(current_cali_point_step_cmd, current_scaling_factor_str, current_cali_point_target, current_usb_port_str)
                 
                 UI_stage = UI_STAGE_READ_FIXED_CALI_POINT_INFO
-
+                
                 #DEBUG (Move cali_point to next index)
                 # current_cali_point_count = current_cali_point_count + 1
             else:
@@ -277,8 +285,8 @@ def server_timers():
                 
             #    UI_stage = UI_STAGE_READ_DYANAMIC_VALUES
             #else:
-            tmp_Upper_Bound = c_lib_Cali.Get_PSU_Cali_Point_High_Limit()
-            tmp_Lower_Bound = c_lib_Cali.Get_PSU_Cali_Point_Low_Limit()
+            tmp_Upper_Bound = getUpperBound()
+            tmp_Lower_Bound = getLowerBound()
             if math.isclose(tmp_Upper_Bound, 0.0, abs_tol=1e-6) or math.isclose(tmp_Lower_Bound, 0.0, abs_tol=1e-6):
                 # Any one of the bound didn't get the value from Cali_Thread
                 High_limit_str  = "-"
@@ -306,10 +314,10 @@ def server_timers():
         elif(UI_stage == UI_STAGE_READ_DYANAMIC_VALUES):
             print("========== UI_STAGE_READ_DYANAMIC_VALUES")
             AdjustMode_str = getAdjustMode()
-            TargetEquipment_Value_Bound = c_lib_Cali.Get_Device_Measured_Value() #str(Mock_equipment_value()) #Debug
-            TargetEquipment_Value_str = f"{TargetEquipment_Value_Bound:.3f}"
+            TargetEquipment_Value = getDeviceMeasureValue()
+            TargetEquipment_Value_str = f"{TargetEquipment_Value:.3f}"
             CaliStatus_str = getCaliStatus()
-            CaliPointComplete_uint8 = c_lib_Cali.Get_Calibration_Point_Complete()
+            CaliPointComplete_uint8 = getCalibrationPointComplete()
             
             print(f'{AdjustMode_str}, {TargetEquipment_Value_str}, {CaliStatus_str}')
             if(CaliPointComplete_uint8 == 1):
@@ -338,87 +346,6 @@ def server_timers():
         
         time.sleep(0.1)
 
-    #This thread's main loop
-    # while True:
-        
-    #     if(UI_stage == 1):
-    #         #Get ModelName string
-    #         # ModelName_ptr = c_lib_Cali.Get_Machine_Name()
-    #         # ModelName_str = ModelName_ptr.decode("utf-8")
-    #         ModelName_str = "BIC-5000-24" #DEBUG
-            
-    #         if(ModelName_str == ""):
-    #             ModelName_str = "-"
-    #             print(f"ModelName = {ModelName_str}")
-    #         else:
-    #             GetScript()
-    #             print("received modelname from C : " + ModelName_str)
-                
-
-    #         #Get CommInterface string
-    #         CommInterface_uint8 = c_lib_Cali.Get_Communication_Type()
-    #         CommInterface_str = comm_type_cases.get(CommInterface_uint8, "-") #"-" is default value
-    #         print(f'CommInterface_str = {CommInterface_str}')
-
-    #         #Get AdjustMode
-    #         AdjustMode_uint8 = c_lib_Cali.Get_Keyboard_Adjustment()
-    #         AdjustMode_str = adjust_mode_cases[AdjustMode_uint8]
-    #         print(f'AdjustMode_str = {AdjustMode_str}')
-
-    #         #Get CaliStatus
-    #         CaliStatus_uint8 = c_lib_Cali.Get_Calibration_Status()
-    #         CaliStatus_str = cali_status_cases[CaliStatus_uint8]
-    #         print(f'CaliStatus_str = {CaliStatus_str}')
-
-    #         print("\n")
-
-    #         # If we already received the following things, the UI_stage can turn to stage 2
-    #         # 1. CommInterface
-    #         # 2. ModelName
-    #         if(CommInterface_str != "-" and len(ModelName_str) > 6):                
-    #             # UI_stage turns to next step
-    #             UI_stage = 2
-    #             print(UI_stage)
-            
-    #         if(CaliStatus_str == "FAIL"): #FAIL
-    #             UI_stage = 0
-    #             c_lib_Cali.Stop_Cali_thread()
-    #             break
-            
-    #     else:
-
-    #         #Get AdjustMode
-    #         AdjustMode_uint8 = c_lib_Cali.Get_Keyboard_Adjustment()
-    #         AdjustMode_str = adjust_mode_cases[AdjustMode_uint8]
-    #         print(AdjustMode_str)
-
-    #         #Get CaliStatus
-    #         CaliStatus_uint8 = c_lib_Cali.Get_Calibration_Status()
-    #         CaliStatus_str = cali_status_cases[CaliStatus_uint8]
-    #         print(CaliStatus_str)
-            
-    #         #Add a task to the tasks_list 
-    #         if((old_CaliType_str != "-" and old_CaliPoint_str != CaliPoint_str) or (old_CaliType_str != CaliType_str)):
-    #             single_task['JSON_Content_Cali_Type'] = CaliType_str
-    #             single_task['JSON_Content_Cali_Point'] = CaliPoint_str
-    #             single_task['JSON_Content_Cali_Task_Status'] = "Running"
-                
-    #             tasks_list.append(single_task)
-    #             single_task.clear()
-            
-
-    #     if(CaliStatus_uint8 == 1 or CaliStatus_uint8 == 2):
-            
-    #         #inform C_Cali_thread
-    #         c_lib_Cali.Stop_Cali_thread()
-    #         print("Thread : Cali terminated.\n")
-    #         print("Thread : ServerTimer Terminated.\n")
-
-    #         UI_stage = 0 # Waiting for button pressing of next time
-
-    #         break #terminate ServerTimer
-    #     time.sleep(0.1)
-
 def GetScript():
     global CurrentFolder_str
     global ScriptFolderPath_str
@@ -428,8 +355,6 @@ def GetScript():
     global ModelName_str
     
     global Cali_point_step_cmd_mapping
-
-    # ModelName_str = "BIC-5000-24" #DEBUG
 
     # Get the part of ModelName_str before the last "-"
     ScriptName_str, _, _ = ModelName_str.rpartition("-")
@@ -454,38 +379,173 @@ def GetScript():
         print(f"[Error] File '{ScriptFilePath_str}' is not exist")
     except json.JSONDecodeError:
         print(f"[Error] File '{ScriptFilePath_str}' Invalid JSON format")
-        
+
+def Init_getDeviceSetting_from_Local_File():
+    global Devices_setting
+    Devices_setting = {}
+
+    #Load local deviceConfig json file to "Devices_setting"
+    try:
+        with open(DEVICE_JSON_FILE_PATH, "r", encoding="utf-8") as file:
+            devices_JSON = json.load(file)
+
+    except FileNotFoundError:
+        print("Error : JSON file not found")
+    except json.JSONDecodeError:
+        print("Error : Json format error")
+    
+    fine_setting_flag = 0
+    for Mfr, Series in devices_JSON.items():
+        for model in Series:
+            if(model == "51101-8"):
+                fine_setting_flag = 1
+            for index in range(len(Series[model]["Identifier"])):
+                tmp_EQ_type_str = Series[model]["EQ_TYPE"]
+                tmp_SerialNum_str = Series[model]["SerialNumber"][index]
+                tmp_CodeName_str = Series[model]["Identifier"][index]
+                tmp_USB_Port_str = Series[model]["USB_Port"][index]
+                print(f'({index}) : ModelName = {Mfr + "," + model}, EQ_TYPE = {tmp_EQ_type_str}, SeriNum = {tmp_SerialNum_str}, ID = {tmp_CodeName_str}, USB_Port = {tmp_USB_Port_str}')
+                
+                tmp_dict = {}
+                tmp_dict["Type"] = tmp_EQ_type_str
+                tmp_dict["ModelName"] = Mfr + "," + model
+                tmp_dict["SerialNum"] = tmp_SerialNum_str
+                tmp_dict["USB_Port"] = tmp_USB_Port_str
+                
+                Devices_setting[tmp_CodeName_str] = tmp_dict
+
+    # Load Fine-setting from local file to "Device_setting"
+    if(fine_setting_flag == 1):
+        with open(FINE_SETTING_JSON_FILE_PATH, "r", encoding="utf-8") as file:
+            fine_setting = json.load(file)
+            json_str = json.dumps(fine_setting, indent=4)
+
+        Devices_setting["Fine-setting"] = fine_setting
+
+    print("[Result]")
+    print(json.dumps(Devices_setting, indent=4))
+    
+def Init_getScript_from_Local_File():
+    global CurrentScript_dict
+    global Cali_point_step_cmd_mapping
+    CurrentScript_dict = {}
+    Cali_point_step_cmd_mapping = {}
+
+    lastTime_ScriptName = ""
+    script_file_path = ""
+    try:
+        # Get the script name we used in last time
+        with open(LAST_USED_SCRIPT_FILE_PATH, "r", encoding="utf-8") as file:
+            tmp_json = json.load(file)
+            lastTime_ScriptName = tmp_json["ScriptName"]
+            print(f'lastTime_ScriptName = {lastTime_ScriptName}')
+
+        # Get the script content we used in last time
+        script_file_path = os.path.join(ScriptFolderPath_str, lastTime_ScriptName)
+        with open(script_file_path, "r", encoding="utf-8") as file:
+            CurrentScript_dict = json.load(file)
+            for cali_point_str in CurrentScript_dict["CaliPoints_Info"]:
+                tmp_step_cmd = CurrentScript_dict["CaliPoints_Info"][cali_point_str]["step_cmd"]
+                Cali_point_step_cmd_mapping[tmp_step_cmd] = cali_point_str
+
+    except FileNotFoundError:
+        print("Error : JSON file not found")
+    except json.JSONDecodeError:
+        print("Error : Json format error")
+
+def Get_cmd_to_CaliPoint_mapping():
+    global CurrentScript_dict
+    global Cali_point_step_cmd_mapping
+
+    if(CurrentScript_dict != {}):
+        Cali_point_step_cmd_mapping = {}
+        for cali_point_str in CurrentScript_dict["CaliPoints_Info"]:
+            tmp_step_cmd = CurrentScript_dict["CaliPoints_Info"][cali_point_str]["step_cmd"]
+            Cali_point_step_cmd_mapping[tmp_step_cmd] = cali_point_str
+
+def reset_pass_or_not_flag_thread():
+    global pass_or_not_flag
+    global token_second_counter
+
+    while (token_second_counter > 0):
+        token_second_counter = token_second_counter - 1
+        time.sleep(1) #sleep 300s
+
+    pass_or_not_flag = 0
+
 def getModelName():
-    ModelName_ptr = c_lib_Cali.Get_Machine_Name()
-    ModelName_str = ModelName_ptr.decode("utf-8")
+    if(Debug_MODE == 0):
+        ModelName_ptr = c_lib_Cali.Get_Machine_Name()
+        ModelName_str = ModelName_ptr.decode("utf-8")
+        return ModelName_str
+    else:
+        ModelName_str = "BIC-5K-48"
+        return ModelName_str
     
-    #DEBUG
-    # ModelName_str = "BIC-5000-24"
-    return ModelName_str
-
 def getCommInterface():
-    CommInterface_uint8 = c_lib_Cali.Get_Communication_Type()
-    CommInterface_str = comm_type_cases.get(CommInterface_uint8, "-") #"-" is default value
+    if(Debug_MODE == 0):
+        CommInterface_uint8 = c_lib_Cali.Get_Communication_Type()
+        CommInterface_str = comm_type_cases.get(CommInterface_uint8, "-") #"-" is default value
+        return CommInterface_str
+    else:
+        CommInterface_str = "CANBUS"
+        return CommInterface_str
     
-    #DEBUG
-    # CommInterface_str = "CANBUS"
-    return CommInterface_str
-
 def getAdjustMode():
-    AdjustMode_uint8 = c_lib_Cali.Get_Keyboard_Adjustment()
-    AdjustMode_str = adjust_mode_cases[AdjustMode_uint8]
-
-    #DEBUG
-    # AdjustMode_str = adjust_mode_cases[0]
-    return AdjustMode_str
+    if(Debug_MODE == 0):
+        AdjustMode_uint8 = c_lib_Cali.Get_Keyboard_Adjustment()
+        AdjustMode_str = adjust_mode_cases[AdjustMode_uint8]
+        return AdjustMode_str
+    else:
+        AdjustMode_str = adjust_mode_cases[0]
+        return AdjustMode_str
 
 def getCaliStatus():
-    CaliStatus_uint8 = c_lib_Cali.Get_Calibration_Status()
-    CaliStatus_str = cali_status_cases[CaliStatus_uint8]
+    if(Debug_MODE == 0):
+        CaliStatus_uint8 = c_lib_Cali.Get_Calibration_Status()
+        CaliStatus_str = cali_status_cases[CaliStatus_uint8]
+        return CaliStatus_str
+    else:
+        global UI_stage
+        CaliStatus_str = cali_status_cases[0]
+        
+        if(UI_stage == UI_STAGE_CHECK_FINISH):
+            CaliStatus_str = cali_status_cases[1]
+        
+        return CaliStatus_str
     
-    #DEBUG
-    # CaliStatus_str = cali_status_cases[0]
-    return CaliStatus_str
+def getUpperBound():
+    if(Debug_MODE == 0):
+        return c_lib_Cali.Get_PSU_Cali_Point_High_Limit()
+    else:
+        return 100
+    
+def getLowerBound():
+    if(Debug_MODE == 0):
+        return c_lib_Cali.Get_PSU_Cali_Point_Low_Limit()
+    else:
+        return 50
+
+def getDeviceMeasureValue():
+    if(Debug_MODE == 0):
+        return c_lib_Cali.Get_Device_Measured_Value()
+    else:
+        return random.uniform(1, 100)
+        # return 77.777
+
+def getCalibrationPointComplete():
+   
+    if(Debug_MODE == 0):
+        return c_lib_Cali.Get_Calibration_Point_Complete()
+    
+    else:
+        global Debug_Enter_pressed
+        temp_enter_pressed = Debug_Enter_pressed
+
+        if(Debug_Enter_pressed == 1):
+            Debug_Enter_pressed = 0
+
+        return temp_enter_pressed
 
 def SendCaliPointInfo(_step_cmd, _scaling_factor, _target, _usb_port):
     
@@ -523,6 +583,20 @@ def Calibration_schedule():
 ##################################################
 @app.route('/api/START_CALI_PROCESS', methods=['POST'])
 def handle_START_CALI_PROCESS():
+    #Before pressing the start_button, the following data need to be ready
+
+    global CurrentScript_dict
+    global Cali_point_step_cmd_mapping
+    cmd_length = len(CurrentScript_dict["Order"])
+    print(f'cmd_length = {cmd_length}')
+
+    if(CurrentScript_dict == {}):
+        return jsonify({'OK_Flag' : 0}), 200
+    if(Cali_point_step_cmd_mapping == {}):
+        return jsonify({'OK_Flag' : 0}), 200
+    if(cmd_length <= 1):
+        return jsonify({'OK_Flag' : 0}), 200
+    
     Rcv_json_object = request.get_json()
     Re_Cali_Flag = Rcv_json_object["Re_cali"]
     if(Re_Cali_Flag == True):
@@ -534,12 +608,12 @@ def handle_START_CALI_PROCESS():
         c_lib_Cali.Check_UI_Reset_Cali(2)
         print(Re_Cali_Flag)
 
-    c_lib_Cali.Start_Cali_thread()
+    # c_lib_Cali.Start_Cali_thread()
 
     thread = Thread(target=server_timers)
     thread.daemon = True
     thread.start()
-    return jsonify({})
+    return jsonify({'OK_Flag' : 1}), 200
 
 @app.route('/api/stage_query', methods=['GET'])
 def handle_stage_query():
@@ -571,7 +645,18 @@ def handle_update_ui_2nd_stage():
     global CurrentScript_dict
     
     #tmp_scaling_factor_str = CurrentScript_dict["CaliPoints_Info"][CaliPoint_str]["scaling_factor"]
+    print(f"\t\t 2nd_stage : Cali_point = {CaliPoint_str}")
+
     tmp_equipment_name_str = CurrentScript_dict["CaliPoints_Info"][CaliPoint_str]["Target_Equipment"]["Equipment_Name"]
+    tmp_step_cmd_str = CurrentScript_dict["CaliPoints_Info"][CaliPoint_str]["step_cmd"]
+    tmp_step_cmd_int = int(tmp_step_cmd_str, 16)
+    tmp_CaliPoint_str = "P{}. {}".format(str(tmp_step_cmd_int), CaliPoint_str)
+    
+    tmp_unit = CurrentScript_dict["CaliPoints_Info"][CaliPoint_str]["unit"]
+    
+    tmp_ValueType_str = CurrentScript_dict["CaliPoints_Info"][CaliPoint_str]["Target_Equipment"]["Value_Type"]
+    
+        
     #if(tmp_scaling_factor_str == "NO"):
     #    #For current cali point, there is no need of scaling_facotr
     #    tmp_done = 1
@@ -582,8 +667,10 @@ def handle_update_ui_2nd_stage():
     
     
 
-    data = jsonify({'WebAPI_CaliPoint'      : f'{CaliPoint_str}',
+    data = jsonify({'WebAPI_CaliPoint'      : f'{tmp_CaliPoint_str}',
                     'WebAPI_Equipment_Name' : f'{tmp_equipment_name_str}',
+                    'WebAPI_ValueType'      : f'{tmp_ValueType_str}',
+                    'WebAPI_Unit'           : f'{tmp_unit}',
                     'WebAPI_High_limit'     : f'{High_limit_str}',
                     'WebAPI_Low_limit'      : f'{Low_limit_str}',
                     'WebAPI_CaliStatus'     : f'{CaliStatus_str}',
@@ -596,9 +683,15 @@ def handle_update_ui_3rd_stage():
     global CaliStatus_str
     global TargetEquipment_Value_str
     global change_to_next_cali_point_flag
-    
+
+    global CurrentScript_dict
+    global CaliPoint_str
+    tmp_unit = CurrentScript_dict["CaliPoints_Info"][CaliPoint_str]["unit"]
+
+
     data = jsonify({'WebAPI_AdjustMode' : f'{AdjustMode_str}',
                     'WebAPI_CaliStatus' : f'{CaliStatus_str}',
+                    'WebAPI_unit'       : f'{tmp_unit}',
                     'WebAPI_Target_EQ_value' : f'{TargetEquipment_Value_str}',
                     'WebAPI_change_point_flag' : change_to_next_cali_point_flag})
     
@@ -609,10 +702,11 @@ def handle_update_ui_3rd_stage():
 
 @app.route('/api/scan_usb_devices', methods=['POST'])
 def handle_scan_usb_devices():
+    global Device_info_to_Web_dict
     DeviceInfo_str_list = []
 
     #debug
-    debug = 0
+    debug = 1
 
     #Real mode
     if(debug == 0):
@@ -640,8 +734,9 @@ def handle_scan_usb_devices():
     
     #Debug mode
     elif(debug == 1):
-        device_info_1 = "/dev/ttyUSB0,Chroma 51101-8"
-        device_info_2 = "/dev/USBTMC0,Chroma ATE,66202,662025001432,1.70"
+        device_info_1 = "/dev/ttyUSB0,Chroma,51101-8"
+        # device_info_2 = "/dev/USBTMC0,Chroma ATE,66202,662025001432,1.70"
+        device_info_2 = "/dev/USBTMC0,Chroma ATE,66205,662025001432,1.70"
         DeviceInfo_str_list.append(device_info_1)
         DeviceInfo_str_list.append(device_info_2)
         print(DeviceInfo_str_list)
@@ -659,9 +754,6 @@ def handle_scan_usb_devices():
     print(devices_JSON)
 
     #Parse the devices' information
-    #Device_info_to_Web_dict = {
-        # "Chroma ATE, 66202" : "DWAM"
-    #}
     Device_info_to_Web_dict = {}
     
     EQ_type = ""
@@ -677,14 +769,21 @@ def handle_scan_usb_devices():
             Device_info_to_Web_dict["Chroma 51101-8"]["Serial_Num"] = ""
             Device_info_to_Web_dict["Chroma 51101-8"]["USB_Port"] = usb_port
         else:
-            split_info_str_list = info.split(",")
+            mfr_name = ""
+            model_name = ""
+            serial_num = ""
 
-            mfr_name = split_info_str_list[1]
-            print(mfr_name)
-            model_name = split_info_str_list[2]
-            print(model_name)
-            serial_num = split_info_str_list[3]
-            print(serial_num)
+            split_info_str_list = info.split(",")
+            if(len(split_info_str_list) >= 2):
+                mfr_name = split_info_str_list[1]
+                print(mfr_name)
+            if(len(split_info_str_list) >= 3):
+                model_name = split_info_str_list[2]
+                print(model_name)
+            if(len(split_info_str_list) >= 4):
+                serial_num = split_info_str_list[3]
+                print(serial_num)
+
             EQ_type = devices_JSON[mfr_name][model_name]["EQ_TYPE"]
 
             devices_JSON[mfr_name][model_name]["SerialNumber"].append(serial_num)
@@ -699,10 +798,49 @@ def handle_scan_usb_devices():
 @app.route('/api/save_devices_setting', methods=['POST'])
 def handle_save_devices_setting():
     global Devices_setting
+
     try:
+        # Receive device data from UI in json format
         Devices_setting = request.get_json()
         json_str = json.dumps(Devices_setting, indent=4)
+        
+        # Reset device data which got from local json file
+        with open(DEVICE_JSON_FILE_PATH, "r", encoding="utf-8") as file:
+            tmp_device_file_data = json.load(file)
+            for Mfr, Series in tmp_device_file_data.items():
+                for model in Series:
+                    Series[model]["SerialNumber"] = []
+                    Series[model]["Identifier"] = []
+                    Series[model]["USB_Port"] = []
+                print("==0.0==")
+                print(Series)
+
+        print("==== file_content : ====")
+        print(json.dumps(tmp_device_file_data, indent=4))
+        print("==== UI   content : ====")
         print(json_str)
+        
+        # Traverse the json data got from UI, and save the content to the json file
+        for CodeName, Info in Devices_setting.items():
+            if(CodeName != "Fine-setting"):
+                tmp_ModelName_str_list = Info["ModelName"].split(",")
+                tmp_USB_Port_str = Info["USB_Port"]
+                tmp_SerialNum_str = Info["SerialNum"]
+                tmp_mfr = tmp_ModelName_str_list[0]
+                tmp_Model = tmp_ModelName_str_list[1]
+                
+                tmp_device_file_data[tmp_mfr][tmp_Model]["Identifier"].append(CodeName)
+                tmp_device_file_data[tmp_mfr][tmp_Model]["SerialNumber"].append(tmp_SerialNum_str)
+                tmp_device_file_data[tmp_mfr][tmp_Model]["USB_Port"].append(tmp_USB_Port_str)
+        print(tmp_device_file_data)
+        with open(DEVICE_JSON_FILE_PATH, "w", encoding="utf-8") as file:
+            json.dump(tmp_device_file_data, file, ensure_ascii=False, indent=4)
+                
+
+        # Save Fine-setting data
+        with open(FINE_SETTING_JSON_FILE_PATH, "w", encoding="utf-8") as file:
+            json.dump(Devices_setting["Fine-setting"], file, ensure_ascii=False, indent=4)
+            
         return jsonify({}), 200
     
     except Exception as e:
@@ -715,6 +853,13 @@ def handle_get_devices_setting():
     print(json_str)
     return jsonify(Devices_setting), 200
 
+#No use currently
+@app.route('/api/get_non_saved_device_info', methods=['GET'])
+def get_non_saved_device_info():
+    json_str = json.dumps(Device_info_to_Web_dict, indent=4)
+    print(json_str)
+    return jsonify(Device_info_to_Web_dict), 200
+
 @app.route('/api/get_script_file_names', methods=['GET'])
 def handle_get_script_file_names():
     files = os.listdir(ScriptFolderPath_str)
@@ -723,23 +868,83 @@ def handle_get_script_file_names():
 
 @app.route('/api/get_script_file_content', methods=['POST'])
 def handle_get_script_file_content():
+    # After selecting the file on WebUI, the "CurrentScript_dict" and "Cali_point_step_cmd_mapping"
+    # will be filled with the data from script file, 
+
+
+    global CurrentScript_dict
+    global Cali_point_step_cmd_mapping
+    global Devices_setting
+
+    CurrentScript_dict = {}
+    Cali_point_step_cmd_mapping = {}
+
+    Device_Script_NotMatch_Flag = 0
+    tmp_CurrentScript_dict = {}
     try:
+        # Get the data from UI via WebAPI
         Rcv_Json_data = request.get_json()
+
         script_File_Name = Rcv_Json_data.get('name', "File_Not_Found")
         print(script_File_Name)
         
         script_File_Path = os.path.join(ScriptFolderPath_str, script_File_Name)
         print(script_File_Path)
 
+        # Open the script json file
         with open(script_File_Path, 'r') as file:
-            print("OPEN!!")
-            return json.load(file), 200
-    
+            # Assign "tmp_CurrentScript_dict" the json content
+            tmp_CurrentScript_dict = json.load(file)
+            # print(json.dumps(tmp_CurrentScript_dict, indent=4, ensure_ascii=False))
+            # print(json.dumps(Devices_setting, indent=4, ensure_ascii=False))
+            
+            # check if the EQ_Name in script is also in Device_setting
+            tmp_CaliPoint_Infos = tmp_CurrentScript_dict["CaliPoints_Info"]            
+            for cali_point_str, obj in tmp_CaliPoint_Infos.items():
+                tmp_info = tmp_CaliPoint_Infos[cali_point_str]
+
+                if(tmp_info["Target_Equipment"]["Equipment_Name"] is not None):
+                    tmp_EQ_NAME = tmp_info["Target_Equipment"]["Equipment_Name"]
+                    if(tmp_EQ_NAME == ""):
+                        continue
+
+                    if(tmp_EQ_NAME not in Devices_setting):
+                        print(f'tmp_EQ_NAME = {tmp_EQ_NAME}')
+                        print("Device and Script are not match")
+                        Device_Script_NotMatch_Flag = 1
+                        break
+
+            if(Device_Script_NotMatch_Flag == 0):
+                CurrentScript_dict = tmp_CurrentScript_dict
+                # Assign "Cali_point_step_cmd_mapping" the order in "tmp_CurrentScript_dict" 
+                Get_cmd_to_CaliPoint_mapping()
+                print(Cali_point_step_cmd_mapping)
+
+            else:
+                CurrentScript_dict = {}
+                Cali_point_step_cmd_mapping = {}
+                print("Clear the Script and Mapping")
+
+
+        # Get the script file name in last time 
+        with open(LAST_USED_SCRIPT_FILE_PATH, "r", encoding="utf-8") as f:
+            tmp_json = json.load(f)
+
+        tmp_json["ScriptName"] = script_File_Name
+
+        with open(LAST_USED_SCRIPT_FILE_PATH, "w", encoding="utf-8") as f:
+            json.dump(tmp_json, f, ensure_ascii=False, indent=4)
+
+        # return the API request with tmp_CurrentScript_dict. 200 means "OK" in API protocol
+        return tmp_CurrentScript_dict, 200
+        
     except Exception as e:
-        return jsonify({'error' : str(e)}), 400
+        return jsonify({'error' : str(e)}), 400 #400 means "ERROR" in API protocol's error code
     
 @app.route('/api/save_modified_script', methods=['POST'])
 def handle_save_modified_script():
+    global CurrentScript_dict
+    global Cali_point_step_cmd_mapping
     if request.is_json:
         Rcv_Json_data = request.get_json()
         # Get script_File_Name
@@ -752,16 +957,66 @@ def handle_save_modified_script():
 
         with open(script_File_Path, "w", encoding="utf-8") as f:
             json.dump(Rcv_Json_data, f, indent=4, ensure_ascii=False)
-
+        
         json_str = json.dumps(Rcv_Json_data, indent=4, ensure_ascii=False)
         print(json_str)
-        # print(Rcv_Json_data)
         
+        CurrentScript_dict = {}
+        Cali_point_step_cmd_mapping = {}
+
+        CurrentScript_dict = Rcv_Json_data
+        Get_cmd_to_CaliPoint_mapping()
+
         return jsonify({"message" : "JSON received", "data": Rcv_Json_data}), 200
 
+@app.route('/api/init_load_cali_points', methods=['GET'])
+def handle_init_load_cali_points():
+    tmp_json_obj = {}
+    if(CurrentScript_dict != {} and Cali_point_step_cmd_mapping != {}):
+        tmp_json_obj["CaliPoint"] = CurrentScript_dict
+        tmp_json_obj["step_cmd_mapping"] = Cali_point_step_cmd_mapping
+    return jsonify(tmp_json_obj), 200
 
+@app.route('/api/init_load_task_list', methods=['GET'])
+def handle_init_load_task_list():
+    tmp_json_obj = {}
+    tmp_json_obj["Script_content"] = CurrentScript_dict
+    tmp_json_obj["cmd_mapping"] = Cali_point_step_cmd_mapping
+    return jsonify(tmp_json_obj), 200
 
+@app.route('/api/check_passwd', methods=['POST'])
+def handle_check_passwd():
+    global Password
+    global pass_or_not_flag
+    if request.is_json:
+        Json_obj = request.get_json()
+        Rcv_passwd = Json_obj["passwd"]
+        print(Rcv_passwd)
+        if(Rcv_passwd in Password):
+            pass_or_not_flag = 1
+        return jsonify({"Pass_Flag" : pass_or_not_flag}), 200
+    
+    else:
+        return jsonify(), 400
 
+@app.route('/api/check_pass_or_not_flag', methods=['GET'])
+def handle_check_pass_or_not_flag():
+    global pass_or_not_flag
+    return jsonify({"Pass_Flag" : pass_or_not_flag}), 200
+
+@app.route('/api/token_counter_reset', methods=['POST'])
+def handle_token_counter_reset():
+    global token_second_counter
+
+    if(token_second_counter > 0):
+        token_second_counter = TOKEN_ALIVE_TIME
+    else:
+        token_second_counter = TOKEN_ALIVE_TIME
+        thread = Thread(target=reset_pass_or_not_flag_thread)
+        thread.daemon = True
+        thread.start()
+    
+    return jsonify({}), 200
 ##################################################
 # debug
 ##################################################
@@ -774,18 +1029,20 @@ def handle_testing():
 
 @app.route('/api/Mock_enter_pressed', methods=['POST'])
 def handle_Mock_enter_pressed():
-    global enter_pressed
+    global Debug_Enter_pressed
     Rcv_Json_data = request.get_json()
-    enter_pressed = Rcv_Json_data["pressed"]
-    print(f'enter_pressed = {enter_pressed}')
+    Debug_Enter_pressed = Rcv_Json_data["pressed"]
+    print(f'Debug_Enter_pressed = {Debug_Enter_pressed}')
     return jsonify({}), 200
 
 def Mock_equipment_value():
     return 24.86
+
 ##################################################
 # main
 ##################################################
 if __name__ == '__main__':
+    Init_getDeviceSetting_from_Local_File()
+    Init_getScript_from_Local_File()
     app.run(debug=True)
-    # GetScript()
-    # ListScriptFiles()
+    # print("admin" in Password)

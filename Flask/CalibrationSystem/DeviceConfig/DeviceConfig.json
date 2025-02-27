@@ -1,18 +1,36 @@
 {
-    "Chroma ATE" : {
-        "66202" : {
-            "EQ_TYPE" : "DWAM",
-            "SerialNumber" : []
+    "Chroma ATE": {
+        "66202": {
+            "EQ_TYPE": "DWAM",
+            "SerialNumber": [],
+            "Identifier": [],
+            "USB_Port": []
+        },
+        "66205": {
+            "EQ_TYPE": "DWAM",
+            "SerialNumber": [
+                "662025001432"
+            ],
+            "Identifier": [
+                "AA"
+            ],
+            "USB_Port": [
+                "/dev/USBTMC0"
+            ]
         }
     },
-    "Chroma ATE" : {
-        "66205" : {
-            "EQ_TYPE" : "DWAM",
-            "SerialNumber" : []
+    "Chroma": {
+        "51101-8": {
+            "EQ_TYPE": "DMM",
+            "SerialNumber": [
+                ""
+            ],
+            "Identifier": [
+                "BB"
+            ],
+            "USB_Port": [
+                "/dev/ttyUSB0"
+            ]
         }
-    },
-    "Chroma 51101-8" : {
-        "EQ_TYPE" : "DMM",
-        "SerialNumber" : []
     }
 }

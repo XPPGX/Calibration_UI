@@ -2,8 +2,8 @@
     "CaliPoints_Info": {
         "ACI_DC_Offset_單相": {
             "Target_Equipment": {
-                "Equipment_Name": "AA",
-                "Value_Type": "Ch0"
+                "Equipment_Name": "A",
+                "Value_Type": "V,RMS"
             },
             "enable": true,
             "scaling_factor": "NO",
@@ -11,8 +11,8 @@
         },
         "ACI輕載電流(2A)": {
             "Target_Equipment": {
-                "Equipment_Name": "BB",
-                "Value_Type": "I,RMS"
+                "Equipment_Name": "B",
+                "Value_Type": "Ch0"
             },
             "enable": true,
             "scaling_factor": "ACI",
