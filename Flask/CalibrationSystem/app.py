@@ -101,7 +101,8 @@ app = Flask(__name__)
 c_lib_Cali = ctypes.CDLL('./Cali_Code/Cali.so')
 #c_lib_Search_Device = ctypes.CDLL('./Clib/Cali_Code/Auto_Search_Device.so')
 
-DEBUG_MODE = 0 #DEBUG_MODE == 1, means it can run without any device ; DEBUG_MODE = 0 means it needs devices to run
+DEBUG_MODE = 1 #DEBUG_MODE == 1, means it can run without DUT ; DEBUG_MODE = 0 means it needs to connect DUT to run
+DEBUG_DEVICE = 1 #DEBUG_DEVICE == 1, means it can run without any device ; DEBUG_DEVICE == 0, means it needs to connect device to run
 Debug_Enter_pressed = 0
 
 ##################################################
@@ -528,7 +529,7 @@ def getLowerBound():
         return 50
 
 def getDeviceMeasureValue():
-    if(DEBUG_MODE == 0):
+    if(DEBUG_DEVICE == 0):
         return c_lib_Cali.Get_Device_Measured_Value()
     else:
         return random.uniform(1, 100)
@@ -706,11 +707,8 @@ def handle_scan_usb_devices():
     global Device_info_to_Web_dict
     DeviceInfo_str_list = []
 
-    #debug
-    debug = 1
-
     #Real mode
-    if(debug == 0):
+    if(DEBUG_DEVICE == 0):
         thread = Thread(target = c_lib_Cali.scan_usb_devices)
         thread.daemon = True
         thread.start()
@@ -734,7 +732,7 @@ def handle_scan_usb_devices():
             count = count + 1
     
     #Debug mode
-    elif(debug == 1):
+    elif(DEBUG_DEVICE == 1):
         device_info_1 = "/dev/ttyUSB0,Chroma,51101-8"
         # device_info_2 = "/dev/USBTMC0,Chroma ATE,66202,662025001432,1.70"
         device_info_2 = "/dev/USBTMC0,Chroma ATE,66205,662025001432,1.70"
