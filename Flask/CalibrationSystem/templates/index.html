@@ -633,6 +633,7 @@
     var UI_Result_color_map = {
         "FINISH" : 'green_style',
         "FAIL" : "red_style",
+        "Device FAIL" : "gray_style",
         "Not Completed" : "yellow_style"
     };
 
@@ -840,7 +841,7 @@
                         }, 0);
                     }
                     
-                    if(UI_Result.innerText == "FAIL"){
+                    if(UI_Result.innerText == "FAIL" || UI_Result.innerText == "Device FAIL"){
                         UI_Result_color = UI_Result_color_map[UI_Result.innerText];
                         UI_Result.classList.add(UI_Result_color);
                         setTimeout(() => {
@@ -891,7 +892,7 @@
                         change_point_status("Running");
                     }
                     
-                    if(UI_Result.innerText == "FAIL"){
+                    if(UI_Result.innerText == "FAIL" || UI_Result.innerText == "Device FAIL"){
                         UI_Result_color = UI_Result_color_map[UI_Result.innerText];
                         UI_Result.classList.add(UI_Result_color);
                         setTimeout(() => {
@@ -959,7 +960,7 @@
                     }
                     
 
-                    if(UI_Result.innerText == "FINISH" || UI_Result.innerText == "FAIL" || UI_Result.innerText == "Not Complete"){
+                    if(UI_Result.innerText == "FINISH" || UI_Result.innerText == "FAIL" || UI_Result.innerText == "Not Complete" || UI_Result.innerText == "Device FAIL"){
                         UI_Result_color = UI_Result_color_map[UI_Result.innerText];
                         UI_Result.classList.add(UI_Result_color);
                         setTimeout(() => {

@@ -101,7 +101,7 @@ app = Flask(__name__)
 c_lib_Cali = ctypes.CDLL('./Cali_Code/Cali.so')
 #c_lib_Search_Device = ctypes.CDLL('./Clib/Cali_Code/Auto_Search_Device.so')
 
-DEBUG_MODE = 1 #DEBUG_MODE == 1, means it can run without DUT ; DEBUG_MODE = 0 means it needs to connect DUT to run
+DEBUG_MODE = 0 #DEBUG_MODE == 1, means it can run without DUT ; DEBUG_MODE = 0 means it needs to connect DUT to run
 DEBUG_DEVICE = 1 #DEBUG_DEVICE == 1, means it can run without any device ; DEBUG_DEVICE == 0, means it needs to connect device to run
 Debug_Enter_pressed = 0
 
@@ -610,7 +610,8 @@ def handle_START_CALI_PROCESS():
         c_lib_Cali.Check_UI_Reset_Cali(2)
         print(Re_Cali_Flag)
 
-    # c_lib_Cali.Start_Cali_thread()
+    if(DEBUG_MODE == 0):
+        c_lib_Cali.Start_Cali_thread()
 
     thread = Thread(target=server_timers)
     thread.daemon = True
