@@ -487,6 +487,8 @@ def getModelName():
 def getCommInterface():
     if(DEBUG_MODE == 0):
         CommInterface_uint8 = c_lib_Cali.Get_Communication_Type()
+        print(f'CommInterface_uint8 = {CommInterface_uint8}')
+        time.sleep(5)
         CommInterface_str = comm_type_cases.get(CommInterface_uint8, "-") #"-" is default value
         return CommInterface_str
     else:

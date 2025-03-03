@@ -945,6 +945,7 @@ void Check_Calibration_Point_Complete(const uint8_t Complete_flag) {
 void Parameter_Init(void) {
     memset(machine_type, ' ', sizeof(char) * 12);
     machine_type[12] = '\0';
+    Manual_Cali_step = SEND_KEY_READ_MODE;
     communication_found = 0;
     space_pressed = 0;
     Cali_Result = 0;

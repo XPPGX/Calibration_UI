@@ -694,6 +694,7 @@
                 document.getElementById("UI_Target_Equipment").innerText = "-";
                 document.getElementById("UI_CaliRange").innerText = "~";
                 document.getElementById('UI_Result').innerText = "-";
+                document.getElementById("DeviceReadType").innerText = "-";
                 document.getElementById("UI_DeviceReadValue").innerText = "-";
                 if(document.getElementById('UI_Result').classList.contains(UI_Result_color)){
                     document.getElementById('UI_Result').classList.remove(UI_Result_color);
@@ -841,7 +842,7 @@
                         }, 0);
                     }
                     
-                    if(UI_Result.innerText == "FAIL" || UI_Result.innerText == "Device FAIL"){
+                    if(UI_Result.innerText == "FAIL"){
                         UI_Result_color = UI_Result_color_map[UI_Result.innerText];
                         UI_Result.classList.add(UI_Result_color);
                         setTimeout(() => {
@@ -892,7 +893,7 @@
                         change_point_status("Running");
                     }
                     
-                    if(UI_Result.innerText == "FAIL" || UI_Result.innerText == "Device FAIL"){
+                    if(UI_Result.innerText == "FAIL"){
                         UI_Result_color = UI_Result_color_map[UI_Result.innerText];
                         UI_Result.classList.add(UI_Result_color);
                         setTimeout(() => {
@@ -960,7 +961,7 @@
                     }
                     
 
-                    if(UI_Result.innerText == "FINISH" || UI_Result.innerText == "FAIL" || UI_Result.innerText == "Not Complete" || UI_Result.innerText == "Device FAIL"){
+                    if(UI_Result.innerText == "FINISH" || UI_Result.innerText == "FAIL" || UI_Result.innerText == "Not Complete"){
                         UI_Result_color = UI_Result_color_map[UI_Result.innerText];
                         UI_Result.classList.add(UI_Result_color);
                         setTimeout(() => {
