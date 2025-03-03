@@ -75,6 +75,8 @@ TargetEquipment_str = "-"
 High_limit_str      = "-"
 Low_limit_str       = "-"
 TargetEquipment_Value_str = "-"
+EQ_ValueColor       = 0
+
 
 #Script
 ScriptName_str = ""
@@ -102,7 +104,7 @@ c_lib_Cali = ctypes.CDLL('./Cali_Code/Cali.so')
 #c_lib_Search_Device = ctypes.CDLL('./Clib/Cali_Code/Auto_Search_Device.so')
 
 DEBUG_MODE = 0 #DEBUG_MODE == 1, means it can run without DUT ; DEBUG_MODE = 0 means it needs to connect DUT to run
-DEBUG_DEVICE = 1 #DEBUG_DEVICE == 1, means it can run without any device ; DEBUG_DEVICE == 0, means it needs to connect device to run
+DEBUG_DEVICE = 0 #DEBUG_DEVICE == 1, means it can run without any device ; DEBUG_DEVICE == 0, means it needs to connect device to run
 Debug_Enter_pressed = 0
 
 ##################################################
@@ -192,6 +194,8 @@ def server_timers():
     global current_cali_point_step_cmd
     global change_to_next_cali_point_flag
 
+    global EQ_ValueColor
+    
     single_task = {} #dictionary
     tasks_list = []
 
@@ -210,7 +214,8 @@ def server_timers():
         current_cali_point_step_cmd = ""
 
         UI_stage = UI_STAGE_POLLING
-
+        EQ_ValueColor = 0
+        
     while True:
         if(UI_stage == UI_STAGE_POLLING):
             print("========== UI_STAGE_POLLING")
@@ -253,7 +258,7 @@ def server_timers():
                 
                 current_cali_point_target = ""
                 print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-                if(Devices_setting[current_target_equipment_name]["ModelName"] == "Chroma 51101-8"):
+                if(Devices_setting[current_target_equipment_name]["ModelName"] == "Chroma,51101-8"):
                     tmp_channel = cali_point_object["Target_Equipment"]["Value_Type"]
                     tmp_channel = tmp_channel[2:]
                     print(tmp_channel)
@@ -320,6 +325,7 @@ def server_timers():
             TargetEquipment_Value_str = f"{TargetEquipment_Value:.3f}"
             CaliStatus_str = getCaliStatus()
             CaliPointComplete_uint8 = getCalibrationPointComplete()
+            EQ_ValueColor = getTargetEQ_ValueColor()
             
             print(f'{AdjustMode_str}, {TargetEquipment_Value_str}, {CaliStatus_str}')
             if(CaliPointComplete_uint8 == 1):
@@ -551,6 +557,10 @@ def getCalibrationPointComplete():
 
         return temp_enter_pressed
 
+def getTargetEQ_ValueColor():
+    tmp_EQ_ValueColor = c_lib_Cali.Get_Valid_Measured_Value()
+    return tmp_EQ_ValueColor 
+
 def SendCaliPointInfo(_step_cmd, _scaling_factor, _target, _usb_port):
     
     step_cmd_hex = int(_step_cmd, 16)
@@ -688,16 +698,18 @@ def handle_update_ui_3rd_stage():
     global CaliStatus_str
     global TargetEquipment_Value_str
     global change_to_next_cali_point_flag
-
+    global EQ_ValueColor
+    
     global CurrentScript_dict
     global CaliPoint_str
     tmp_unit = CurrentScript_dict["CaliPoints_Info"][CaliPoint_str]["unit"]
-
+    
 
     data = jsonify({'WebAPI_AdjustMode' : f'{AdjustMode_str}',
                     'WebAPI_CaliStatus' : f'{CaliStatus_str}',
                     'WebAPI_unit'       : f'{tmp_unit}',
                     'WebAPI_Target_EQ_value' : f'{TargetEquipment_Value_str}',
+                    'WebAPI_ValueColor' : f'{EQ_ValueColor}',
                     'WebAPI_change_point_flag' : change_to_next_cali_point_flag})
     
     if(change_to_next_cali_point_flag == 1):
@@ -883,6 +895,7 @@ def handle_get_script_file_content():
 
     Device_Script_NotMatch_Flag = 0
     tmp_CurrentScript_dict = {}
+    tmp_JSON_to_UI = {}
     try:
         # Get the data from UI via WebAPI
         Rcv_Json_data = request.get_json()
@@ -938,7 +951,9 @@ def handle_get_script_file_content():
             json.dump(tmp_json, f, ensure_ascii=False, indent=4)
 
         # return the API request with tmp_CurrentScript_dict. 200 means "OK" in API protocol
-        return tmp_CurrentScript_dict, 200
+        tmp_JSON_to_UI["CaliInfos"] = tmp_CurrentScript_dict
+        tmp_JSON_to_UI["stepMapping"] = Cali_point_step_cmd_mapping
+        return tmp_JSON_to_UI, 200
         
     except Exception as e:
         return jsonify({'error' : str(e)}), 400 #400 means "ERROR" in API protocol's error code
@@ -1044,7 +1059,7 @@ def Mock_equipment_value():
 # main
 ##################################################
 if __name__ == '__main__':
-    Init_getDeviceSetting_from_Local_File()
+    # ~ Init_getDeviceSetting_from_Local_File()
     Init_getScript_from_Local_File()
     app.run(debug=True)
     # print("admin" in Password)

@@ -841,6 +841,7 @@ void* Device_Get_Data(void* arg) {
                 if (token != NULL) {
                     strncpy(Chroma_51101_Sensor, token, sizeof(Chroma_51101_Sensor) - 1);
                     Chroma_51101_Sensor[sizeof(Chroma_51101_Sensor) - 1] = '\0';
+                
                     if (strncmp(Chroma_51101_Sensor, "VA480", 5) == 0)
                     {
                         Chroma_51101_Write_Process(UI_USB_Port, SENSOR_TYPE_SETTING, Chroma_51101_Channel, VA_480, 2);
@@ -954,6 +955,9 @@ void Parameter_Init(void) {
     Cali_status = 0;
     Cali_type_polling = 0;
     Cali_read_step = 0;
+
+    UI_Calibration_Point = 0;
+    Valid_measured_value = 0;
 }
 
 

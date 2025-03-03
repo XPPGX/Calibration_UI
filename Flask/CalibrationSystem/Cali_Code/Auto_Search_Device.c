@@ -202,7 +202,7 @@ int Chroma_51101_Read_Process(const char *device_path, unsigned char command, ui
     if (receive_datalen > 0) {
         if (command == GET_DEVICE_ADDRESS)
         {
-            strncpy(Device_name, "Chroma 51101-8", MAX_NAME_LENGTH - 1);
+            strncpy(Device_name, "Chroma,51101-8", MAX_NAME_LENGTH - 1);
             Device_name[MAX_NAME_LENGTH - 1] = '\0';
             Store_Device_information(device_path, Device_name);
         }

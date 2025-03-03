@@ -56,8 +56,8 @@
             gap: 20px; /* 增加間距 */
         }
         .right-container{
-            width: 40%;
-            padding-left: 15%;
+            width: 50%;
+            padding-left: 10%;
         }
 
         /* .row .left{
@@ -189,7 +189,7 @@
             background-color: #f4f4f4;
         }
         .valueText{
-            width: 300px;
+            width: 400px;
         }
         .row_equipment_Unit{
             /* position: absolute;
@@ -842,7 +842,11 @@
                         }, 0);
                     }
                     
-                    if(UI_Result.innerText == "FAIL"){
+                    if(UI_Result.innerText == "Device FAIL" ||
+                        UI_Result.innerText == "DUT FAIL" ||
+                        UI_Result.innerText == "Cali point FAIL" ||
+                        UI_Result.innerText == "Peripheral FAIL")
+                    {
                         UI_Result_color = UI_Result_color_map[UI_Result.innerText];
                         UI_Result.classList.add(UI_Result_color);
                         setTimeout(() => {
@@ -893,7 +897,11 @@
                         change_point_status("Running");
                     }
                     
-                    if(UI_Result.innerText == "FAIL"){
+                    if(UI_Result.innerText == "Device FAIL" ||
+                        UI_Result.innerText == "DUT FAIL" ||
+                        UI_Result.innerText == "Cali point FAIL" ||
+                        UI_Result.innerText == "Peripheral FAIL")
+                    {
                         UI_Result_color = UI_Result_color_map[UI_Result.innerText];
                         UI_Result.classList.add(UI_Result_color);
                         setTimeout(() => {
@@ -919,17 +927,18 @@
                     const UI_AdjustMode = document.getElementById("UI_AdjustMode");
                     const UI_DeviceReadValue = document.getElementById("UI_DeviceReadValue");
                     const UI_Result = document.getElementById('UI_Result');
+                    
                     let change_point_flag;
 
                     UI_AdjustMode.innerText = res_data["WebAPI_AdjustMode"];
                     UI_DeviceReadValue.innerText = `${res_data["WebAPI_Target_EQ_value"]} (${res_data["WebAPI_unit"]})`;
                     UI_Result.innerText = res_data["WebAPI_CaliStatus"];
                     change_point_flag = res_data["WebAPI_change_point_flag"];
-                    
+                    const ValueColor =  res_data["WebAPI_ValueColor"];
                     //Change the color of the Device Value according to the upper and lower bound
                     compare_device_value_float = parseFloat(res_data["WebAPI_Target_EQ_value"]);
                     console.log(`U = ${compare_upper_bound_float}, V = ${compare_device_value_float}, L = ${compare_lower_bound_float}`);
-                    if((compare_device_value_float <= compare_upper_bound_float) && (compare_device_value_float >= compare_lower_bound_float)){
+                    if(ValueColor == 1){
                         UI_DeviceReadValue.classList.remove("red-bg");
                         UI_DeviceReadValue.classList.add("green-bg");
                         console.log("green");
@@ -939,6 +948,16 @@
                         UI_DeviceReadValue.classList.add("red-bg");
                         console.log("red");
                     }
+                    //~ if((compare_device_value_float <= compare_upper_bound_float) && (compare_device_value_float >= compare_lower_bound_float)){
+                        //~ UI_DeviceReadValue.classList.remove("red-bg");
+                        //~ UI_DeviceReadValue.classList.add("green-bg");
+                        //~ console.log("green");
+                    //~ }
+                    //~ else{
+                        //~ UI_DeviceReadValue.classList.remove("green-bg");
+                        //~ UI_DeviceReadValue.classList.add("red-bg");
+                        //~ console.log("red");
+                    //~ }
 
                     //Change the color of adjustment after pressing space key
                     if(UI_AdjustMode.innerText == "粗調"){
@@ -961,7 +980,9 @@
                     }
                     
 
-                    if(UI_Result.innerText == "FINISH" || UI_Result.innerText == "FAIL" || UI_Result.innerText == "Not Complete"){
+                    if(UI_Result.innerText == "FINISH" || UI_Result.innerText == "DUT FAIL" || UI_Result.innerText == "Not Complete" ||
+                        UI_Result.innerText == "Device FAIL" || UI_Result.innerText == "Cali point FAIL" || UI_Result.innerText == "Peripheral FAIL")
+                    {
                         UI_Result_color = UI_Result_color_map[UI_Result.innerText];
                         UI_Result.classList.add(UI_Result_color);
                         setTimeout(() => {

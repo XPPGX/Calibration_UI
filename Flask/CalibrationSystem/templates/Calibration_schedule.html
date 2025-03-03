@@ -468,15 +468,6 @@
                 console.log(`${cali_point_str}.enable = ${cali_point_obj.enable}`);
                 addRow(cali_point_str, device_options, cali_point_obj, Devices_setting);
             })
-
-            // Object.keys(CaliPoints_Info).forEach(cali_point_str =>{ //cali_point's type is string
-            //     console.log(`${cali_point_str}:`, CaliPoints_Info[cali_point_str]);
-            //     const cali_point_obj = CaliPoints_Info[cali_point_str];
-            //     console.log("====0.0===");
-            //     console.log(cali_point_obj);
-            //     console.log(`${cali_point_str}.enable = ${cali_point_obj.enable}`);
-            //     addRow(cali_point_str, device_options, cali_point_obj, Devices_setting);
-            // })
         }
     }
 
@@ -573,9 +564,9 @@
                     body:JSON.stringify({'name' : file})
                 });
                 const res2_data = await response_2.json();
-
+                
                 console.log("====0..0====");
-                script_JSON_object = res2_data;
+                script_JSON_object = res2_data["CaliInfos"];
                 console.log(script_JSON_object);
 
                 scriptFileName = filebutton.Full_scriptFileName;
@@ -591,7 +582,19 @@
                 tableBody.innerHTML = "";
                 console.log(typeof(CaliPoints_Info));
                 rowCount = 0;
-                Object.keys(CaliPoints_Info).forEach(cali_point_str =>{ //cali_point's type is string
+                //~ Object.keys(CaliPoints_Info).forEach(cali_point_str =>{ //cali_point's type is string
+                    //~ console.log(`${cali_point_str}:`, CaliPoints_Info[cali_point_str]);
+                    //~ const cali_point_obj = CaliPoints_Info[cali_point_str];
+                    //~ console.log("====0.0===");
+                    //~ console.log(cali_point_obj);
+                    //~ console.log(`${cali_point_str}.enable = ${cali_point_obj.enable}`);
+                    //~ addRow(cali_point_str, device_options, cali_point_obj, Devices_setting);
+                //~ })
+                const step_cmd_mapping = res2_data["stepMapping"];
+                const Order = script_JSON_object["Order"];
+                let sequence_cali_point_str_arr = Get_Sequence_by_Order(Order, step_cmd_mapping);
+
+                sequence_cali_point_str_arr.forEach((cali_point_str, index) =>{
                     console.log(`${cali_point_str}:`, CaliPoints_Info[cali_point_str]);
                     const cali_point_obj = CaliPoints_Info[cali_point_str];
                     console.log("====0.0===");
@@ -599,7 +602,6 @@
                     console.log(`${cali_point_str}.enable = ${cali_point_obj.enable}`);
                     addRow(cali_point_str, device_options, cali_point_obj, Devices_setting);
                 })
-
 
                 document.getElementById('dialog-box').style.display = 'none';
                 document.getElementById('dialog-overlay').style.display = 'none';

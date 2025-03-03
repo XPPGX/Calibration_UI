@@ -2,8 +2,13 @@
     "Chroma 51101-8": [
         {
             "Ch": "0",
-            "Value_Type": "VA10",
+            "Value_Type": "VA480",
             "Shunt_Value": "1"
+        },
+        {
+            "Ch": "1",
+            "Value_Type": "VA10",
+            "Shunt_Value": "0.0001667"
         }
     ]
 }
