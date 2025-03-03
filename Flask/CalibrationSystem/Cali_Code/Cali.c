@@ -948,7 +948,12 @@ void Parameter_Init(void) {
     Manual_Cali_step = SEND_KEY_READ_MODE;
     communication_found = 0;
     space_pressed = 0;
+    
+    Canbus_ask_name = 0;
     Cali_Result = 0;
+    Cali_status = 0;
+    Cali_type_polling = 0;
+    Cali_read_step = 0;
 }
 
 
