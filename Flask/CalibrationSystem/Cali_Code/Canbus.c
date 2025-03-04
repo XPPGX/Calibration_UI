@@ -80,6 +80,7 @@ void Canbus_TxProcess_Read(uint32_t CAN_Address)
             break;
         }
     }
+    usleep(10000);
 }
 
 void Canbus_TxProcess_Write(uint32_t CAN_Address)

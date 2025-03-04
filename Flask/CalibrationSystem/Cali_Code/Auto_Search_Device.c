@@ -283,6 +283,10 @@ void scan_usb_devices(void) {
                     (strstr(device_path, "ttyUSB") != NULL && Chroma_51101_Read_Process(device_path, GET_DEVICE_ADDRESS, 0x00, 0) == 0)) 
                 {
                     printf("Device: %s identified\n", device_path);
+                    if(strstr(device_path, "usbtmc") != NULL)
+                    {
+                        SCPI_Write_Process(device_path, SCPI_LOCAL_STATE);
+                    }
                 } else {
                     printf("Failed to communicate with: %s\n", device_path);
                 }

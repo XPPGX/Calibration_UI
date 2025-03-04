@@ -192,6 +192,7 @@ void Canbus_Calibration(void){
             if (UI_Set_Cali_Point_Flag == YES)
             {
                 pthread_create(&Device_Comm_thread, NULL, Device_Get_Data, NULL);
+                UI_Set_Cali_Point_Flag = 0;
                 Manual_Cali_step = READ_CALI_STATUS;
                 break;
             }
@@ -634,12 +635,19 @@ void Manual_Calibration(void){
                 } else if (communication_found == MODBUS) {
                     Modbus_TxProcess_Write(MOD_CALI_STATUS);
                 }
-                Cali_Point_Cali_Complete_To_UI = 1;
+                
+                pthread_cancel(Device_Comm_thread);
+                if(strstr(UI_USB_Port, "usbtmc") != NULL)
+                {
+                    SCPI_Write_Process(UI_USB_Port, SCPI_LOCAL_STATE);
+                }
+                
                 Manual_Cali_step = READ_UI_SET_POINT;
                 PSU_High_Limit = 0.0f;
                 PSU_Low_Limit = 0.0f;
                 Cali_read_step = 0;
-                pthread_cancel(Device_Comm_thread);
+                Cali_Point_Cali_Complete_To_UI = 1;
+
                 delay(1000);
                 break;
             }
