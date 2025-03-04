@@ -9,13 +9,13 @@
         "66205": {
             "EQ_TYPE": "DWAM",
             "SerialNumber": [
-                "662050005166"
+                "662025001432"
             ],
             "Identifier": [
                 "DWAM1"
             ],
             "USB_Port": [
-                "/dev/usbtmc0"
+                "/dev/USBTMC0"
             ]
         }
     },
@@ -30,6 +30,20 @@
             ],
             "USB_Port": [
                 "/dev/ttyUSB0"
+            ]
+        }
+    },
+    "GWInstek": {
+        "GDM8342": {
+            "EQ_TYPE": "DMM",
+            "SerialNumber": [
+                "GER817373"
+            ],
+            "Identifier": [
+                "DMM2"
+            ],
+            "USB_Port": [
+                "/dev/ttyUSB1"
             ]
         }
     }

@@ -385,7 +385,9 @@
     let device_options = [];
     let optionMap = {
         DWAM : ["I,RMS", "V,RMS", "I,DC", "V,DC"],
-        DMM : []
+        DMM : [],
+        Chroma_51101_8 : [],
+        GWInstek_GDM8342 : []
     };
 
     const YES = 1;
@@ -427,14 +429,25 @@
             }
             const Devices_setting = await response_1.json();
             console.log(Devices_setting);
+
             //According to the devices setting, put all options to "target value"
             device_options = []
             optionMap.DMM = []
+            optionMap.Chroma_51101_8 = []
+            optionMap.GWInstek_GDM8342 = []
+
             Object.keys(Devices_setting).forEach(key => {
                 if(key == "Fine-setting"){
-                    Devices_setting["Fine-setting"]["Chroma 51101-8"].forEach(channel => {
-                        optionMap.DMM.push(`Ch${channel.Ch}`);
-                    })
+                    if("Chroma 51101-8" in Devices_setting["Fine-setting"]){
+                        Devices_setting["Fine-setting"]["Chroma 51101-8"].forEach(channel => {
+                            optionMap.Chroma_51101_8.push(`Ch${channel.Ch}`);
+                        })
+                    }
+                    if("GWInstek,GDM8342" in Devices_setting["Fine-setting"]){
+                        Devices_setting["Fine-setting"]["GWInstek,GDM8342"].forEach(channel => {
+                            optionMap.GWInstek_GDM8342.push(`Ch${channel.Ch}`);
+                        })
+                    }
                 }
                 else{
                     let device = key;
@@ -443,7 +456,8 @@
                 }
             })
             console.log(device_options);
-            console.log(optionMap.DMM);
+            console.log(optionMap.Chroma_51101_8);
+            console.log(optionMap.GWInstek_GDM8342);
 
             //Check if the CodeName is in the Devices_setting
             selectFile_Device_NotMatch_Alert_Flag = NO;
@@ -753,6 +767,15 @@
             }
         }
 
+        if(selectValue_Type == "DMM"){
+            if(_Devices_setting[_targetEquipmentSelect_value].ModelName == "Chroma,51101-8"){
+                selectValue_Type = "Chroma_51101_8";
+            }
+            else if(_Devices_setting[_targetEquipmentSelect_value].ModelName == "GWInstek,GDM8342"){
+                selectValue_Type = "GWInstek_GDM8342";
+            }
+        }
+
         if(selectValue_Type && optionMap[selectValue_Type]){
             optionMap[selectValue_Type].forEach(option => {
                 const newOption = createOptions('16px', option, option);
@@ -843,6 +866,17 @@
         
 
         corres_target_value_selector.innerHTML = "";
+        if(selectValue_Type == "DMM"){
+            
+            if(_Devices_setting[selectValue].ModelName == "Chroma,51101-8"){
+                selectValue_Type = "Chroma_51101_8";
+            }
+            else if(_Devices_setting[selectValue].ModelName == "GWInstek,GDM8342"){
+                selectValue_Type = "GWInstek_GDM8342";
+            }
+            console.log(selectValue_Type);
+        }
+
         if(!(optionMap[selectValue_Type])){
             const newOption = createOptions('16px', selectValue_Type, selectValue_Type);
             corres_target_value_selector.appendChild(newOption);

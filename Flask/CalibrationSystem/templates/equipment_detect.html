@@ -262,7 +262,7 @@
             </div>
             
             <div class="dialog-overlay" id="dialog-overlay_fine_setting"></div>
-            <div class="dialog-box" id="dialog-box_fine_setting">
+            <div class="dialog-box" id="dialog-box_fine_setting_Chroma_51101_8">
                 <div class="row">
                     <span class="left">儀器：</span>
                     <span class="left" id="RCV_EquipName">-</span>
@@ -363,7 +363,38 @@
                     <input class="dialog-row-arrange_r" type="text" placeholder="shunt factor" disabled id="input-7"/>
                 </div>
                 
-                <button id="close-dialog_fine_setting">確定</button>
+                <button onclick="close_fine_setting_dialog()">確定</button>
+            </div>
+            
+            <div class="dialog-overlay" id="dialog-overlay_fine_setting"></div>
+            <div class="dialog-box" id="dialog-box_fine_setting_GWInstek_GDM8342">
+                <div class="row">
+                    <span class="left">儀器：</span>
+                    <span class="left" id="RCV_EquipName_GWInstek_GDM8342">-</span>
+                </div>
+                <div class="row">
+                    <span class="dialog-row-arrange_l">Ch0 : </span>
+                    
+                    <select class="dialog-row-arrange_m_select" id="Ch0_Mode_GWInstek_GDM8342" data-target="input-0_GWInstek_GDM8342">
+                        <option value="NO">--type--</option>
+                        <option value="V">V</option>
+                        <option value="A">A</option>
+                    </select>
+                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt factor" disabled id="input-0_GWInstek_GDM8342"/>
+                </div>
+
+                <div class="row">
+                    <span class="dialog-row-arrange_l">Ch1 : </span>
+                    
+                    <select class="dialog-row-arrange_m_select" id="Ch1_Mode_GWInstek_GDM8342" data-target="input-1_GWInstek_GDM8342">
+                        <option value="NO">--type--</option>
+                        <option value="V">V</option>
+                        <option value="A">A</option>
+                    </select>
+                    <input class="dialog-row-arrange_r" type="text" placeholder="shunt factor" disabled id="input-1_GWInstek_GDM8342"/>
+                </div>
+
+                <button onclick="close_fine_setting_dialog()">確定</button>
             </div>
 
             <!-- <button class="add-row-button" id="addRowButton">搜尋新儀器</button> -->
@@ -377,6 +408,7 @@
     </div>
 
 <script>
+    let current_fine_setting_device_name_str = "";
     let device_ModelName_USBport_mapping = {};
 
     document.addEventListener('DOMContentLoaded', async function(){
@@ -411,19 +443,42 @@
 
             Object.keys(res_data).forEach(key => {
                 if(key == "Fine-setting"){
-                    for(let channel in res_data["Fine-setting"]["Chroma 51101-8"]){
-                        const tmp_object = res_data["Fine-setting"]["Chroma 51101-8"][channel];
-                        console.log(channel);
-                        console.log(tmp_object);
-                        
-                        let Channel_Mode_ID = "Ch" + tmp_object["Ch"].toString() + "_Mode";
-                        let data_target_ID = "input-" + tmp_object["Ch"].toString();
-                        let Channel_Mode = document.getElementById(Channel_Mode_ID);
-                        let data_target = document.getElementById(data_target_ID);
-                        
-                        //show default value
-                        Channel_Mode.value = tmp_object["Value_Type"];
-                        data_target.value = tmp_object["Shunt_Value"];
+                    if("Chroma 51101-8" in res_data["Fine-setting"]){
+                        for(let channel in res_data["Fine-setting"]["Chroma 51101-8"]){
+                            const tmp_object = res_data["Fine-setting"]["Chroma 51101-8"][channel];
+                            console.log(channel);
+                            console.log(tmp_object);
+                            
+                            let Channel_Mode_ID = "Ch" + tmp_object["Ch"].toString() + "_Mode";
+                            let data_target_ID = "input-" + tmp_object["Ch"].toString();
+                            let Channel_Mode = document.getElementById(Channel_Mode_ID);
+                            let data_target = document.getElementById(data_target_ID);
+
+                            //allow enter some number
+                            data_target.disabled = false;
+
+                            //show default value
+                            Channel_Mode.value = tmp_object["Value_Type"];
+                            data_target.value = tmp_object["Shunt_Value"];
+                            
+                        }
+                    }
+                    if("GWInstek,GDM8342" in res_data["Fine-setting"]){
+                        for(let channel in res_data["Fine-setting"]["GWInstek,GDM8342"]){
+                            var tmp_object =res_data["Fine-setting"]["GWInstek,GDM8342"][channel];
+                            let Channel_Mode_ID = "Ch" + tmp_object["Ch"].toString() + "_Mode_GWInstek_GDM8342";
+                            let data_target_ID = "input-" + tmp_object["Ch"].toString() + "_GWInstek_GDM8342";
+                            let Channel_Mode = document.getElementById(Channel_Mode_ID);
+                            let data_target = document.getElementById(data_target_ID);
+                            
+                            //allow enter some number;
+                            data_target.disabled = false;
+
+
+                            //show default value
+                            Channel_Mode.value = tmp_object["Value_Type"];
+                            data_target.value = tmp_object["Shunt_Value"];
+                        }
                     }
                 }
                 else{
@@ -569,16 +624,17 @@
         console.log(fixed_row_number);
         const row = table.rows[fixed_row_number - 1]; //Get the row of the equipment that needs to fine-setting
         switch(equip_name){
+            case 'GWInstek,GDM8342':
             case 'Chroma,51101-8':
                 // document.getElementById('btn_Config').style.display = 'block';
-                let cell = row.cells[4];
-                let button = document.createElement("button");
+                var cell = row.cells[4];
+                var button = document.createElement("button");
                 button.textContent = "設定";
-                button.onclick = show_fine_setting_dialog;
+                // button.onclick = show_fine_setting_dialog(equip_name);
+                button.addEventListener("click", () => show_fine_setting_dialog(equip_name));
                 button.classList.add("add-row-button");
                 cell.appendChild(button); 
                 break;
-
             default:
                 break;
         }
@@ -593,25 +649,51 @@
 
     document.getElementById("dialog-overlay_fine_setting").addEventListener('click', () => {
         close_fine_setting_dialog();
+        
     })
 
-    document.getElementById('close-dialog_fine_setting').addEventListener('click', () => {
-        close_fine_setting_dialog();
-    })
+    // document.getElementById('close-dialog_fine_setting').addEventListener('click', () => {
+    //     close_fine_setting_dialog();
+    // })
 
     function close_fine_setting_dialog(){
         document.getElementById('dialog-overlay_fine_setting').style.display = 'none';
-        document.getElementById('dialog-box_fine_setting').style.display = 'none';
+        switch(current_fine_setting_device_name_str){
+            case "GWInstek,GDM8342":
+                document.getElementById('dialog-box_fine_setting_GWInstek_GDM8342').style.display = 'none';
+                break;
+
+            case "Chroma,51101-8":
+                document.getElementById('dialog-box_fine_setting_Chroma_51101_8').style.display = 'none';
+                break;
+        }
+        
     }
 
-    function show_fine_setting_dialog(){
+    function show_fine_setting_dialog(_EquipName){
         console.log("HI");
 
+        switch(_EquipName){
+            case "GWInstek,GDM8342":
+                current_fine_setting_device_name_str = "GWInstek,GDM8342";
 
-        document.getElementById('dialog-overlay_fine_setting').style.display = 'block';
-        document.getElementById('dialog-box_fine_setting').style.display = 'block';
+                document.getElementById('dialog-overlay_fine_setting').style.display = 'block';
+                document.getElementById('dialog-box_fine_setting_GWInstek_GDM8342').style.display = 'block';
 
-        document.getElementById('RCV_EquipName').innerText = 'chroma-51101-8';
+                document.getElementById('RCV_EquipName_GWInstek_GDM8342').innerText = _EquipName;
+            break;
+
+            case "Chroma,51101-8":
+                current_fine_setting_device_name_str = "Chroma,51101-8";
+                
+                document.getElementById('dialog-overlay_fine_setting').style.display = 'block';
+                document.getElementById('dialog-box_fine_setting_Chroma_51101_8').style.display = 'block';
+
+                document.getElementById('RCV_EquipName').innerText = _EquipName;
+            break;
+            
+        }
+        
 
         document.addEventListener('change', function(event){
             if(event.target.classList.contains('dialog-row-arrange_m_select')){
@@ -625,7 +707,6 @@
                 else{
                     inputField.disabled = false;
                 }
-
             }
         })
     }
@@ -634,7 +715,7 @@
 
 
     //     document.getElementById('dialog-overlay_fine_setting').style.display = 'block';
-    //     document.getElementById('dialog-box_fine_setting').style.display = 'block';
+    //     document.getElementById('dialog-box_fine_setting_Chroma_51101_8').style.display = 'block';
 
     //     document.getElementById('RCV_EquipName').innerText = 'chroma-51101-8';
 
@@ -704,25 +785,27 @@
         console.log(devices_setting);
         // id="Ch0_Mode" data-target="input-0"
         devices_setting["Fine-setting"] = {};
-        devices_setting["Fine-setting"]["Chroma 51101-8"] = [];
-        for(let i = 0 ; i < 8 ; i ++){
-            let Channel_Mode_ID = "Ch" + i.toString() + "_Mode";
-            let data_target_ID = "input-" + i.toString();
+        saving_fine_setting("Chroma 51101-8");
+        saving_fine_setting("GWInstek,GDM8342");
+        // devices_setting["Fine-setting"]["Chroma 51101-8"] = [];
+        // for(let i = 0 ; i < 8 ; i ++){
+        //     let Channel_Mode_ID = "Ch" + i.toString() + "_Mode";
+        //     let data_target_ID = "input-" + i.toString();
             
-            let Channel_Mode = document.getElementById(Channel_Mode_ID);
-            let data_target = document.getElementById(data_target_ID);
+        //     let Channel_Mode = document.getElementById(Channel_Mode_ID);
+        //     let data_target = document.getElementById(data_target_ID);
 
-            console.log(Channel_Mode_ID + "," + data_target_ID + " : " + Channel_Mode.value + ", " + data_target.value);
+        //     console.log(Channel_Mode_ID + "," + data_target_ID + " : " + Channel_Mode.value + ", " + data_target.value);
             
-            if(Channel_Mode.value != "NO"){
-                let tmp_json_object = {};
-                tmp_json_object["Ch"] = i.toString();
-                tmp_json_object["Value_Type"] = Channel_Mode.value;
-                tmp_json_object["Shunt_Value"] = data_target.value;
+        //     if(Channel_Mode.value != "NO"){
+        //         let tmp_json_object = {};
+        //         tmp_json_object["Ch"] = i.toString();
+        //         tmp_json_object["Value_Type"] = Channel_Mode.value;
+        //         tmp_json_object["Shunt_Value"] = data_target.value;
 
-                devices_setting["Fine-setting"]["Chroma 51101-8"].push(tmp_json_object);
-            }
-        }
+        //         devices_setting["Fine-setting"]["Chroma 51101-8"].push(tmp_json_object);
+        //     }
+        // }
         
         console.log(devices_setting);
 
@@ -733,6 +816,56 @@
         });
 
     })
+    
+    function saving_fine_setting(_device_name_str){
+        devices_setting["Fine-setting"][_device_name_str] = []
+        switch(_device_name_str){
+            case "Chroma 51101-8":
+                for(let i = 0 ; i < 8 ; i ++){
+                    let Channel_Mode_ID = "Ch" + i.toString() + "_Mode";
+                    let data_target_ID = "input-" + i.toString();
+                    
+                    let Channel_Mode = document.getElementById(Channel_Mode_ID);
+                    let data_target = document.getElementById(data_target_ID);
+
+                    console.log(Channel_Mode_ID + "," + data_target_ID + " : " + Channel_Mode.value + ", " + data_target.value);
+                    
+                    if(Channel_Mode.value != "NO"){
+                        let tmp_json_object = {};
+                        tmp_json_object["Ch"] = i.toString();
+                        tmp_json_object["Value_Type"] = Channel_Mode.value;
+                        tmp_json_object["Shunt_Value"] = data_target.value;
+
+                        devices_setting["Fine-setting"]["Chroma 51101-8"].push(tmp_json_object);
+                    }
+                }
+                break;
+            case "GWInstek,GDM8342":
+                for(let i = 0 ; i < 2 ; i ++){
+                    let Channel_Mode_ID = "Ch" + i.toString() + "_Mode_GWInstek_GDM8342";
+                    let data_target_ID = "input-" + i.toString() + "_GWInstek_GDM8342";
+                    
+                    let Channel_Mode = document.getElementById(Channel_Mode_ID);
+                    let data_target = document.getElementById(data_target_ID);
+
+                    console.log(Channel_Mode_ID + "," + data_target_ID + " : " + Channel_Mode.value + ", " + data_target.value);
+                    
+                    if(Channel_Mode.value != "NO"){
+                        let tmp_json_object = {};
+                        tmp_json_object["Ch"] = i.toString();
+                        tmp_json_object["Value_Type"] = Channel_Mode.value;
+                        tmp_json_object["Shunt_Value"] = data_target.value;
+
+                        devices_setting["Fine-setting"]["GWInstek,GDM8342"].push(tmp_json_object);
+                    }
+                }
+                break;
+        }
+        
+        
+        console.log(devices_setting);
+
+    }
 </script>
 
 </body>

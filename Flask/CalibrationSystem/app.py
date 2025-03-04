@@ -103,8 +103,8 @@ app = Flask(__name__)
 c_lib_Cali = ctypes.CDLL('./Cali_Code/Cali.so')
 #c_lib_Search_Device = ctypes.CDLL('./Clib/Cali_Code/Auto_Search_Device.so')
 
-DEBUG_MODE = 0 #DEBUG_MODE == 1, means it can run without DUT ; DEBUG_MODE = 0 means it needs to connect DUT to run
-DEBUG_DEVICE = 0 #DEBUG_DEVICE == 1, means it can run without any device ; DEBUG_DEVICE == 0, means it needs to connect device to run
+DEBUG_MODE = 1 #DEBUG_MODE == 1, means it can run without DUT ; DEBUG_MODE = 0 means it needs to connect DUT to run
+DEBUG_DEVICE = 1 #DEBUG_DEVICE == 1, means it can run without any device ; DEBUG_DEVICE == 0, means it needs to connect device to run
 Debug_Enter_pressed = 0
 
 ##################################################
@@ -259,14 +259,27 @@ def server_timers():
                 current_cali_point_target = ""
                 print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                 if(Devices_setting[current_target_equipment_name]["ModelName"] == "Chroma,51101-8"):
-                    tmp_channel = cali_point_object["Target_Equipment"]["Value_Type"]
-                    tmp_channel = tmp_channel[2:]
-                    print(tmp_channel)
-                    for channel in Devices_setting["Fine-setting"]["Chroma 51101-8"]:
-                        if(channel["Ch"] == tmp_channel):
-                            current_cali_point_target = tmp_channel + "," + channel["Value_Type"] + "," + channel["Shunt_Value"] #Get cali_point_target
-                            print(f'current_target = {current_cali_point_target}')
-                            break
+                    print("Chroma,51101-8")
+                    GetCaliPointTarget(cali_point_object, "Chroma 51101-8")
+                    # tmp_channel = cali_point_object["Target_Equipment"]["Value_Type"]
+                    # tmp_channel = tmp_channel[2:]
+                    # print(tmp_channel)
+                    # for channel in Devices_setting["Fine-setting"]["Chroma 51101-8"]:
+                    #     if(channel["Ch"] == tmp_channel):
+                    #         current_cali_point_target = tmp_channel + "," + channel["Value_Type"] + "," + channel["Shunt_Value"] #Get cali_point_target
+                    #         print(f'current_target = {current_cali_point_target}')
+                    #         break
+                elif(Devices_setting[current_target_equipment_name]["ModelName"] == "GWInstek,GDM8342"):
+                    print("GWInstek,GDM8342")
+                    GetCaliPointTarget(cali_point_object, "GWInstek,GDM8342")
+                    # tmp_channel = cali_point_object["Target_Equipment"]["Value_Type"]
+                    # tmp_channel = tmp_channel[2:]
+                    # print(tmp_channel)
+                    # for channel in Devices_setting["Fine-setting"]["GWInstek,GDM8342"]:
+                    #     if(channel["Ch"] == tmp_channel):
+                    #         current_cali_point_target = tmp_channel + "," + channel["Value_Type"] + "," + channel["Shunt_Value"] #Get cali_point_target
+                    #         print(f'current_target = {current_cali_point_target}')
+                    #         break
                 else:
                     current_cali_point_target = cali_point_object["Target_Equipment"]["Value_Type"] #Get cali_point_target
                     print(f'current_target = {current_cali_point_target}')
@@ -576,6 +589,15 @@ def SendCaliPointInfo(_step_cmd, _scaling_factor, _target, _usb_port):
     #Raise the Flag to tell Cali_thread that Info has been transmitted
     c_lib_Cali.Check_UI_Set_Cali_Point_Flag(1)
 
+def GetCaliPointTarget(_cali_point_object, _device_name):
+    tmp_channel = _cali_point_object["Target_Equipment"]["Value_Type"]
+    tmp_channel = tmp_channel[2:]
+    print(tmp_channel)
+    for channel in Devices_setting["Fine-setting"][_device_name]:
+        if(channel["Ch"] == tmp_channel):
+            current_cali_point_target = tmp_channel + "," + channel["Value_Type"] + "," + channel["Shunt_Value"] #Get cali_point_target
+            print(f'current_target = {current_cali_point_target}')
+            break
 ##################################################
 # Web page routes
 ##################################################
@@ -751,8 +773,10 @@ def handle_scan_usb_devices():
         device_info_1 = "/dev/ttyUSB0,Chroma,51101-8"
         # device_info_2 = "/dev/USBTMC0,Chroma ATE,66202,662025001432,1.70"
         device_info_2 = "/dev/USBTMC0,Chroma ATE,66205,662025001432,1.70"
+        device_info_3 = "/dev/ttyUSB1,GWInstek,GDM8342,GER817373,1.04"
         DeviceInfo_str_list.append(device_info_1)
         DeviceInfo_str_list.append(device_info_2)
+        DeviceInfo_str_list.append(device_info_3)
         print(DeviceInfo_str_list)
     
     
@@ -773,39 +797,42 @@ def handle_scan_usb_devices():
     EQ_type = ""
 
     for info in DeviceInfo_str_list:
+
         split_info_str_list = info.split(",")
         usb_port = split_info_str_list[0]
 
-        if(split_info_str_list[1] == "Chroma 51101-8"):
-            EQ_type = devices_JSON["Chroma 51101-8"]["EQ_TYPE"]
-            Device_info_to_Web_dict["Chroma 51101-8"] = {}
-            Device_info_to_Web_dict["Chroma 51101-8"]["EQ_TYPE"] = EQ_type
-            Device_info_to_Web_dict["Chroma 51101-8"]["Serial_Num"] = ""
-            Device_info_to_Web_dict["Chroma 51101-8"]["USB_Port"] = usb_port
-        else:
-            mfr_name = ""
-            model_name = ""
-            serial_num = ""
+        mfr_name = ""
+        model_name = ""
+        serial_num = ""
 
-            split_info_str_list = info.split(",")
-            if(len(split_info_str_list) >= 2):
-                mfr_name = split_info_str_list[1]
-                print(mfr_name)
-            if(len(split_info_str_list) >= 3):
-                model_name = split_info_str_list[2]
-                print(model_name)
-            if(len(split_info_str_list) >= 4):
-                serial_num = split_info_str_list[3]
-                print(serial_num)
+        split_info_str_list = info.split(",")
+        if(len(split_info_str_list) >= 2):
+            mfr_name = split_info_str_list[1]
+            print(mfr_name)
+        if(len(split_info_str_list) >= 3):
+            model_name = split_info_str_list[2]
+            print(model_name)
+        if(len(split_info_str_list) >= 4):
+            serial_num = split_info_str_list[3]
+            print(serial_num)
 
-            EQ_type = devices_JSON[mfr_name][model_name]["EQ_TYPE"]
+        EQ_type = devices_JSON[mfr_name][model_name]["EQ_TYPE"]
 
-            devices_JSON[mfr_name][model_name]["SerialNumber"].append(serial_num)
+        devices_JSON[mfr_name][model_name]["SerialNumber"].append(serial_num)
 
-            Device_info_to_Web_dict[mfr_name + "," + model_name] = {}
-            Device_info_to_Web_dict[mfr_name + "," + model_name]["EQ_TYPE"] = EQ_type
-            Device_info_to_Web_dict[mfr_name + "," + model_name]["Serial_Num"] = serial_num
-            Device_info_to_Web_dict[mfr_name + "," + model_name]["USB_Port"] = usb_port
+        Device_info_to_Web_dict[mfr_name + "," + model_name] = {}
+        Device_info_to_Web_dict[mfr_name + "," + model_name]["EQ_TYPE"] = EQ_type
+        Device_info_to_Web_dict[mfr_name + "," + model_name]["Serial_Num"] = serial_num
+        Device_info_to_Web_dict[mfr_name + "," + model_name]["USB_Port"] = usb_port
+
+        # if(split_info_str_list[1] == "Chroma 51101-8"): #No case come to here
+        #     EQ_type = devices_JSON["Chroma 51101-8"]["EQ_TYPE"]
+        #     Device_info_to_Web_dict["Chroma 51101-8"] = {}
+        #     Device_info_to_Web_dict["Chroma 51101-8"]["EQ_TYPE"] = EQ_type
+        #     Device_info_to_Web_dict["Chroma 51101-8"]["Serial_Num"] = ""
+        #     Device_info_to_Web_dict["Chroma 51101-8"]["USB_Port"] = usb_port
+        # else:
+            
     print(Device_info_to_Web_dict)
     return jsonify(Device_info_to_Web_dict), 200
     
