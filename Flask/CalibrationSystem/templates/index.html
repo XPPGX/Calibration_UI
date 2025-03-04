@@ -541,7 +541,7 @@
             <!-- <div id="TASK_TABLE" class="task-list-container">
                 任務列表會動態加入內容
             </div> -->
-            <div style="max-height: 250px; overflow-y: auto; border: 1px solid #ccc;">
+            <!-- <div style="max-height: 250px; overflow-y: auto; border: 1px solid #ccc;">
                 <table id="TASK_TABLE">
                     <thead>
                         <tr>
@@ -554,7 +554,8 @@
     
                     </tbody>
                 </table>
-            </div>
+            </div> -->
+            <div id="MessageBox" style="border: 1px solid black; padding: 10px; width: 80%; white-space: pre-line; overflow-y: auto; max-height: 250px;" ></div>
         </div>
 
         <div class="dialog-overlay" id="dialog-overlay"></div>
@@ -664,7 +665,7 @@
     //DEBUG_TESTING
     document.getElementById('test_btn').addEventListener('click', async () => {
         console.log("POST_API");
-        change_point_status();
+        // change_point_status();
         const response = await fetch('/api/Mock_enter_pressed', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -894,7 +895,11 @@
                     if(old_cali_point != UI_CaliPoint.innerText && res_data["done"] == 1){
                         UI_stage = 3;
                         old_cali_point = UI_CaliPoint.innerText;
-                        change_point_status("Running");
+                        // change_point_status("Running");
+
+                        const MessageBox = document.getElementById("MessageBox");
+                        MessageBox.innerText = MessageBox.innerText + "\n" + UI_CaliPoint.innerText + "...Running";
+                        MessageBox.scrollTop = MessageBox.scrollHeight;
                     }
                     
                     if(UI_Result.innerText == "Device FAIL" ||
@@ -907,6 +912,10 @@
                         setTimeout(() => {
                             UI_stage = 4;
                             Cali_Flag = 2;
+
+                            const MessageBox = document.getElementById("MessageBox");
+                            MessageBox.innerText = MessageBox.innerText + "\n" + UI_CaliPoint.innerText + "...Fail";
+                            MessageBox.scrollTop = MessageBox.scrollHeight;
                         });
                     }
 
@@ -974,9 +983,13 @@
                     if(change_point_flag == 1){
                         //!!!!!! TASK_TABLE !!!!!!
                         //Add the finished task to the TASK_TABLE
-                        change_point_status("OK");
+                        // change_point_status("OK");
                         
                         UI_stage = 2;
+
+                        const MessageBox = document.getElementById("MessageBox");
+                        MessageBox.innerText = MessageBox.innerText + "\n" + UI_CaliPoint.innerText + "...OK";
+                        MessageBox.scrollTop = MessageBox.scrollHeight;
                     }
                     
 
@@ -988,6 +1001,18 @@
                         setTimeout(() => {
                             UI_stage = 4;
                             Cali_Flag = 2;
+
+                            const MessageBox = document.getElementById("MessageBox");
+
+                            let tmp_status = UI_Result.innerText;
+                            if(tmp_status == "FINISH" || tmp_status == "Not Complete"){
+
+                            }
+                            else{
+                                tmp_status = "Fail"
+                            }
+                            MessageBox.innerText = MessageBox.innerText + "\n" + UI_CaliPoint.innerText + "..." + tmp_status;
+                            MessageBox.scrollTop = MessageBox.scrollHeight;
                         });
 
                     }

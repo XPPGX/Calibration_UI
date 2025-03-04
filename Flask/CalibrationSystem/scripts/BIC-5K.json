@@ -12,30 +12,30 @@
         },
         "ACI輕載電流(2A)": {
             "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": ""
+                "Equipment_Name": "DWAM1",
+                "Value_Type": "I,RMS"
             },
-            "enable": false,
+            "enable": true,
             "scaling_factor": "ACI",
             "step_cmd": "0x0006",
             "unit": "A"
         },
         "ACI重載電流(22A)": {
             "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": ""
+                "Equipment_Name": "DMM1",
+                "Value_Type": "Ch0"
             },
-            "enable": false,
+            "enable": true,
             "scaling_factor": "ACI",
             "step_cmd": "0x0007",
             "unit": "A"
         },
         "ACV": {
             "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": ""
+                "Equipment_Name": "DMM2",
+                "Value_Type": "Ch0"
             },
-            "enable": false,
+            "enable": true,
             "scaling_factor": "ACV",
             "step_cmd": "0x0005",
             "unit": "V"
@@ -52,10 +52,10 @@
         },
         "DC反向滿載電流": {
             "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": ""
+                "Equipment_Name": "DMM2",
+                "Value_Type": "Ch0"
             },
-            "enable": false,
+            "enable": true,
             "scaling_factor": "DCI",
             "step_cmd": "0x0004",
             "unit": "A"
@@ -75,6 +75,10 @@
         "0x0002",
         "0x0001",
         "0x0003",
+        "0x0004",
+        "0x0005",
+        "0x0006",
+        "0x0007",
         "0xffff"
     ],
     "script_File_Name": "BIC-5K.json"
