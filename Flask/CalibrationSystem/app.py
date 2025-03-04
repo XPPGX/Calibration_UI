@@ -260,7 +260,7 @@ def server_timers():
                 print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                 if(Devices_setting[current_target_equipment_name]["ModelName"] == "Chroma,51101-8"):
                     print("Chroma,51101-8")
-                    GetCaliPointTarget(cali_point_object, "Chroma 51101-8")
+                    current_cali_point_target = GetCaliPointTarget(cali_point_object, "Chroma 51101-8")
                     # tmp_channel = cali_point_object["Target_Equipment"]["Value_Type"]
                     # tmp_channel = tmp_channel[2:]
                     # print(tmp_channel)
@@ -271,7 +271,7 @@ def server_timers():
                     #         break
                 elif(Devices_setting[current_target_equipment_name]["ModelName"] == "GWInstek,GDM8342"):
                     print("GWInstek,GDM8342")
-                    GetCaliPointTarget(cali_point_object, "GWInstek,GDM8342")
+                    current_cali_point_target = GetCaliPointTarget(cali_point_object, "GWInstek,GDM8342")
                     # tmp_channel = cali_point_object["Target_Equipment"]["Value_Type"]
                     # tmp_channel = tmp_channel[2:]
                     # print(tmp_channel)
@@ -590,6 +590,8 @@ def SendCaliPointInfo(_step_cmd, _scaling_factor, _target, _usb_port):
     c_lib_Cali.Check_UI_Set_Cali_Point_Flag(1)
 
 def GetCaliPointTarget(_cali_point_object, _device_name):
+    current_cali_point_target = ""
+    
     tmp_channel = _cali_point_object["Target_Equipment"]["Value_Type"]
     tmp_channel = tmp_channel[2:]
     print(tmp_channel)
@@ -598,6 +600,7 @@ def GetCaliPointTarget(_cali_point_object, _device_name):
             current_cali_point_target = tmp_channel + "," + channel["Value_Type"] + "," + channel["Shunt_Value"] #Get cali_point_target
             print(f'current_target = {current_cali_point_target}')
             break
+    return current_cali_point_target
 ##################################################
 # Web page routes
 ##################################################
