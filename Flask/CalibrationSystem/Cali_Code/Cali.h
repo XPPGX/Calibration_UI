@@ -17,6 +17,7 @@
 #include <linux/input.h>
 #include <termios.h>
 #include <dirent.h>
+#include <poll.h>
 
 #define CANBUS  1
 #define MODBUS  2
@@ -85,13 +86,14 @@ extern float PSU_DCI_Factor;
 extern char UI_Scaling_Factor[MAX_STRING_LENGTH];
 extern char UI_USB_Port[MAX_STRING_LENGTH];
 extern char UI_Target[MAX_STRING_LENGTH];
-extern float Chroma_51101_Factor;
+extern float Current_Shunt_Factor;
 
 /* function -----------------------------------------------*/
 extern void Start_Cali_thread(void);
 extern void Stop_Cali_thread(void);
 extern void Manual_Calibration(void);
 extern float Scaling_Factor_Convert(uint8_t HexValue);
+extern int Wait_for_response_poll(int fd, int timeout_ms);
 //UI Get
 extern char* Get_Machine_Name(void);
 extern uint8_t Get_Communication_Type(void);

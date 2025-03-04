@@ -28,9 +28,9 @@ float PSU_ACV_Factor = 0.0f;
 float PSU_ACI_Factor = 0.0f;
 float PSU_DCV_Factor = 0.0f;
 float PSU_DCI_Factor = 0.0f;
-int Chroma_51101_Channel;
+int Meter_Channel;
 char Chroma_51101_Sensor[MAX_STRING_LENGTH];
-float Chroma_51101_Factor;
+float Current_Shunt_Factor;
 uint8_t Valid_measured_value = 0;
 
 volatile uint8_t communication_found = 0; // 0: No COMM, 1: CAN, 2: MODBUS
@@ -62,6 +62,7 @@ void* Cali_routine(void* arg);
 void* Canbus_Polling(void* arg);
 void* Modbus_Polling(void* arg);
 void* Device_Get_Data(void* arg);
+int Wait_for_response_poll(int fd, int timeout_ms);
 
 void Start_Cali_thread(void);
 void Stop_Cali_thread(void);
@@ -157,12 +158,12 @@ void Canbus_Calibration(void){
     while(1){
         switch (Manual_Cali_step)
         {
-        case SEND_KEY_READ_MODE:    //Send KEY repeatedly„ÄÅAsk calibration mode?
+        case SEND_KEY_READ_MODE:    //Send KEY repeatedly°BAsk calibration mode?
             // Send Key
             Canbus_TxProcess_Write(CAN_CALIBRATION_KEY);
             usleep(20000); //Delay 20ms
 
-            // Read PSU mode 0ÔºöNormal Mode  1ÔºöCalibrate Mode
+            // Read PSU mode 0°GNormal Mode  1°GCalibrate Mode
             Canbus_TxProcess_Read(CAN_READ_PSU_MODE);
 
             // Receive
@@ -179,7 +180,6 @@ void Canbus_Calibration(void){
             if(PSU_Reset_Cali_Flag == YES)
             {
                 Canbus_TxProcess_Write(CAN_CALI_RESULT);
-                usleep(20000); // Delay 20ms
                 Manual_Cali_step = READ_UI_SET_POINT;
             }
             else if(PSU_Reset_Cali_Flag == NO)
@@ -291,12 +291,12 @@ void Modbus_Calibration(void){
     {
         switch (Manual_Cali_step)
         {
-        case SEND_KEY_READ_MODE:    //Send KEY repeatedly„ÄÅAsk calibration mode?
+        case SEND_KEY_READ_MODE:    //Send KEY repeatedly?ÅAsk calibration mode?
             // Send Key
             Modbus_TxProcess_Write(MOD_CALIBRATION_KEY);
             usleep(20000); //Delay 20ms
 
-            // Read PSU mode 0ÔºöNormal Mode  1ÔºöCalibrate Mode
+            // Read PSU mode 0°GNormal Mode  1°GCalibrate Mode
             Modbus_TxProcess_Read(MOD_READ_PSU_MODE);
             Mod_bytes_read = Modbus_RxProcess(response_data, sizeof(response_data));
             if ((Mod_bytes_read > 0) && (response_data[1] == 0x03) && (response_data[4] == 0x01)) {
@@ -370,7 +370,6 @@ void Modbus_Calibration(void){
                 
                 case CALI_POINT_SETTING:    //0x0003
                     Modbus_TxProcess_Write(MOD_CALIBRATION_POINT);
-                    usleep(20000); // Delay 20ms
                     break;
                 
                 case CALI_FINISH:           //0xFFFF
@@ -635,13 +634,13 @@ void Manual_Calibration(void){
                 } else if (communication_found == MODBUS) {
                     Modbus_TxProcess_Write(MOD_CALI_STATUS);
                 }
-                
+
                 pthread_cancel(Device_Comm_thread);
-                if(strstr(UI_USB_Port, "usbtmc") != NULL)
+                if (strstr(UI_USB_Port, "usbtmc") != NULL)
                 {
                     SCPI_Write_Process(UI_USB_Port, SCPI_LOCAL_STATE);
                 }
-                
+
                 Manual_Cali_step = READ_UI_SET_POINT;
                 PSU_High_Limit = 0.0f;
                 PSU_Low_Limit = 0.0f;
@@ -694,7 +693,7 @@ const char* Find_Keyboard_Device(void)
             snprintf(temp_path, sizeof(temp_path), "/dev/input/%s", entry->d_name);
             fd = open(temp_path, O_RDONLY | O_NONBLOCK);
             if (fd != -1) {
-                if (ioctl(fd, EVIOCGID, &device_info) == 0) { //EVIOCGIDÔºöDevice ID„ÄÅProduct ID„ÄÅVersion
+                if (ioctl(fd, EVIOCGID, &device_info) == 0) { //EVIOCGID°GDevice ID°BProduct ID°BVersion
                     memset(name, 0, sizeof(name));
                     ioctl(fd, EVIOCGNAME(sizeof(name)), name);
                     if (strstr(name, "HID 1189:8890")) {    //check name
@@ -784,7 +783,7 @@ void* Cali_routine(void* arg) {
     // Init Mutex
     pthread_mutex_init(&lock, NULL);
 
-    // Create CANBUS „ÄÅ RS485 polling thread
+    // Create CANBUS °B RS485 polling thread
     pthread_create(&canbus_thread, NULL, Canbus_Polling, NULL);
     pthread_create(&modbus_thread, NULL, Modbus_Polling, NULL);
 
@@ -814,7 +813,9 @@ void* Cali_routine(void* arg) {
 
 void* Device_Get_Data(void* arg) {
     char *token;
-    Chroma_51101_Channel = -1;
+    Meter_Channel = -1;
+    uint8_t Chroma_51101_Flag = 0;
+    uint8_t GDM_8342_Flag = 0;
 
     while(1){
         if (strstr(UI_USB_Port, "usbtmc") != NULL)
@@ -838,38 +839,58 @@ void* Device_Get_Data(void* arg) {
         }
         else if (strstr(UI_USB_Port, "ttyUSB") != NULL)
         {
-            if(Chroma_51101_Channel < 0)
+            if(Meter_Channel < 0)
             {
                 token = strtok(UI_Target, ",");
                 if (token != NULL)
                 {
-                    Chroma_51101_Channel = atoi(token);
+                    Meter_Channel = atoi(token);
                 }
                 token = strtok(NULL, ",");
                 if (token != NULL) {
                     strncpy(Chroma_51101_Sensor, token, sizeof(Chroma_51101_Sensor) - 1);
                     Chroma_51101_Sensor[sizeof(Chroma_51101_Sensor) - 1] = '\0';
-                
-                    if (strncmp(Chroma_51101_Sensor, "VA480", 5) == 0)
+                    if (strcmp(Chroma_51101_Sensor, "VA480") == 0)
                     {
-                        Chroma_51101_Write_Process(UI_USB_Port, SENSOR_TYPE_SETTING, Chroma_51101_Channel, VA_480, 2);
+                        Chroma_51101_Write_Process(UI_USB_Port, SENSOR_TYPE_SETTING, Meter_Channel, VA_480, 2);
+                        Chroma_51101_Flag = 1;
                     }
-                    else if (strncmp(Chroma_51101_Sensor, "VA10", 4) == 0)
+                    else if (strcmp(Chroma_51101_Sensor, "VA10") == 0)
                     {
-                        Chroma_51101_Write_Process(UI_USB_Port, SENSOR_TYPE_SETTING, Chroma_51101_Channel, VA_10, 2);
+                        Chroma_51101_Write_Process(UI_USB_Port, SENSOR_TYPE_SETTING, Meter_Channel, VA_10, 2);
+                        Chroma_51101_Flag = 1;
+                    }
+                    else if (strcmp(Chroma_51101_Sensor, "V") == 0)
+                    {
+                        GDM_8342_Flag = 1;
                     }
                 }
                 token = strtok(NULL, ",");
                 if (token != NULL) {
-                    Chroma_51101_Factor = atof(token);
+                    Current_Shunt_Factor = atof(token);
                 }
             }
             else{
-                Chroma_51101_Read_Process(UI_USB_Port, GET_SENSOR_DATA, Chroma_51101_Channel, 1);
+                if(Chroma_51101_Flag = 1)
+                {
+                    Chroma_51101_Read_Process(UI_USB_Port, GET_SENSOR_DATA, Meter_Channel, 1);
+                }
+                else if(GDM_8342_Flag = 1)
+                {
+                    SCPI_Read_Process(UI_USB_Port, SCPI_READ);
+                }
             }
         }
         usleep(20000);
     }
+}
+
+int Wait_for_response_poll(int fd, int timeout_ms) {
+    struct pollfd fds;
+    fds.fd = fd;
+    fds.events = POLLIN;
+
+    return poll(&fds, 1, timeout_ms);
 }
 
 void Start_Cali_thread(void) {
@@ -972,7 +993,7 @@ void Parameter_Init(void) {
 //debug
 
 //int main() {
-//    printf("ÊéÉÊèèÈÄ£Êé•ÂÑÄÂô®\n");
+//    printf("±Ω¥y≥s±µªˆæπ\n");
 //    scan_usb_devices();
 //    printf("Start\n");
 //    Start_Cali_thread();

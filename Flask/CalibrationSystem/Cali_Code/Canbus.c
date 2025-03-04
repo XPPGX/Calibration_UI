@@ -80,7 +80,6 @@ void Canbus_TxProcess_Read(uint32_t CAN_Address)
             break;
         }
     }
-    usleep(10000);
 }
 
 void Canbus_TxProcess_Write(uint32_t CAN_Address)
@@ -131,188 +130,191 @@ void Canbus_RxProcess(uint16_t Commmand)
 {
     int Can_read_bytes = 0;
 
-    Can_read_bytes = read(can_socket, &frame, sizeof(frame));
-    if (Can_read_bytes > 0) {
-        if((frame.data[0] == (Commmand & 0xFF)) && (frame.data[1] == ((Commmand>>8) & 0xFF)))
-        {
-            Can_no_receive_cnt = 0;
-            Can_receive_data_error_cnt = 0;
-
-            switch (Commmand)
+    if (Wait_for_response_poll(can_socket, 500) > 0)
+    {
+        Can_read_bytes = read(can_socket, &frame, sizeof(frame));
+        if (Can_read_bytes > 0) {
+            if((frame.data[0] == (Commmand & 0xFF)) && (frame.data[1] == ((Commmand>>8) & 0xFF)))
             {
-            case CAN_MODEL_NAME_B0B5:
-                Canbus_ask_name = 1;
-                memcpy(machine_type, &frame.data[2], 6);
-                machine_type[6] = '\0';
-                break;
+                Can_no_receive_cnt = 0;
+                Can_receive_data_error_cnt = 0;
 
-            case CAN_MODEL_NAME_B6B11:
-                Canbus_ask_name = 2;
-                memcpy(&machine_type[6], &frame.data[2], 6);
-                machine_type[12] = '\0';
-                break;
-            
-            case CAN_READ_PSU_MODE:
-                if(frame.data[2] == 0x01){
-                    Manual_Cali_step = READ_PSU_SCALING_FACTOR;
-                }
-                else{
-                    Manual_Cali_step = SEND_KEY_READ_MODE;
-                }
-                break;
-            
-            case CAN_SCALING_FACTOR:
-                PSU_ACV_Factor_Comm = (frame.data[3] & 0xF);
-                PSU_ACI_Factor_Comm = (frame.data[5] & 0xF);
-                PSU_DCV_Factor_Comm = (frame.data[2] & 0xF);
-                PSU_DCI_Factor_Comm = ((frame.data[2]>>4) & 0xF);
-                PSU_ACV_Factor = Scaling_Factor_Convert(PSU_ACV_Factor_Comm);
-                PSU_ACI_Factor = Scaling_Factor_Convert(PSU_ACI_Factor_Comm);
-                PSU_DCV_Factor = Scaling_Factor_Convert(PSU_DCV_Factor_Comm);
-                PSU_DCI_Factor = Scaling_Factor_Convert(PSU_DCI_Factor_Comm);
-                Manual_Cali_step = UI_RESET_CALI;
-                break;
-            
-            case CAN_CALI_STATUS:
-                Cali_status = (frame.data[3]<<8) | frame.data[2];
-                switch (Cali_status)
+                switch (Commmand)
                 {
-                case CALI_DEVICE_SETTING:   //0x0000
-                    Manual_Calibration();
+                case CAN_MODEL_NAME_B0B5:
+                    Canbus_ask_name = 1;
+                    memcpy(machine_type, &frame.data[2], 6);
+                    machine_type[6] = '\0';
+                    break;
+
+                case CAN_MODEL_NAME_B6B11:
+                    Canbus_ask_name = 2;
+                    memcpy(&machine_type[6], &frame.data[2], 6);
+                    machine_type[12] = '\0';
                     break;
                 
-                case CALI_DATA_LOG:         //0x0001
-                    Manual_Cali_step = READ_CALI_STATUS;
+                case CAN_READ_PSU_MODE:
+                    if(frame.data[2] == 0x01){
+                        Manual_Cali_step = READ_PSU_SCALING_FACTOR;
+                    }
+                    else{
+                        Manual_Cali_step = SEND_KEY_READ_MODE;
+                    }
                     break;
                 
-                case CALI_POINT_NOMATCH:    //0x0002
-                    printf("校正點不匹配\n");
-                    Cali_Result = CALI_POINT_FAIL;
+                case CAN_SCALING_FACTOR:
+                    PSU_ACV_Factor_Comm = (frame.data[3] & 0xF);
+                    PSU_ACI_Factor_Comm = (frame.data[5] & 0xF);
+                    PSU_DCV_Factor_Comm = (frame.data[2] & 0xF);
+                    PSU_DCI_Factor_Comm = ((frame.data[2]>>4) & 0xF);
+                    PSU_ACV_Factor = Scaling_Factor_Convert(PSU_ACV_Factor_Comm);
+                    PSU_ACI_Factor = Scaling_Factor_Convert(PSU_ACI_Factor_Comm);
+                    PSU_DCV_Factor = Scaling_Factor_Convert(PSU_DCV_Factor_Comm);
+                    PSU_DCI_Factor = Scaling_Factor_Convert(PSU_DCI_Factor_Comm);
+                    Manual_Cali_step = UI_RESET_CALI;
                     break;
                 
-                case CALI_POINT_SETTING:    //0x0003
-                    Canbus_TxProcess_Write(CAN_CALIBRATION_POINT);
-                    usleep(20000); // Delay 20ms
+                case CAN_CALI_STATUS:
+                    Cali_status = (frame.data[3]<<8) | frame.data[2];
+                    switch (Cali_status)
+                    {
+                    case CALI_DEVICE_SETTING:   //0x0000
+                        Manual_Calibration();
+                        break;
+                    
+                    case CALI_DATA_LOG:         //0x0001
+                        Manual_Cali_step = READ_CALI_STATUS;
+                        break;
+                    
+                    case CALI_POINT_NOMATCH:    //0x0002
+                        printf("校正點不匹配\n");
+                        Cali_Result = CALI_POINT_FAIL;
+                        break;
+                    
+                    case CALI_POINT_SETTING:    //0x0003
+                        Canbus_TxProcess_Write(CAN_CALIBRATION_POINT);
+                        usleep(20000); // Delay 20ms
+                        break;
+                    
+                    case CALI_FINISH:           //0xFFFF
+                        Manual_Cali_step = READ_CALI_RESULT;
+                        break;
+                    
+                    default:
+                        break;
+                    }
                     break;
                 
-                case CALI_FINISH:           //0xFFFF
-                    Manual_Cali_step = READ_CALI_RESULT;
+                case CAN_CALI_RESULT:
+                    if(frame.data[2] == 0x01)
+                    {
+                        Cali_Result = FINISH;
+                    }
+                    else if(frame.data[2] == 0x02)
+                    {
+                        Cali_Result = NOT_COMPLETE;
+                    }
                     break;
                 
+                case CAN_SVR_POLLING:
+                    Cali_type_polling = frame.data[2];
+                    Cali_read_step++;
+                    break;
+
+                case CAN_READ_HIGH_LIMIT:
+                    PSU_High_Limit_Comm = ((frame.data[3] << 8) | frame.data[2]);
+                    if (strcmp(UI_Scaling_Factor, "ACV") == 0) 
+                    {
+                        PSU_High_Limit = PSU_High_Limit_Comm * PSU_ACV_Factor;
+                    } 
+                    else if (strcmp(UI_Scaling_Factor, "ACI") == 0) 
+                    {
+                        PSU_High_Limit = PSU_High_Limit_Comm * PSU_ACI_Factor;
+                    } 
+                    else if (strcmp(UI_Scaling_Factor, "DCV") == 0) 
+                    {
+                        PSU_High_Limit = PSU_High_Limit_Comm * PSU_DCV_Factor;
+                    } 
+                    else if (strcmp(UI_Scaling_Factor, "DCI") == 0) 
+                    {
+                        PSU_High_Limit = PSU_High_Limit_Comm * PSU_DCI_Factor;
+                    }
+                    else if ((strcmp(UI_Scaling_Factor, "mA") == 0) || (strcmp(UI_Scaling_Factor, "mV") == 0)) 
+                    {
+                        PSU_High_Limit = PSU_High_Limit_Comm * 0.001f;
+                    } 
+                    else 
+                    {
+                        PSU_High_Limit = PSU_High_Limit_Comm;
+                    }
+                    printf("上限值:%.2f\n",PSU_High_Limit);
+                    Cali_read_step++;
+                    break;
+
+                case CAN_READ_LOW_LIMIT:
+                    PSU_Low_Limit_Comm = ((frame.data[3] << 8) | frame.data[2]);
+                    if (strcmp(UI_Scaling_Factor, "ACV") == 0) 
+                    {
+                        PSU_Low_Limit = PSU_Low_Limit_Comm * PSU_ACV_Factor;
+                    } 
+                    else if (strcmp(UI_Scaling_Factor, "ACI") == 0) 
+                    {
+                        PSU_Low_Limit = PSU_Low_Limit_Comm * PSU_ACI_Factor;
+                    } 
+                    else if (strcmp(UI_Scaling_Factor, "DCV") == 0) 
+                    {
+                        PSU_Low_Limit = PSU_Low_Limit_Comm * PSU_DCV_Factor;
+                    } 
+                    else if (strcmp(UI_Scaling_Factor, "DCI") == 0) 
+                    {
+                        PSU_Low_Limit = PSU_Low_Limit_Comm * PSU_DCI_Factor;
+                    }
+                    else if ((strcmp(UI_Scaling_Factor, "mA") == 0) || (strcmp(UI_Scaling_Factor, "mV") == 0)) 
+                    {
+                        PSU_Low_Limit = PSU_Low_Limit_Comm * 0.001f;
+                    } 
+                    else 
+                    {
+                        PSU_Low_Limit = PSU_Low_Limit_Comm;
+                    }
+                    printf("下限值:%.2f\n",PSU_Low_Limit);
+                    Cali_read_step++;
+                    break;
+
+                case CAN_AC_SOURCE_SET:
+                    Cali_read_step++;
+                    break;
+
+                case CAN_DC_SOURCE_SET:
+                    Cali_read_step++;
+                    break;
+
+                case CAN_DC_LOAD_SET:
+                    Cali_read_step++;
+                    break;
+
                 default:
                     break;
                 }
-                break;
-            
-            case CAN_CALI_RESULT:
-                if(frame.data[2] == 0x01)
+            }
+            else
+            {
+                Can_receive_data_error_cnt++;
+                if(Can_receive_data_error_cnt >= 10)
                 {
-                    Cali_Result = FINISH;
+                    //Cali_Result = FAIL;
                 }
-                else if(frame.data[2] == 0x02)
-                {
-                    Cali_Result = NOT_COMPLETE;
-                }
-                break;
-            
-            case CAN_SVR_POLLING:
-                Cali_type_polling = frame.data[2];
-                Cali_read_step++;
-                break;
-
-            case CAN_READ_HIGH_LIMIT:
-                PSU_High_Limit_Comm = ((frame.data[3] << 8) | frame.data[2]);
-                if (strcmp(UI_Scaling_Factor, "ACV") == 0) 
-                {
-                    PSU_High_Limit = PSU_High_Limit_Comm * PSU_ACV_Factor;
-                } 
-                else if (strcmp(UI_Scaling_Factor, "ACI") == 0) 
-                {
-                    PSU_High_Limit = PSU_High_Limit_Comm * PSU_ACI_Factor;
-                } 
-                else if (strcmp(UI_Scaling_Factor, "DCV") == 0) 
-                {
-                    PSU_High_Limit = PSU_High_Limit_Comm * PSU_DCV_Factor;
-                } 
-                else if (strcmp(UI_Scaling_Factor, "DCI") == 0) 
-                {
-                    PSU_High_Limit = PSU_High_Limit_Comm * PSU_DCI_Factor;
-                }
-                else if ((strcmp(UI_Scaling_Factor, "mA") == 0) || (strcmp(UI_Scaling_Factor, "mV") == 0)) 
-                {
-                    PSU_High_Limit = PSU_High_Limit_Comm * 0.001f;
-                } 
-                else 
-                {
-                    PSU_High_Limit = PSU_High_Limit_Comm;
-                }
-                printf("上限值:%.2f\n",PSU_High_Limit);
-                Cali_read_step++;
-                break;
-
-            case CAN_READ_LOW_LIMIT:
-                PSU_Low_Limit_Comm = ((frame.data[3] << 8) | frame.data[2]);
-                if (strcmp(UI_Scaling_Factor, "ACV") == 0) 
-                {
-                    PSU_Low_Limit = PSU_Low_Limit_Comm * PSU_ACV_Factor;
-                } 
-                else if (strcmp(UI_Scaling_Factor, "ACI") == 0) 
-                {
-                    PSU_Low_Limit = PSU_Low_Limit_Comm * PSU_ACI_Factor;
-                } 
-                else if (strcmp(UI_Scaling_Factor, "DCV") == 0) 
-                {
-                    PSU_Low_Limit = PSU_Low_Limit_Comm * PSU_DCV_Factor;
-                } 
-                else if (strcmp(UI_Scaling_Factor, "DCI") == 0) 
-                {
-                    PSU_Low_Limit = PSU_Low_Limit_Comm * PSU_DCI_Factor;
-                }
-                else if ((strcmp(UI_Scaling_Factor, "mA") == 0) || (strcmp(UI_Scaling_Factor, "mV") == 0)) 
-                {
-                    PSU_Low_Limit = PSU_Low_Limit_Comm * 0.001f;
-                } 
-                else 
-                {
-                    PSU_Low_Limit = PSU_Low_Limit_Comm;
-                }
-                printf("下限值:%.2f\n",PSU_Low_Limit);
-                Cali_read_step++;
-                break;
-
-            case CAN_AC_SOURCE_SET:
-                Cali_read_step++;
-                break;
-
-            case CAN_DC_SOURCE_SET:
-                Cali_read_step++;
-                break;
-
-            case CAN_DC_LOAD_SET:
-                Cali_read_step++;
-                break;
-
-            default:
-                break;
             }
         }
-        else
-        {
-            Can_receive_data_error_cnt++;
-            if(Can_receive_data_error_cnt >= 10)
+        else if (Can_read_bytes < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+            Cali_Result = DUT_FAIL; //CAN Read error
+        }
+        else if (Can_read_bytes < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            Can_no_receive_cnt++;
+            if(Can_no_receive_cnt >= 10)
             {
                 //Cali_Result = FAIL;
             }
-        }
-    }
-    else if (Can_read_bytes < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-        Cali_Result = DUT_FAIL; //CAN Read error
-    }
-    else if (Can_read_bytes < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-        Can_no_receive_cnt++;
-        if(Can_no_receive_cnt >= 10)
-        {
-            //Cali_Result = FAIL;
         }
     }
 }

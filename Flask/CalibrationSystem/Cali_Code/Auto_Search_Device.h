@@ -5,11 +5,18 @@
 #define MAX_NAME_LENGTH 256
 
 #define SCPI_IDN            "*IDN?\n"
+#define SCPI_VOLT           "MEASure:VOLTage?\n"
 #define SCPI_VOLT_RMS       "MEASure:VOLTage:RMS?\n"
 #define SCPI_VOLT_DC        "MEASure:VOLTage:DC?\n"
+#define SCPI_CURR           "MEASure:CURRent?\n"
 #define SCPI_CURR_RMS       "MEASure:CURRent:RMS?\n"
 #define SCPI_CURR_DC        "MEASure:CURRent:DC?\n"
 #define SCPI_LOCAL_STATE    "SYSTem:LOCal\n"
+#define SCPI_LOAD_ON        "LOAD ON\n"
+#define SCPI_LOAD_OFF       "LOAD OFF\n"
+#define SCPI_CURR_STAT_L1   "CURR:STAT:L1\n"
+#define SCPI_SET_MODE_CCH   "MODE CCH\n"
+#define SCPI_READ           "READ?\n"
 
 typedef struct {
     char device_path[MAX_NAME_LENGTH];

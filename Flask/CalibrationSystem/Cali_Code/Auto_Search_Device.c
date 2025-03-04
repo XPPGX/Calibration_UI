@@ -18,6 +18,7 @@ int SCPI_Read_Process(const char *device_path, const char *command);
 int SCPI_Write_Process(const char *device_path, const char *command);
 int Chroma_51101_Read_Process(const char *device_path, unsigned char command, uint8_t param1, uint8_t response_length);
 int Chroma_51101_Write_Process(const char *device_path, unsigned char command, uint8_t param1, uint8_t param2, uint8_t response_length);
+const char* Set_DCLoad_Current_Static(float load_value);
 
 void scan_usb_devices(void);
 const char* Get_Device_information(int index);
@@ -89,6 +90,7 @@ int SCPI_Read_Process(const char *device_path, const char *command) {
     char read_buffer[MAX_NAME_LENGTH];
     char temp[MAX_NAME_LENGTH];
     int receive_len = 0;
+    float Meter_measured_value = 0.0f;
     int fd = -1;
 
     for (uint8_t i = 0; i < device_usb_port_count; i++)
@@ -113,34 +115,44 @@ int SCPI_Read_Process(const char *device_path, const char *command) {
         Cali_Result = DEVICE_FAIL;         //Write fail
         return -1;
     }
-    usleep(20000); // wait respone
 
-    // read respone
-    memset(read_buffer, 0, sizeof(read_buffer));
-    receive_len = read(fd, read_buffer, MAX_NAME_LENGTH - 1);
+    if (Wait_for_response_poll(fd, 500) > 0) {
+        // read respone
+        memset(read_buffer, 0, sizeof(read_buffer));
+        receive_len = read(fd, read_buffer, MAX_NAME_LENGTH - 1);
 
-    if (receive_len > 0) {
-        read_buffer[receive_len] = '\0';
+        if (receive_len > 0) {
+            read_buffer[receive_len] = '\0';
 
-        if(strcmp(command, SCPI_IDN) == 0) //Determine USB port is usbtmc*
-        {
-            snprintf(temp, sizeof(temp), "%s,%s", device_path, read_buffer);
-            strncpy(Device_information[device_count], temp, MAX_NAME_LENGTH - 1);
-            Device_information[device_count][MAX_NAME_LENGTH - 1] = '\0';
-            device_count++;
+            if(strcmp(command, SCPI_IDN) == 0) //Determine USB port is usbtmc*
+            {
+                snprintf(temp, sizeof(temp), "%s,%s", device_path, read_buffer);
+                strncpy(Device_information[device_count], temp, MAX_NAME_LENGTH - 1);
+                Device_information[device_count][MAX_NAME_LENGTH - 1] = '\0';
+                device_count++;
+            }
+            else if((strcmp(command, SCPI_VOLT_RMS) == 0) || (strcmp(command, SCPI_VOLT_DC) == 0) 
+                || (strcmp(command, SCPI_CURR_RMS) == 0) || (strcmp(command, SCPI_CURR_DC) == 0))
+            {
+                Device_measured_value = atof(read_buffer);
+            }
+            else if(strcmp(command, SCPI_READ) == 0)
+            {
+                sscanf(read_buffer, ">%f,", &Meter_measured_value);
+                Device_measured_value = (Meter_measured_value / Current_Shunt_Factor);
+            }
         }
-        else if((strcmp(command, SCPI_VOLT_RMS) == 0) || (strcmp(command, SCPI_VOLT_DC) == 0) 
-            || (strcmp(command, SCPI_CURR_RMS) == 0) || (strcmp(command, SCPI_CURR_DC) == 0))
-        {
-            Device_measured_value = atof(read_buffer);
+        else if (receive_len < 0) {
+            perror("Error reading from SCPI device");
+            Cali_Result = DEVICE_FAIL;         //Read fail
+            return -1;
         }
+        return 0;
     }
-    else if (receive_len < 0) {
-        perror("Error reading from SCPI device");
-        Cali_Result = DEVICE_FAIL;         //Read fail
+    else {
+        Cali_Result = DEVICE_FAIL;         //Read Timeout
         return -1;
     }
-    return 0;
 }
 
 // SCPI write data process
@@ -212,7 +224,7 @@ int Chroma_51101_Read_Process(const char *device_path, unsigned char command, ui
             {
                 Chroma_51101_Data |= (Receive_respone[i] << ((5-i) * 8));
             }
-            Device_measured_value = (float) ((Chroma_51101_Data / 10000.0f) / Chroma_51101_Factor);
+            Device_measured_value = (float) ((Chroma_51101_Data / 10000.0f) / Current_Shunt_Factor);
             Chroma_51101_Data = 0;
         }
     }
@@ -280,10 +292,11 @@ void scan_usb_devices(void) {
 
             if (Device_Open_Init(device_path) == 0) {
                 if ((strstr(device_path, "usbtmc") != NULL && SCPI_Read_Process(device_path, SCPI_IDN) == 0) ||
-                    (strstr(device_path, "ttyUSB") != NULL && Chroma_51101_Read_Process(device_path, GET_DEVICE_ADDRESS, 0x00, 0) == 0)) 
+                    (strstr(device_path, "ttyUSB") != NULL && Chroma_51101_Read_Process(device_path, GET_DEVICE_ADDRESS, 0x00, 0) == 0) ||
+                    (strstr(device_path, "ttyUSB") != NULL && SCPI_Read_Process(device_path, SCPI_IDN) == 0)) 
                 {
                     printf("Device: %s identified\n", device_path);
-                    if(strstr(device_path, "usbtmc") != NULL)
+                    if (strstr(device_path, "usbtmc") != NULL)
                     {
                         SCPI_Write_Process(device_path, SCPI_LOCAL_STATE);
                     }
@@ -307,6 +320,14 @@ void SCPI_Device_Comm_Control_Close(void) {
             SCPI_Write_Process(Device_USB_Port[i].device_path, SCPI_LOCAL_STATE);
         }
     }
+}
+
+const char* Set_DCLoad_Current_Static(float load_value) {
+    static char load_command[MAX_NAME_LENGTH];
+
+    snprintf(load_command, sizeof(load_command), "%s %.2fA\n", SCPI_CURR_STAT_L1, load_value);
+
+    return load_command;
 }
 
 const char* Get_Device_information(int index) {
