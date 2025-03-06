@@ -449,7 +449,8 @@
                         })
                     }
                 }
-                else{
+                else if(Devices_setting[key].Type == "DMM" || Devices_setting[key].Type == "DWAM"){
+
                     let device = key;
                     device_options.push(device);
                     console.log(key);
@@ -537,13 +538,23 @@
         //According to the devices setting, put all options to "target value"
         device_options = []
         optionMap.DMM = []
+        optionMap.Chroma_51101_8 = []
+        optionMap.GWInstek_GDM8342 = []
         Object.keys(Devices_setting).forEach(key => {
             if(key == "Fine-setting"){
-                Devices_setting["Fine-setting"]["Chroma 51101-8"].forEach(channel => {
-                    optionMap.DMM.push(`Ch${channel.Ch}`);
-                })
+                if("Chroma 51101-8" in Devices_setting["Fine-setting"]){
+                    Devices_setting["Fine-setting"]["Chroma 51101-8"].forEach(channel => {
+                        optionMap.Chroma_51101_8.push(`Ch${channel.Ch}`);
+                    })
+                }
+                if("GWInstek,GDM8342" in Devices_setting["Fine-setting"]){
+                    Devices_setting["Fine-setting"]["GWInstek,GDM8342"].forEach(channel => {
+                        optionMap.GWInstek_GDM8342.push(`Ch${channel.Ch}`);
+                    })
+                }
             }
-            else{
+            else if(Devices_setting[key].Type == "DMM" || Devices_setting[key].Type == "DWAM"){
+
                 let device = key;
                 device_options.push(device);
                 console.log(key);

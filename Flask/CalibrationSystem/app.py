@@ -591,7 +591,7 @@ def SendCaliPointInfo(_step_cmd, _scaling_factor, _target, _usb_port):
 
 def GetCaliPointTarget(_cali_point_object, _device_name):
     current_cali_point_target = ""
-    
+
     tmp_channel = _cali_point_object["Target_Equipment"]["Value_Type"]
     tmp_channel = tmp_channel[2:]
     print(tmp_channel)
@@ -777,9 +777,11 @@ def handle_scan_usb_devices():
         # device_info_2 = "/dev/USBTMC0,Chroma ATE,66202,662025001432,1.70"
         device_info_2 = "/dev/USBTMC0,Chroma ATE,66205,662025001432,1.70"
         device_info_3 = "/dev/ttyUSB1,GWInstek,GDM8342,GER817373,1.04"
+        device_info_4 = "/dev/ttyUSB2,ATA1045"
         DeviceInfo_str_list.append(device_info_1)
         DeviceInfo_str_list.append(device_info_2)
         DeviceInfo_str_list.append(device_info_3)
+        DeviceInfo_str_list.append(device_info_4)
         print(DeviceInfo_str_list)
     
     
@@ -787,18 +789,20 @@ def handle_scan_usb_devices():
     try:
         with open(DEVICE_JSON_FILE_PATH, "r", encoding="utf-8") as file:
             devices_JSON = json.load(file)
+            print("======Content in DeviceConfig.json======")
+            print(json.dumps(devices_JSON, ensure_ascii=False, indent=4))
     except FileNotFoundError:
         print("Error : JSON file not found")
     except json.JSONDecodeError:
         print("Error : Json format error")
 
-    print(devices_JSON)
+    
 
     #Parse the devices' information
     Device_info_to_Web_dict = {}
     
     EQ_type = ""
-
+    combine_name = ""
     for info in DeviceInfo_str_list:
 
         split_info_str_list = info.split(",")
@@ -808,33 +812,27 @@ def handle_scan_usb_devices():
         model_name = ""
         serial_num = ""
 
+        print("==split info_str")
         split_info_str_list = info.split(",")
         if(len(split_info_str_list) >= 2):
             mfr_name = split_info_str_list[1]
+            combine_name = mfr_name
             print(mfr_name)
         if(len(split_info_str_list) >= 3):
             model_name = split_info_str_list[2]
+            combine_name = mfr_name + "," + model_name
             print(model_name)
         if(len(split_info_str_list) >= 4):
             serial_num = split_info_str_list[3]
             print(serial_num)
+        print(mfr_name + "," + model_name + "," + serial_num)
 
-        EQ_type = devices_JSON[mfr_name][model_name]["EQ_TYPE"]
-
-        devices_JSON[mfr_name][model_name]["SerialNumber"].append(serial_num)
-
-        Device_info_to_Web_dict[mfr_name + "," + model_name] = {}
-        Device_info_to_Web_dict[mfr_name + "," + model_name]["EQ_TYPE"] = EQ_type
-        Device_info_to_Web_dict[mfr_name + "," + model_name]["Serial_Num"] = serial_num
-        Device_info_to_Web_dict[mfr_name + "," + model_name]["USB_Port"] = usb_port
-
-        # if(split_info_str_list[1] == "Chroma 51101-8"): #No case come to here
-        #     EQ_type = devices_JSON["Chroma 51101-8"]["EQ_TYPE"]
-        #     Device_info_to_Web_dict["Chroma 51101-8"] = {}
-        #     Device_info_to_Web_dict["Chroma 51101-8"]["EQ_TYPE"] = EQ_type
-        #     Device_info_to_Web_dict["Chroma 51101-8"]["Serial_Num"] = ""
-        #     Device_info_to_Web_dict["Chroma 51101-8"]["USB_Port"] = usb_port
-        # else:
+        EQ_type = devices_JSON[combine_name]["EQ_TYPE"]
+        devices_JSON[combine_name]["SerialNumber"].append(serial_num)
+        Device_info_to_Web_dict[combine_name] = {}
+        Device_info_to_Web_dict[combine_name]["EQ_TYPE"] = EQ_type
+        Device_info_to_Web_dict[combine_name]["Serial_Num"] = serial_num
+        Device_info_to_Web_dict[combine_name]["USB_Port"] = usb_port
             
     print(Device_info_to_Web_dict)
     return jsonify(Device_info_to_Web_dict), 200
@@ -842,52 +840,52 @@ def handle_scan_usb_devices():
 @app.route('/api/save_devices_setting', methods=['POST'])
 def handle_save_devices_setting():
     global Devices_setting
+    tmp_device_file_data = {}
 
     try:
         # Receive device data from UI in json format
         Devices_setting = request.get_json()
-        json_str = json.dumps(Devices_setting, indent=4)
         
         # Reset device data which got from local json file
         with open(DEVICE_JSON_FILE_PATH, "r", encoding="utf-8") as file:
             tmp_device_file_data = json.load(file)
-            for Mfr, Series in tmp_device_file_data.items():
-                for model in Series:
-                    Series[model]["SerialNumber"] = []
-                    Series[model]["Identifier"] = []
-                    Series[model]["USB_Port"] = []
-                print("==0.0==")
-                print(Series)
+            for name, content in tmp_device_file_data.items():
+                content["SerialNumber"] = []
+                content["Identifier"] = []
+                content["USB_Port"] = []
+                # print("==0.0==")
+                # print(content)
 
-        print("==== file_content : ====")
+        print("==== file_content (After clear the data) : ====")
         print(json.dumps(tmp_device_file_data, indent=4))
-        print("==== UI   content : ====")
-        print(json_str)
+        print("==== UI   content (also in server variable \"Devices_setting\"): ====")
+        print(json.dumps(Devices_setting, indent=4))
         
         # Traverse the json data got from UI, and save the content to the json file
         for CodeName, Info in Devices_setting.items():
             if(CodeName != "Fine-setting"):
-                tmp_ModelName_str_list = Info["ModelName"].split(",")
+                tmp_ModelName_str = Info["ModelName"]
                 tmp_USB_Port_str = Info["USB_Port"]
                 tmp_SerialNum_str = Info["SerialNum"]
-                tmp_mfr = tmp_ModelName_str_list[0]
-                tmp_Model = tmp_ModelName_str_list[1]
-                
-                tmp_device_file_data[tmp_mfr][tmp_Model]["Identifier"].append(CodeName)
-                tmp_device_file_data[tmp_mfr][tmp_Model]["SerialNumber"].append(tmp_SerialNum_str)
-                tmp_device_file_data[tmp_mfr][tmp_Model]["USB_Port"].append(tmp_USB_Port_str)
-        print(tmp_device_file_data)
+
+                tmp_device_file_data[tmp_ModelName_str]["Identifier"].append(CodeName)
+                tmp_device_file_data[tmp_ModelName_str]["SerialNumber"].append(tmp_SerialNum_str)
+                tmp_device_file_data[tmp_ModelName_str]["USB_Port"].append(tmp_USB_Port_str)
+
         with open(DEVICE_JSON_FILE_PATH, "w", encoding="utf-8") as file:
             json.dump(tmp_device_file_data, file, ensure_ascii=False, indent=4)
-                
+
+
 
         # Save Fine-setting data
         with open(FINE_SETTING_JSON_FILE_PATH, "w", encoding="utf-8") as file:
             json.dump(Devices_setting["Fine-setting"], file, ensure_ascii=False, indent=4)
-            
+        
+                  
         return jsonify({}), 200
     
     except Exception as e:
+        print(e) ## Print error message in the terminal
         return jsonify({'error' : str(e)}), 400
 
 @app.route('/api/get_devices_setting', methods=['GET'])
