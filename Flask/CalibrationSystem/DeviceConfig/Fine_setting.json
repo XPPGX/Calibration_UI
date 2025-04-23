@@ -2,15 +2,15 @@
     "Chroma 51101-8": [
         {
             "Ch": "0",
-            "Value_Type": "VA10",
-            "Shunt_Value": "123"
+            "Value_Type": "VA480",
+            "Shunt_Value": "1"
         }
     ],
     "GWInstek,GDM8342": [
         {
             "Ch": "0",
-            "Value_Type": "A",
-            "Shunt_Value": "123"
+            "Value_Type": "V",
+            "Shunt_Value": "0.0001667"
         }
     ]
 }

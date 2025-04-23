@@ -36,7 +36,7 @@ adjust_mode_cases = {
 
 cali_status_cases = defaultdict(lambda: "Running...",  ## Suitable for a large number of default cases
     {
-        1 : "FINISH",
+        1 : "PASS",
         2 : "Not Complete",
         3 : "Device FAIL",
         4 : "DUT FAIL",
@@ -103,8 +103,8 @@ app = Flask(__name__)
 c_lib_Cali = ctypes.CDLL('./Cali_Code/Cali.so')
 #c_lib_Search_Device = ctypes.CDLL('./Clib/Cali_Code/Auto_Search_Device.so')
 
-DEBUG_MODE = 1 #DEBUG_MODE == 1, means it can run without DUT ; DEBUG_MODE = 0 means it needs to connect DUT to run
-DEBUG_DEVICE = 1 #DEBUG_DEVICE == 1, means it can run without any device ; DEBUG_DEVICE == 0, means it needs to connect device to run
+DEBUG_MODE = 0 #DEBUG_MODE == 1, means it can run without DUT ; DEBUG_MODE = 0 means it needs to connect DUT to run
+DEBUG_DEVICE = 0 #DEBUG_DEVICE == 1, means it can run without any device ; DEBUG_DEVICE == 0, means it needs to connect device to run
 Debug_Enter_pressed = 0
 
 ##################################################
@@ -332,7 +332,7 @@ def server_timers():
                 break
 
         elif(UI_stage == UI_STAGE_READ_DYANAMIC_VALUES):
-            print("========== UI_STAGE_READ_DYANAMIC_VALUES")
+            #print("========== UI_STAGE_READ_DYANAMIC_VALUES")
             AdjustMode_str = getAdjustMode()
             TargetEquipment_Value = getDeviceMeasureValue()
             TargetEquipment_Value_str = f"{TargetEquipment_Value:.3f}"
@@ -340,7 +340,7 @@ def server_timers():
             CaliPointComplete_uint8 = getCalibrationPointComplete()
             EQ_ValueColor = getTargetEQ_ValueColor()
             
-            print(f'{AdjustMode_str}, {TargetEquipment_Value_str}, {CaliStatus_str}')
+            #print(f'{AdjustMode_str}, {TargetEquipment_Value_str}, {CaliStatus_str}')
             if(CaliPointComplete_uint8 == 1):
                 c_lib_Cali.Check_Calibration_Point_Complete(0)
                 current_cali_point_count = current_cali_point_count + 1
@@ -356,7 +356,7 @@ def server_timers():
         elif(UI_stage == UI_STAGE_CHECK_FINISH):
             print("========== UI_STAGE_CHECK_FINISH")
             CaliStatus_str = getCaliStatus()
-            if(CaliStatus_str == "FINISH" or CaliStatus_str == "Not Complete" 
+            if(CaliStatus_str == "PASS" or CaliStatus_str == "Not Complete" 
             or CaliStatus_str == "Device FAIL" or CaliStatus_str == "DUT FAIL" 
             or CaliStatus_str == "Cali point FAIL" or CaliStatus_str == "Peripheral FAIL"):
                 c_lib_Cali.Stop_Cali_thread()
@@ -773,15 +773,17 @@ def handle_scan_usb_devices():
     
     #Debug mode
     elif(DEBUG_DEVICE == 1):
-        device_info_1 = "/dev/ttyUSB0,Chroma,51101-8"
-        # device_info_2 = "/dev/USBTMC0,Chroma ATE,66202,662025001432,1.70"
-        device_info_2 = "/dev/USBTMC0,Chroma ATE,66205,662025001432,1.70"
+        # device_info_1 = "/dev/ttyUSB0,Chroma,51101-8"
+        device_info_1 = "/dev/USBTMC0,Chroma ATE,66205,662025001111,1.70"
+        device_info_2 = "/dev/USBTMC1,Chroma ATE,66205,662025001432,1.70"
         device_info_3 = "/dev/ttyUSB1,GWInstek,GDM8342,GER817373,1.04"
         device_info_4 = "/dev/ttyUSB2,ATA1045"
+        device_info_5 = "/dev/ttyUSB0,Chroma,51101-8"
         DeviceInfo_str_list.append(device_info_1)
         DeviceInfo_str_list.append(device_info_2)
         DeviceInfo_str_list.append(device_info_3)
         DeviceInfo_str_list.append(device_info_4)
+        DeviceInfo_str_list.append(device_info_5)
         print(DeviceInfo_str_list)
     
     
@@ -801,8 +803,22 @@ def handle_scan_usb_devices():
     #Parse the devices' information
     Device_info_to_Web_dict = {}
     
+    Type_Counter = {}
+    Type_Counter["ACS"] = 0
+    Type_Counter["DWAM"] = 0
+    Type_Counter["DMM"] = 0
+    Type_Counter["DCS"] = 0
+    Type_Counter["DCL"] = 0
+
+    for device in devices_JSON.values():
+        device["SerialNumber"] = []
+        device["Identifier"] = []
+        device["USB_Port"] = []
+
     EQ_type = ""
+    Instrument_ID = ""
     combine_name = ""
+
     for info in DeviceInfo_str_list:
 
         split_info_str_list = info.split(",")
@@ -827,12 +843,20 @@ def handle_scan_usb_devices():
             print(serial_num)
         print(mfr_name + "," + model_name + "," + serial_num)
 
+        #temp_len = len(devices_JSON[combine_name]["Identifier"])
         EQ_type = devices_JSON[combine_name]["EQ_TYPE"]
+        Instrument_ID = EQ_type + str(Type_Counter[EQ_type])
+        Type_Counter[EQ_type] = Type_Counter[EQ_type] + 1
+
         devices_JSON[combine_name]["SerialNumber"].append(serial_num)
+        devices_JSON[combine_name]["Identifier"].append(Instrument_ID)
+        devices_JSON[combine_name]["USB_Port"].append(usb_port)
+
         Device_info_to_Web_dict[combine_name] = {}
         Device_info_to_Web_dict[combine_name]["EQ_TYPE"] = EQ_type
-        Device_info_to_Web_dict[combine_name]["Serial_Num"] = serial_num
-        Device_info_to_Web_dict[combine_name]["USB_Port"] = usb_port
+        Device_info_to_Web_dict[combine_name]["SerialNumber"] = devices_JSON[combine_name]["SerialNumber"]
+        Device_info_to_Web_dict[combine_name]["USB_Port"] = devices_JSON[combine_name]["USB_Port"]
+        Device_info_to_Web_dict[combine_name]["Identifier"] = devices_JSON[combine_name]["Identifier"]
             
     print(Device_info_to_Web_dict)
     return jsonify(Device_info_to_Web_dict), 200
@@ -1089,5 +1113,6 @@ def Mock_equipment_value():
 if __name__ == '__main__':
     # ~ Init_getDeviceSetting_from_Local_File()
     Init_getScript_from_Local_File()
+    #app.run('127.0.0.1', port=4040)
     app.run(debug=True)
     # print("admin" in Password)

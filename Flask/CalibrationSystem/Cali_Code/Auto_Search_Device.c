@@ -2,6 +2,8 @@
 #include "Cali.h"
 #include "Auto_Search_Device.h"
 #include "Chroma_meter_51101_8.h"
+#include "Canbus.h"
+#include "Modbus.h"
 
 /* Parameter -----------------------------------------------*/
 char Device_information[MAX_DEVICES][MAX_NAME_LENGTH];
@@ -25,6 +27,7 @@ const char* Get_Device_information(int index);
 int Device_Open_Init(const char *device_path);
 void Device_Close(void);
 void SCPI_Device_Comm_Control_Close(void);
+void log_to_csv(float measured_value);
 
 int Device_Open_Init(const char *device_path) {
     int fd;
@@ -115,44 +118,57 @@ int SCPI_Read_Process(const char *device_path, const char *command) {
         Cali_Result = DEVICE_FAIL;         //Write fail
         return -1;
     }
+    if (strcmp(command, SCPI_READ) == 0)
+    {
+        if (Wait_for_response_poll(fd, 500) > 0) {
+            // read respone
+            memset(read_buffer, 0, sizeof(read_buffer));
+            receive_len = read(fd, read_buffer, MAX_NAME_LENGTH - 1);
+        }
+    }
+    else
+    {
+        usleep(20000); // wait respone
 
-    if (Wait_for_response_poll(fd, 500) > 0) {
         // read respone
         memset(read_buffer, 0, sizeof(read_buffer));
         receive_len = read(fd, read_buffer, MAX_NAME_LENGTH - 1);
+    }
 
-        if (receive_len > 0) {
-            read_buffer[receive_len] = '\0';
+    if (receive_len > 0) {
+        read_buffer[receive_len] = '\0';
 
-            if(strcmp(command, SCPI_IDN) == 0) //Determine USB port is usbtmc*
-            {
-                snprintf(temp, sizeof(temp), "%s,%s", device_path, read_buffer);
-                strncpy(Device_information[device_count], temp, MAX_NAME_LENGTH - 1);
-                Device_information[device_count][MAX_NAME_LENGTH - 1] = '\0';
-                device_count++;
-            }
-            else if((strcmp(command, SCPI_VOLT_RMS) == 0) || (strcmp(command, SCPI_VOLT_DC) == 0) 
-                || (strcmp(command, SCPI_CURR_RMS) == 0) || (strcmp(command, SCPI_CURR_DC) == 0))
-            {
-                Device_measured_value = atof(read_buffer);
-            }
-            else if(strcmp(command, SCPI_READ) == 0)
-            {
-                sscanf(read_buffer, ">%f,", &Meter_measured_value);
-                Device_measured_value = (Meter_measured_value / Current_Shunt_Factor);
-            }
+        if(strcmp(command, SCPI_IDN) == 0) //Determine USB port is usbtmc*
+        {
+            snprintf(temp, sizeof(temp), "%s,%s", device_path, read_buffer);
+            strncpy(Device_information[device_count], temp, MAX_NAME_LENGTH - 1);
+            Device_information[device_count][MAX_NAME_LENGTH - 1] = '\0';
+            device_count++;
         }
-        else if (receive_len < 0) {
-            perror("Error reading from SCPI device");
-            Cali_Result = DEVICE_FAIL;         //Read fail
-            return -1;
+        else if((strcmp(command, SCPI_VOLT_RMS) == 0) || (strcmp(command, SCPI_VOLT_DC) == 0) 
+            || (strcmp(command, SCPI_CURR_RMS) == 0) || (strcmp(command, SCPI_CURR_DC) == 0))
+        {
+            Device_measured_value = atof(read_buffer);
+            //printf("Device_measured_value: %.3f\n", Device_measured_value);
+            //log_to_csv(Device_measured_value);
+        }
+        else if(strcmp(command, SCPI_READ) == 0)
+        {
+            sscanf(read_buffer, "%f,", &Meter_measured_value);
+            Device_measured_value = (Meter_measured_value / Current_Shunt_Factor);
         }
         return 0;
     }
-    else {
-        Cali_Result = DEVICE_FAIL;         //Read Timeout
+    else if (receive_len < 0) {
+        perror("Error reading from SCPI device");
+        Cali_Result = DEVICE_FAIL;         //Read fail
         return -1;
     }
+    else
+    {
+        return -1;
+    }
+    
 }
 
 // SCPI write data process
@@ -227,14 +243,18 @@ int Chroma_51101_Read_Process(const char *device_path, unsigned char command, ui
             Device_measured_value = (float) ((Chroma_51101_Data / 10000.0f) / Current_Shunt_Factor);
             Chroma_51101_Data = 0;
         }
+        return 0;
     }
     else if (receive_datalen < 0)
     {
         Cali_Result = DEVICE_FAIL;         //Read fail
         return -1;
     }
-
-    return 0;
+    else
+    {
+        return -1;
+    }
+    
 }
 
 int Chroma_51101_Write_Process(const char *device_path, unsigned char command, uint8_t param1, uint8_t param2, uint8_t response_length) {
@@ -273,11 +293,96 @@ void scan_usb_devices(void) {
     DIR *dir;
     struct dirent *entry;
     char device_path[MAX_NAME_LENGTH];
+    uint8_t scan_can_device_count = 0;
+    uint8_t scan_mod_device_count = 0;
 
     memset(Device_information, 0, sizeof(Device_information));
     device_count = 0;
     Device_Close();
+
+    memset(&frame, 0, sizeof(struct can_frame));
+    Canbus_Init();
+    Canbus_ask_name = 0;
+
+    while (scan_can_device_count < 5) {
+        switch(Canbus_ask_name)
+        {
+            case 0: //no model name
+            {
+                // Send 0x0082
+                Canbus_TxProcess_Read(CAN_TX_ID_DEVICE, CAN_MODEL_NAME_B0B5);
+                // Receive
+                Canbus_RxProcess(CAN_MODEL_NAME_B0B5);
+                break;
+            }
+
+            case 1: //half model name
+            {
+                // Send 0x0083
+                Canbus_TxProcess_Read(CAN_TX_ID_DEVICE, CAN_MODEL_NAME_B6B11);
+                // Receive
+                Canbus_RxProcess(CAN_MODEL_NAME_B6B11);
+                break;
+            }
+
+            case 2: //full model name
+            {
+                Canbus_TxProcess_Write(CAN_TX_ID_DEVICE, CAN_SYSTEM_CONFIG);
+                usleep(20000);
+                DCS_Remote_Switch = 0;
+                Canbus_TxProcess_Write(CAN_TX_ID_DEVICE, CAN_OPERATION);
+                usleep(20000);
+                Store_Device_information("CANBUS", machine_type);
+                scan_can_device_count = 5;
+            }
+
+            default:
+                break;
+        }
+        usleep(20000); // Delay 20ms
+        scan_can_device_count++;
+    }
     
+    Modbus_Init();
+    Modbus_ask_name = 0;
+
+    while (scan_mod_device_count < 5) {
+        switch(Modbus_ask_name)
+        {
+            case 0: //no model name
+            {
+                Modbus_TxProcess_Read(MOD_TX_ID_DEVICE, MOD_MODEL_NAME_B0B5);
+
+                Modbus_RxProcess(MOD_MODEL_NAME_B0B5);
+                break;
+            }
+
+            case 1: //half model name
+            {
+                Modbus_TxProcess_Read(MOD_TX_ID_DEVICE, MOD_MODEL_NAME_B6B11);
+
+                Modbus_RxProcess(MOD_MODEL_NAME_B6B11);
+                break;
+            }
+
+            case 2: //full model name
+            {
+                Modbus_TxProcess_Write(MOD_TX_ID_DEVICE, MOD_SYSTEM_CONFIG);
+                usleep(20000);
+                DCS_Remote_Switch = 0;
+                Modbus_TxProcess_Write(MOD_TX_ID_DEVICE, MOD_OPERATION);
+                usleep(20000);
+                Store_Device_information("MODBUS", machine_type);
+                scan_mod_device_count = 5;
+            }
+
+            default:
+                break;
+        }
+        usleep(20000); // Delay 20ms
+        scan_mod_device_count++;
+    }
+
     // Scan /dev Table usbtmc and ttyUSB devices
     dir = opendir("/dev");
     if (!dir) {
@@ -292,8 +397,8 @@ void scan_usb_devices(void) {
 
             if (Device_Open_Init(device_path) == 0) {
                 if ((strstr(device_path, "usbtmc") != NULL && SCPI_Read_Process(device_path, SCPI_IDN) == 0) ||
-                    (strstr(device_path, "ttyUSB") != NULL && Chroma_51101_Read_Process(device_path, GET_DEVICE_ADDRESS, 0x00, 0) == 0) ||
-                    (strstr(device_path, "ttyUSB") != NULL && SCPI_Read_Process(device_path, SCPI_IDN) == 0)) 
+                    (strstr(device_path, "ttyUSB") != NULL && SCPI_Read_Process(device_path, SCPI_IDN) == 0) ||
+                    (strstr(device_path, "ttyUSB") != NULL && Chroma_51101_Read_Process(device_path, GET_DEVICE_ADDRESS, 0x00, 0) == 0)) 
                 {
                     printf("Device: %s identified\n", device_path);
                     if (strstr(device_path, "usbtmc") != NULL)
@@ -336,6 +441,25 @@ const char* Get_Device_information(int index) {
     } else {
         return "Invalid Index";
     }
+}
+
+void log_to_csv(float measured_value) {
+    FILE *fp = fopen("DWAM_TEST.csv", "a"); // 以 "a" 模式開啟，追加數據
+    if (fp == NULL) {
+        printf("無法開啟 CSV 檔案\n");
+        return;
+    }
+
+    // 取得當前時間
+    time_t t = time(NULL);
+    struct tm *tm_info = localtime(&t);
+    char time_str[20];
+    strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
+
+    // 寫入 CSV 格式：時間, 測量值
+    fprintf(fp, "%s,%.3f\n", time_str, measured_value);
+
+    fclose(fp);
 }
 
 /*

@@ -1,80 +1,277 @@
 {
     "CaliPoints_Info": {
         "ACI_DC_Offset_單相": {
-            "Target_Equipment": {
-                "Equipment_Name": "D",
-                "Value_Type": "Ch0"
+            "Step_Setting": {
+                "1": {
+                    "Control_Device": "DCS1",
+                    "Setting_Type": "V",
+                    "Setting_Value": "55"
+                },
+                "2": {
+                    "Control_Device": "DCS1",
+                    "Setting_Type": "I",
+                    "Setting_Value": "115"
+                },
+                "3": {
+                    "Control_Device": "DCS1",
+                    "Setting_Type": "Switch",
+                    "Setting_Value": "ON"
+                },
+                "4": {
+                    "Control_Device": "Keyboard",
+                    "Setting_Type": "Wait",
+                    "Setting_Value": "2048"
+                },
+                "5": {
+                    "Control_Device": "Keyboard",
+                    "Setting_Type": "Next",
+                    "Setting_Value": ""
+                },
+                "6": {
+                    "Control_Device": "DCS1",
+                    "Setting_Type": "Switch",
+                    "Setting_Value": "OFF"
+                }
             },
-            "enable": true,
+            "Target_Equipment": {
+                "Equipment_Name": "DWAM1",
+                "Value_Type": "I,DC"
+            },
+            "adjust_direction": "Negative",
+            "enable": false,
             "scaling_factor": "mA",
             "step_cmd": "0x0001",
             "unit": "A"
         },
         "ACI輕載電流(2A)": {
-            "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": ""
+            "Step_Setting": {
+                "1": {
+                    "Control_Device": "DCL1",
+                    "Setting_Type": "I",
+                    "Setting_Value": "7"
+                },
+                "2": {
+                    "Control_Device": "DCL1",
+                    "Setting_Type": "Switch",
+                    "Setting_Value": "ON"
+                },
+                "3": {
+                    "Control_Device": "DCL1",
+                    "Setting_Type": "Wait",
+                    "Setting_Value": "7.1"
+                },
+                "4": {
+                    "Control_Device": "Keyboard",
+                    "Setting_Type": "Next",
+                    "Setting_Value": ""
+                },
+                "5": {
+                    "Control_Device": "DCL1",
+                    "Setting_Type": "Switch",
+                    "Setting_Value": "OFF"
+                }
             },
-            "enable": false,
-            "scaling_factor": "ACI",
-            "step_cmd": "0x0006",
-            "unit": "A"
-        },
-        "ACI重載電流(22A)": {
             "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": ""
+                "Equipment_Name": "DWAM1",
+                "Value_Type": "I,RMS"
             },
+            "adjust_direction": "Positive",
             "enable": false,
             "scaling_factor": "ACI",
             "step_cmd": "0x0007",
             "unit": "A"
         },
-        "ACV": {
-            "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": ""
+        "ACI重載電流(22A)": {
+            "Step_Setting": {
+                "1": {
+                    "Control_Device": "DCL1",
+                    "Setting_Type": "I",
+                    "Setting_Value": "90"
+                },
+                "2": {
+                    "Control_Device": "DCL1",
+                    "Setting_Type": "Switch",
+                    "Setting_Value": "ON"
+                },
+                "3": {
+                    "Control_Device": "DCL1",
+                    "Setting_Type": "Wait",
+                    "Setting_Value": "87.6"
+                },
+                "4": {
+                    "Control_Device": "Keyboard",
+                    "Setting_Type": "Next",
+                    "Setting_Value": ""
+                },
+                "5": {
+                    "Control_Device": "DCL1",
+                    "Setting_Type": "Switch",
+                    "Setting_Value": "OFF"
+                }
             },
+            "Target_Equipment": {
+                "Equipment_Name": "DWAM1",
+                "Value_Type": "I,RMS"
+            },
+            "adjust_direction": "Positive",
             "enable": false,
+            "scaling_factor": "ACI",
+            "step_cmd": "0x0008",
+            "unit": "A"
+        },
+        "ACV": {
+            "Step_Setting": {
+                "1": {
+                    "Control_Device": "ACS1",
+                    "Setting_Type": "Wait",
+                    "Setting_Value": ""
+                },
+                "2": {
+                    "Control_Device": "Keyboard",
+                    "Setting_Type": "Next",
+                    "Setting_Value": ""
+                }
+            },
+            "Target_Equipment": {
+                "Equipment_Name": "DWAM1",
+                "Value_Type": "V,RMS"
+            },
+            "adjust_direction": "Positive",
+            "enable": true,
             "scaling_factor": "ACV",
-            "step_cmd": "0x0005",
+            "step_cmd": "0x0006",
             "unit": "V"
         },
-        "DCV+空載電流": {
+        "DCI反向滿載電流": {
+            "Step_Setting": {
+                "1": {
+                    "Control_Device": "DCS1",
+                    "Setting_Type": "V",
+                    "Setting_Value": "55"
+                },
+                "2": {
+                    "Control_Device": "DCS1",
+                    "Setting_Type": "I",
+                    "Setting_Value": "115"
+                },
+                "3": {
+                    "Control_Device": "DCS1",
+                    "Setting_Type": "Switch",
+                    "Setting_Value": "ON"
+                },
+                "4": {
+                    "Control_Device": "DCS1",
+                    "Setting_Type": "Wait",
+                    "Setting_Value": ""
+                },
+                "5": {
+                    "Control_Device": "Keyboard",
+                    "Setting_Type": "Next",
+                    "Setting_Value": ""
+                },
+                "6": {
+                    "Control_Device": "DCS1",
+                    "Setting_Type": "Switch",
+                    "Setting_Value": "OFF"
+                }
+            },
             "Target_Equipment": {
-                "Equipment_Name": "C",
+                "Equipment_Name": "DMM2",
                 "Value_Type": "Ch0"
             },
-            "enable": true,
-            "scaling_factor": "DCV",
-            "step_cmd": "0x0002",
-            "unit": "V"
+            "adjust_direction": "Negative",
+            "enable": false,
+            "scaling_factor": "DCI",
+            "step_cmd": "0x0005",
+            "unit": "A"
         },
-        "DC反向滿載電流": {
-            "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": ""
+        "DCI正向滿載電流": {
+            "Step_Setting": {
+                "1": {
+                    "Control_Device": "DCL1",
+                    "Setting_Type": "I",
+                    "Setting_Value": "104"
+                },
+                "2": {
+                    "Control_Device": "DCL1",
+                    "Setting_Type": "Switch",
+                    "Setting_Value": "ON"
+                },
+                "3": {
+                    "Control_Device": "DCL1",
+                    "Setting_Type": "Wait",
+                    "Setting_Value": "80"
+                },
+                "4": {
+                    "Control_Device": "Keyboard",
+                    "Setting_Type": "Next",
+                    "Setting_Value": ""
+                },
+                "5": {
+                    "Control_Device": "DCL1",
+                    "Setting_Type": "Switch",
+                    "Setting_Value": "OFF"
+                }
             },
+            "Target_Equipment": {
+                "Equipment_Name": "DMM2",
+                "Value_Type": "Ch0"
+            },
+            "adjust_direction": "Positive",
             "enable": false,
             "scaling_factor": "DCI",
             "step_cmd": "0x0004",
             "unit": "A"
         },
-        "DC正向滿載電流": {
+        "DCI空載電流": {
+            "Step_Setting": {
+                "1": {
+                    "Control_Device": "DCL1",
+                    "Setting_Type": "Wait",
+                    "Setting_Value": ""
+                },
+                "2": {
+                    "Control_Device": "Keyboard",
+                    "Setting_Type": "Next",
+                    "Setting_Value": ""
+                }
+            },
             "Target_Equipment": {
-                "Equipment_Name": "D",
+                "Equipment_Name": "DMM2",
                 "Value_Type": "Ch0"
             },
-            "enable": true,
+            "adjust_direction": "Positive",
+            "enable": false,
             "scaling_factor": "DCI",
             "step_cmd": "0x0003",
             "unit": "A"
+        },
+        "DCV": {
+            "Step_Setting": {
+                "1": {
+                    "Control_Device": "DCL1",
+                    "Setting_Type": "Wait",
+                    "Setting_Value": ""
+                },
+                "2": {
+                    "Control_Device": "Keyboard",
+                    "Setting_Type": "Next",
+                    "Setting_Value": ""
+                }
+            },
+            "Target_Equipment": {
+                "Equipment_Name": "DMM1",
+                "Value_Type": "Ch0"
+            },
+            "adjust_direction": "Positive",
+            "enable": false,
+            "scaling_factor": "DCV",
+            "step_cmd": "0x0002",
+            "unit": "V"
         }
     },
     "Order": [
-        "0x0002",
-        "0x0001",
-        "0x0003",
+        "0x0006",
         "0xffff"
     ],
     "script_File_Name": "BIC-5K.json"

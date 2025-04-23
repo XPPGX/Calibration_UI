@@ -2,7 +2,9 @@
 #include "Cali.h"
 #include "Auto_Search_Device.h"
 #include "Chroma_meter_51101_8.h"
+#include "Modbus.h"
 
+uint8_t CRC_error_cnt = 0;
 /* function -----------------------------------------------*/
 int init_serial(const char *portname);
 int Read_Packet(int fd, unsigned char command, uint8_t param, uint8_t response_length, char *response);
@@ -115,38 +117,37 @@ int Read_Packet(int fd, unsigned char command, uint8_t param, uint8_t response_l
         perror("Error writing from serial port");
         return -1;
     }
+    usleep(20000);
 
-    if (Wait_for_response_poll(fd, 500) > 0) {
-        memset(response, 0, MAX_NAME_LENGTH);
-        receive_len = read(fd, response, MAX_NAME_LENGTH - 1);
-        if(receive_len > 2)
+    memset(response, 0, MAX_NAME_LENGTH);
+    receive_len = read(fd, response, MAX_NAME_LENGTH - 1);
+    if(receive_len > 2)
+    {
+        received_crc = (response[receive_len - 1] << 8) | response[receive_len - 2];
+        calculated_crc = calculateCRC(response, receive_len - 2);
+        response[receive_len] = '\0';
+
+        // printf("Received data: ");
+        // for (int i = 0; i < receive_len; i++) {
+        //     printf("0x%02X, ", (unsigned char)response[i]);
+        // }
+        // printf("\n");
+        if(received_crc == calculated_crc)
         {
-            received_crc = (response[receive_len - 1] << 8) | response[receive_len - 2];
-            calculated_crc = calculateCRC(response, receive_len - 2);
-            response[receive_len] = '\0';
-
-            printf("Received data: ");
-            for (int i = 0; i < receive_len; i++) {
-                printf("0x%02X, ", (unsigned char)response[i]);
-            }
-            printf("\n");
-            if(received_crc == calculated_crc)
-            {
-                return receive_len;
-            }
-            else
-            {
-                printf("CRC ERROR\n");
-                return 0;
-            }
+            return receive_len;
         }
-        else if (receive_len < 0) {
-            perror("Error reading from serial port");
+        else
+        {
+            printf("CRC ERROR\n");
             return -1;
         }
-        else{
-            return 0;
-        }
+    }
+    else if (receive_len < 0) {
+        perror("Error reading from serial port");
+        return -1;
+    }
+    else{
+        return -1;
     }
 }
 
@@ -186,37 +187,45 @@ int Write_Packet(int fd, unsigned char command, uint8_t param1, uint8_t param2, 
         perror("Error writing from serial port");
         return -1;
     }
+    usleep(20000);
 
-    if (Wait_for_response_poll(fd, 500) > 0) {
-        memset(response, 0, MAX_NAME_LENGTH);
-        receive_len = read(fd, response, MAX_NAME_LENGTH - 1);
-        if(receive_len > 2)
+    memset(response, 0, MAX_NAME_LENGTH);
+    receive_len = read(fd, response, MAX_NAME_LENGTH - 1);
+    if(receive_len > 2)
+    {
+        received_crc = (response[receive_len - 1] << 8) | response[receive_len - 2];
+        calculated_crc = calculateCRC(response, receive_len - 2);
+        response[receive_len] = '\0';
+
+        // printf("Received data: ");
+        // for (int i = 0; i < receive_len; i++) {
+        //     printf("0x%02X, ", (unsigned char)response[i]);
+        // }
+        // printf("\n");
+        if(received_crc == calculated_crc)
         {
-            received_crc = (response[receive_len - 1] << 8) | response[receive_len - 2];
-            calculated_crc = calculateCRC(response, receive_len - 2);
-            response[receive_len] = '\0';
-
-            printf("Received data: ");
-            for (int i = 0; i < receive_len; i++) {
-                printf("0x%02X, ", (unsigned char)response[i]);
-            }
-            printf("\n");
-            if(received_crc == calculated_crc)
+            CRC_error_cnt = 0;
+            return receive_len;
+        }
+        else
+        {
+            CRC_error_cnt++;
+            if(CRC_error_cnt > 5)
             {
-                return receive_len;
+                printf("CRC ERROR\n");
+                return -1;
             }
             else
             {
-                printf("CRC ERROR\n");
                 return 0;
             }
         }
-        else if (receive_len < 0) {
-            perror("Error reading from serial port");
-            return -1;
-        }
-        else{
-            return 0;
-        }
+    }
+    else if (receive_len < 0) {
+        perror("Error reading from serial port");
+        return -1;
+    }
+    else{
+        return -1;
     }
 }

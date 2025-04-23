@@ -18,12 +18,15 @@
 #include <termios.h>
 #include <dirent.h>
 #include <poll.h>
+#include <cJSON.h>
+#include <math.h>
+#include <time.h>
 
 #define CANBUS  1
 #define MODBUS  2
 #define PMBUS   3
 
-#define FINISH              1
+#define PASS                1
 #define NOT_COMPLETE        2
 #define DEVICE_FAIL         3
 #define DUT_FAIL            4
@@ -54,25 +57,29 @@
 //----------------CALI POINT----------------//
 #define ACI_DC_OFFSET_1P 	0x0001
 #define DCV 	            0x0002
-#define DCI_POS_FULL_LOAD 	0x0003
-#define DCI_NEG_FULL_LOAD 	0x0004
-#define ACV 	            0x0005
-#define ACI_LIGHT_LOAD 	    0x0006
-#define ACI_HEAVY_LOAD 	    0x0007
+#define DCI_ZERO_LOAD       0x0003
+#define DCI_POS_FULL_LOAD 	0x0004
+#define DCI_NEG_FULL_LOAD 	0x0005
+#define ACV 	            0x0006
+#define ACI_LIGHT_LOAD 	    0x0007
+#define ACI_HEAVY_LOAD 	    0x0008
 #define CALI_POINT_END 	    0xFFFF
 
 /* Parameter -----------------------------------------------*/
 extern int SVR_value;
-extern volatile char machine_type[13];
+extern char machine_type[13];
 extern uint16_t Cali_Result;
 extern uint16_t UI_Calibration_Point;
 extern uint8_t Canbus_ask_name;
+extern uint8_t Modbus_ask_name;
 extern uint8_t Manual_Cali_step;
 extern uint16_t Cali_status;
 extern uint8_t Cali_type_polling;
 extern uint8_t Cali_read_step;
 extern int16_t PSU_High_Limit_Comm;
+extern uint16_t PSU_High_Limit_uComm;
 extern int16_t PSU_Low_Limit_Comm;
+extern uint16_t PSU_Low_Limit_uComm;
 extern float PSU_High_Limit;
 extern float PSU_Low_Limit;
 extern uint8_t PSU_ACV_Factor_Comm;
@@ -87,6 +94,13 @@ extern char UI_Scaling_Factor[MAX_STRING_LENGTH];
 extern char UI_USB_Port[MAX_STRING_LENGTH];
 extern char UI_Target[MAX_STRING_LENGTH];
 extern float Current_Shunt_Factor;
+extern uint8_t wCali_Status;
+
+//Auto Control Calibration
+extern uint16_t DCS_Volt_Set_Value;
+extern uint16_t DCS_Curr_Set_Value;
+extern uint8_t  DCS_Remote_Switch;
+extern int16_t Cali_Default_Value;
 
 /* function -----------------------------------------------*/
 extern void Start_Cali_thread(void);

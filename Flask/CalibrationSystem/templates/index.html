@@ -632,7 +632,7 @@
     var UI_AdjustMode_new_style = 'big_wood_style';
     var UI_Result_color = '';
     var UI_Result_color_map = {
-        "FINISH" : 'green_style',
+        "PASS" : 'green_style',
         "FAIL" : "red_style",
         "Device FAIL" : "gray_style",
         "Not Completed" : "yellow_style"
@@ -993,19 +993,19 @@
                     }
                     
 
-                    if(UI_Result.innerText == "FINISH" || UI_Result.innerText == "DUT FAIL" || UI_Result.innerText == "Not Complete" ||
+                    if(UI_Result.innerText == "PASS" || UI_Result.innerText == "DUT FAIL" || UI_Result.innerText == "Not Complete" ||
                         UI_Result.innerText == "Device FAIL" || UI_Result.innerText == "Cali point FAIL" || UI_Result.innerText == "Peripheral FAIL")
                     {
                         UI_Result_color = UI_Result_color_map[UI_Result.innerText];
                         UI_Result.classList.add(UI_Result_color);
                         setTimeout(() => {
                             UI_stage = 4;
-                            Cali_Flag = 2;
+                            Cali_Flag = 0;
 
                             const MessageBox = document.getElementById("MessageBox");
 
                             let tmp_status = UI_Result.innerText;
-                            if(tmp_status == "FINISH" || tmp_status == "Not Complete"){
+                            if(tmp_status == "PASS" || tmp_status == "Not Complete"){
 
                             }
                             else{

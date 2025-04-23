@@ -489,7 +489,7 @@
                     addRow(tmp_type, tmp_code_name, tmp_model_name, tmp_serial_num, '');
                     
                     let tmp_usb_port = res_data[key]["USB_Port"];
-                    device_ModelName_USBport_mapping[tmp_model_name] = tmp_usb_port;
+                    device_ModelName_USBport_mapping[tmp_code_name] = tmp_usb_port;
                 }
             })
             loading_flag = 1;
@@ -515,7 +515,7 @@
 
             for(let model_name in res_data){
                 let type = res_data[model_name]["EQ_TYPE"];
-                let serial_num = res_data[model_name]["Serial_Num"];
+                let serial_num = res_data[model_name]["SerialNumber"];
 
                 addRow(type, '', model_name, serial_num, '', '');
 
@@ -541,13 +541,21 @@
 
         for(let model_name in res1_data){
             let type = res1_data[model_name]["EQ_TYPE"];
-            let serial_num = res1_data[model_name]["Serial_Num"];
-
-            addRow(type, '', model_name, serial_num, '', '');
+            let serial_num = res1_data[model_name]["SerialNumber"];
 
             //temp store the mapping of devices' ModelName and USB_Port
-            let usb_port = res1_data[model_name]["USB_Port"];
-            device_ModelName_USBport_mapping[model_name] = usb_port;
+            let code_name_list = res1_data[model_name]["Identifier"];
+		    let usb_port_list = res1_data[model_name]["USB_Port"];
+            for(let i = 0 ; i < code_name_list.length ; i ++)
+            {
+                const tmp_code_name = res1_data[model_name]["Identifier"][i];
+                const tmp_serial_num = res1_data[model_name]["SerialNumber"][i];
+                addRow(type, tmp_code_name, model_name, tmp_serial_num, '', '');
+                const tmp_usb_port = res1_data[model_name]["USB_Port"][i];
+                device_ModelName_USBport_mapping[tmp_code_name] = tmp_usb_port;
+            }
+            //let usb_port = res1_data[model_name]["USB_Port"];
+            //device_ModelName_USBport_mapping[model_name] = usb_port;
         }
         console.log(device_ModelName_USBport_mapping);
     });
@@ -574,15 +582,16 @@
 
         // 創建可輸入文字的欄位
         const inputCell = document.createElement('td');
-        const input = document.createElement('input');
-        input.type = 'text';
+        // const input = document.createElement('input');
+        // input.type = 'text';
         if(code_name == ''){
             //Any detection has occured, Devices_setting is empty
         }
         else{
-            input.value = code_name;
+            //input.value = code_name;
+            inputCell.textContent = code_name;
         }
-        inputCell.appendChild(input);
+        // inputCell.appendChild(input);
 
         // 創建單位欄位
         const unitCell_1 = document.createElement('td');
@@ -763,8 +772,9 @@
             console.log(type_cell_str);
             
             //CodeName_cell_str
-            let inputField = CodeName_cell.querySelector("input");
-            let CodeName_cell_str = inputField.value;
+            //let inputField = CodeName_cell.querySelector("input");
+            //let CodeName_cell_str = inputField.value;
+            let CodeName_cell_str = CodeName_cell.textContent;
             console.log(CodeName_cell_str);
 
             //ModelName_cell_str
@@ -779,7 +789,7 @@
             devices_setting[CodeName_cell_str]["Type"] = type_cell_str;
             devices_setting[CodeName_cell_str]["ModelName"] = ModelName_cell_str;
             devices_setting[CodeName_cell_str]["SerialNum"] = SerialNum_cell_str;
-            devices_setting[CodeName_cell_str]["USB_Port"] = device_ModelName_USBport_mapping[ModelName_cell_str];
+            devices_setting[CodeName_cell_str]["USB_Port"] = device_ModelName_USBport_mapping[CodeName_cell_str];
         }
         
         console.log(devices_setting);

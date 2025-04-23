@@ -5,16 +5,22 @@
         "Identifier": [],
         "USB_Port": []
     },
+    "Chroma ATE,66204": {
+        "EQ_TYPE": "DWAM",
+        "SerialNumber": [],
+        "Identifier": [],
+        "USB_Port": []
+    },
     "Chroma ATE,66205": {
         "EQ_TYPE": "DWAM",
         "SerialNumber": [
-            "662025001432"
+            "662050005166"
         ],
         "Identifier": [
-            "B"
+            "DWAM1"
         ],
         "USB_Port": [
-            "/dev/USBTMC0"
+            "/dev/usbtmc2"
         ]
     },
     "Chroma,51101-8": {
@@ -23,10 +29,34 @@
             ""
         ],
         "Identifier": [
-            "C"
+            "DMM1"
         ],
         "USB_Port": [
-            "/dev/ttyUSB0"
+            "/dev/ttyUSB1"
+        ]
+    },
+    "Chroma,63206A-600-420": {
+        "EQ_TYPE": "DCL",
+        "SerialNumber": [
+            "63206AM00470"
+        ],
+        "Identifier": [
+            "DCL1"
+        ],
+        "USB_Port": [
+            "/dev/usbtmc0"
+        ]
+    },
+    "Chroma,61815": {
+        "EQ_TYPE": "ACS",
+        "SerialNumber": [
+            "96181500001444"
+        ],
+        "Identifier": [
+            "ACS1"
+        ],
+        "USB_Port": [
+            "/dev/usbtmc1"
         ]
     },
     "GWInstek,GDM8342": {
@@ -35,22 +65,28 @@
             "GER817373"
         ],
         "Identifier": [
-            "D"
+            "DMM2"
         ],
         "USB_Port": [
-            "/dev/ttyUSB1"
+            "/dev/ttyUSB0"
         ]
     },
     "ATA1045": {
         "EQ_TYPE": "ACS",
+        "SerialNumber": [],
+        "Identifier": [],
+        "USB_Port": []
+    },
+    "SHP-10K-55  ": {
+        "EQ_TYPE": "DCS",
         "SerialNumber": [
             ""
         ],
         "Identifier": [
-            "A"
+            "DCS1"
         ],
         "USB_Port": [
-            "/dev/ttyUSB2"
+            "CANBUS"
         ]
     }
 }
