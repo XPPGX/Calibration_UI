@@ -14,13 +14,16 @@
     "Chroma ATE,66205": {
         "EQ_TYPE": "DWAM",
         "SerialNumber": [
-            "662050005166"
+            "662025001111",
+            "662025001432"
         ],
         "Identifier": [
+            "DWAM0",
             "DWAM1"
         ],
         "USB_Port": [
-            "/dev/usbtmc2"
+            "/dev/USBTMC0",
+            "/dev/USBTMC1"
         ]
     },
     "Chroma,51101-8": {
@@ -32,32 +35,20 @@
             "DMM1"
         ],
         "USB_Port": [
-            "/dev/ttyUSB1"
+            "/dev/ttyUSB0"
         ]
     },
     "Chroma,63206A-600-420": {
         "EQ_TYPE": "DCL",
-        "SerialNumber": [
-            "63206AM00470"
-        ],
-        "Identifier": [
-            "DCL1"
-        ],
-        "USB_Port": [
-            "/dev/usbtmc0"
-        ]
+        "SerialNumber": [],
+        "Identifier": [],
+        "USB_Port": []
     },
     "Chroma,61815": {
         "EQ_TYPE": "ACS",
-        "SerialNumber": [
-            "96181500001444"
-        ],
-        "Identifier": [
-            "ACS1"
-        ],
-        "USB_Port": [
-            "/dev/usbtmc1"
-        ]
+        "SerialNumber": [],
+        "Identifier": [],
+        "USB_Port": []
     },
     "GWInstek,GDM8342": {
         "EQ_TYPE": "DMM",
@@ -65,28 +56,28 @@
             "GER817373"
         ],
         "Identifier": [
-            "DMM2"
+            "DMM0"
         ],
         "USB_Port": [
-            "/dev/ttyUSB0"
+            "/dev/ttyUSB1"
         ]
     },
     "ATA1045": {
         "EQ_TYPE": "ACS",
-        "SerialNumber": [],
-        "Identifier": [],
-        "USB_Port": []
-    },
-    "SHP-10K-55  ": {
-        "EQ_TYPE": "DCS",
         "SerialNumber": [
             ""
         ],
         "Identifier": [
-            "DCS1"
+            "ACS0"
         ],
         "USB_Port": [
-            "CANBUS"
+            "/dev/ttyUSB2"
         ]
+    },
+    "SHP-10K-55  ": {
+        "EQ_TYPE": "DCS",
+        "SerialNumber": [],
+        "Identifier": [],
+        "USB_Port": []
     }
 }

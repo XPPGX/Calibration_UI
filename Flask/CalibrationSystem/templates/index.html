@@ -642,6 +642,8 @@
     let compare_lower_bound_float   = 0;
     let compare_device_value_float  = 0;
 
+    var resultShowcase_Flag = 0; //For handling the multi showcase of the final results like "PASS" or "FAIL"
+
     document.addEventListener('DOMContentLoaded', function(){
         initNavbar();
 
@@ -700,9 +702,10 @@
                 if(document.getElementById('UI_Result').classList.contains(UI_Result_color)){
                     document.getElementById('UI_Result').classList.remove(UI_Result_color);
                 }
-                refresh_points_status();
+                old_cali_point = "";
+                refresh_task_list();
                 Cali_point_counter = 1;
-                
+                resultShowcase_Flag = 0;
 
             case 0:
                 let json_data = {};
@@ -898,7 +901,7 @@
                         // change_point_status("Running");
 
                         const MessageBox = document.getElementById("MessageBox");
-                        MessageBox.innerText = MessageBox.innerText + "\n" + UI_CaliPoint.innerText + "...Running";
+                        MessageBox.textContent = MessageBox.textContent + "\n" + UI_CaliPoint.textContent + "...Running";
                         MessageBox.scrollTop = MessageBox.scrollHeight;
                     }
                     
@@ -914,7 +917,7 @@
                             Cali_Flag = 2;
 
                             const MessageBox = document.getElementById("MessageBox");
-                            MessageBox.innerText = MessageBox.innerText + "\n" + UI_CaliPoint.innerText + "...Fail";
+                            MessageBox.textContent = MessageBox.textContent + "\n" + "=============== FAIL ===============";
                             MessageBox.scrollTop = MessageBox.scrollHeight;
                         });
                     }
@@ -988,33 +991,43 @@
                         UI_stage = 2;
 
                         const MessageBox = document.getElementById("MessageBox");
-                        MessageBox.innerText = MessageBox.innerText + "\n" + UI_CaliPoint.innerText + "...OK";
+                        MessageBox.textContent = MessageBox.textContent + "\n" + UI_CaliPoint.innerText + "...OK";
                         MessageBox.scrollTop = MessageBox.scrollHeight;
                     }
                     
 
-                    if(UI_Result.innerText == "PASS" || UI_Result.innerText == "DUT FAIL" || UI_Result.innerText == "Not Complete" ||
-                        UI_Result.innerText == "Device FAIL" || UI_Result.innerText == "Cali point FAIL" || UI_Result.innerText == "Peripheral FAIL")
+                    // if(UI_Result.innerText == "PASS" || UI_Result.innerText == "DUT FAIL" || UI_Result.innerText == "Not Complete" ||
+                    //     UI_Result.innerText == "Device FAIL" || UI_Result.innerText == "Cali point FAIL" || UI_Result.innerText == "Peripheral FAIL")
+                    if( (res_data["WebAPI_CaliStatus"] == "PASS" ||
+                        res_data["WebAPI_CaliStatus"] == "DUT FAIL" ||
+                        res_data["WebAPI_CaliStatus"] == "Not Complete" ||
+                        res_data["WebAPI_CaliStatus"] == "Device FAIL" ||
+                        res_data["WebAPI_CaliStatus"] == "Cali point FAIL" ||
+                        res_data["WebAPI_CaliStatus"] == "Peripheral FAIL") && (resultShowcase_Flag == 0))
                     {
+
+                        resultShowcase_Flag = 1;
+
                         UI_Result_color = UI_Result_color_map[UI_Result.innerText];
                         UI_Result.classList.add(UI_Result_color);
+
+                        const MessageBox = document.getElementById("MessageBox");
+                        let tmp_status = UI_Result.innerText;
+                        if(tmp_status == "PASS" || tmp_status == "Not Complete"){
+                            MessageBox.textContent = MessageBox.textContent + "\n" + "=============== PASS ===============";
+                        }
+                        else{
+                            tmp_status = "Fail"
+                            MessageBox.textContent = MessageBox.textContent + "\n" + "=============== FAIL ===============";
+                        }
+                        MessageBox.scrollTop = MessageBox.scrollHeight;
+
                         setTimeout(() => {
                             UI_stage = 4;
-                            Cali_Flag = 0;
+                            Cali_Flag = 2;
 
-                            const MessageBox = document.getElementById("MessageBox");
-
-                            let tmp_status = UI_Result.innerText;
-                            if(tmp_status == "PASS" || tmp_status == "Not Complete"){
-
-                            }
-                            else{
-                                tmp_status = "Fail"
-                            }
-                            MessageBox.innerText = MessageBox.innerText + "\n" + UI_CaliPoint.innerText + "..." + tmp_status;
-                            MessageBox.scrollTop = MessageBox.scrollHeight;
                         });
-
+                        
                     }
                     break;
                 }
@@ -1055,17 +1068,10 @@
         }
     }
 
-    function refresh_points_status(){
-        const table = document.getElementById('TASK_TABLE');
-        for(let temp_counter = 1 ; temp_counter < table.rows.length ; temp_counter ++){
-            //Get the status label
-            const currentCaliPoint_status_label = table.rows[temp_counter].cells[2].querySelector("label");
-
-            //change the text and style of the label
-            currentCaliPoint_status_label.innerText = "Wait";
-            currentCaliPoint_status_label.className = "table-label";
-            currentCaliPoint_status_label.classList.add('table-wait', 'table-label');
-        }
+    function refresh_task_list(){
+        const MessageBox = document.getElementById("MessageBox");
+        MessageBox.innerText = "";
+        MessageBox.scrollTop = MessageBox.scrollHeight;
     }
 </script>
 

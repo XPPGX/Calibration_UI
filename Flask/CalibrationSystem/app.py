@@ -103,8 +103,8 @@ app = Flask(__name__)
 c_lib_Cali = ctypes.CDLL('./Cali_Code/Cali.so')
 #c_lib_Search_Device = ctypes.CDLL('./Clib/Cali_Code/Auto_Search_Device.so')
 
-DEBUG_MODE = 0 #DEBUG_MODE == 1, means it can run without DUT ; DEBUG_MODE = 0 means it needs to connect DUT to run
-DEBUG_DEVICE = 0 #DEBUG_DEVICE == 1, means it can run without any device ; DEBUG_DEVICE == 0, means it needs to connect device to run
+DEBUG_MODE = 1 #DEBUG_MODE == 1, means it can run without DUT ; DEBUG_MODE = 0 means it needs to connect DUT to run
+DEBUG_DEVICE = 1 #DEBUG_DEVICE == 1, means it can run without any device ; DEBUG_DEVICE == 0, means it needs to connect device to run
 Debug_Enter_pressed = 0
 
 ##################################################
@@ -1113,6 +1113,6 @@ def Mock_equipment_value():
 if __name__ == '__main__':
     # ~ Init_getDeviceSetting_from_Local_File()
     Init_getScript_from_Local_File()
-    #app.run('127.0.0.1', port=4040)
-    app.run(debug=True)
+    app.run('127.0.0.1', port=4040)
+    # app.run(debug=True)
     # print("admin" in Password)

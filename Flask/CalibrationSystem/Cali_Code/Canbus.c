@@ -336,7 +336,7 @@ void Canbus_RxProcess(uint16_t CAN_Command)
             Can_receive_data_error_cnt++;
             if(Can_receive_data_error_cnt >= 50)
             {
-                Cali_Result = FAIL;
+                Cali_Result = DUT_FAIL;
             }
         }
     }
@@ -347,7 +347,7 @@ void Canbus_RxProcess(uint16_t CAN_Command)
         Can_no_receive_cnt++;
         if(Can_no_receive_cnt >= 50)
         {
-            Cali_Result = FAIL;
+            Cali_Result = DUT_FAIL;
         }
     }
 }

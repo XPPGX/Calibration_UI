@@ -355,7 +355,7 @@ void Modbus_RxProcess(uint16_t StartAddress)
             Mod_receive_data_error_cnt++;
             if(Mod_receive_data_error_cnt >= 50)
             {
-                Cali_Result = FAIL;         //CRC or Receive Data ERROR
+                Cali_Result = DUT_FAIL;         //CRC or Receive Data ERROR
             }
             printf("CRC error: received=0x%04X, calculated=0x%04X\n", received_crc, calculated_crc);
         }
@@ -364,7 +364,7 @@ void Modbus_RxProcess(uint16_t StartAddress)
         Mod_no_receive_cnt++;
         if(Mod_no_receive_cnt >= 50)
         {
-            Cali_Result = FAIL;
+            Cali_Result = DUT_FAIL;
         }
     }
 }
