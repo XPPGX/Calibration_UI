@@ -617,6 +617,9 @@ def equipment_detect():
 def Calibration_schedule():
     return render_template('Calibration_schedule.html')
 
+@app.route('/TestItem')
+def TestItem():
+    return render_template('TestItem.html')
 ##################################################
 # WebAPI
 ##################################################

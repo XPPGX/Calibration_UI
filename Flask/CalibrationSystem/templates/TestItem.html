@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <title>校正治具</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="{{url_for('static', filename='js/navbar.js')}}"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-top: 60px; /* 留出空間給固定的navbar */
+            background: #d3d3d3; /* 漸變背景色 */
+            height: 100%; /* 讓背景覆蓋整個螢幕 */
+        }
+        /* 每一行設置 */
+        .row {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            position: relative;
+            gap:20px;
+            width: 100%;
+        }
+
+        .text {
+            padding: 5px;
+            color: white;
+        }
+        
+        .text.left{
+            width: 100px;
+            text-align: left;
+        }
+        .text.right{
+            width: 300px;
+            text-align: left;
+            border: 1px solid white;
+        }
+
+        #content{
+            display: flex;
+            padding: 20px;
+            font-size: 18px;
+        }
+        .left-container{
+            display: flex;
+            flex-direction: column;
+            width: 50%;
+            padding-right: 20px;
+        }
+        .top {
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* 增加間距 */
+        }
+        .right-container{
+            width: 50%;
+            padding-left: 10%;
+        }
+
+        .box{
+            width: 80%;
+            height: 300px;
+            border: 2px solid #333;
+            background-color: white;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+
+
+        button:hover,
+        button.space-hover{
+            background-color: gray;
+        }
+        
+
+        .button_manual_auto {
+            background-color: #5db860;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 25px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            width: 150px;
+            height: 50px;
+        }
+
+        .text_in_container {
+            font-size: 30px;
+            color: black;
+            margin-left: 10px; /* 按鈕和文字之間的距離 */
+        }
+
+    
+        .button_start{
+            position: absolute;
+            top:0;
+            left:calc(50%);
+            background-color: #e4f584;
+            color: black;
+            border: none;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 35px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            width: 400px;
+            height: 100%;
+        }
+
+        .border_with_corner{
+            position: absolute;
+            top: 0;
+            left: calc(50%);
+            margin-left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 400px;
+            height: 50px;
+            border: 1px solid #000000;
+            border-radius: 10px;
+            background-color: #f4f4f4;
+        }
+
+        .text_coarsen_refine{
+            font-weight: bold;
+            font-size: 50px;
+            background-color: #d3d3d3;
+            border: 1px solid #000000;
+            border-radius: 10px;
+        }
+        .separator{
+            border-top: 2px solid #333;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .bottom{
+            display: flex;
+            flex-direction: column;
+            gap:10px;
+        }
+        .text_result{
+            margin-left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 300px;
+            border: 1px solid #000000;
+            border-radius: 10px;
+            background-color: #f4f4f4;
+            font-size: 50px;
+            font-weight: bold;
+        }
+
+        .text_equipment{
+           color: purple;    
+           font-weight: bold;
+        }
+        .row-equipment{
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            position: relative;
+            gap:20px;
+            width: 100%;
+        }
+        .row_equipment_border_with_corner{
+            /* position: absolute;
+            top: 0;
+            left: calc(30%); */
+            margin-left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            border: 1px solid #000000;
+            border-radius: 10px;
+            background-color: #f4f4f4;
+        }
+        .valueText{
+            width: 400px;
+        }
+        .row_equipment_Unit{
+            /* position: absolute;
+            top: 0;
+            left: calc(100%); */
+            margin-left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 10%;
+            height: 100%;
+            font-size: 24px;
+        }
+        .text-progress{
+            font-size: 30px;
+            color: black;
+            margin-left: 10px; /* 按鈕和文字之間的距離 */
+            margin-top: 60px;
+            font-weight: bold;
+        }
+
+        .task-list-container {
+            max-width: 100%;
+            margin-right: 10%;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            height: 300px;
+            width: 90%;
+            overflow-y: auto;
+        }
+
+        .task-item{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .task-item:last-child{
+            border-bottom: none;
+        }
+
+        .task-name{
+            font-size : 25px;
+        }
+
+        .task-status{
+            font-size: 20px;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: #fff;
+        }
+
+        .status-running{
+            background-color: #475569;
+        }
+
+        .status-ok{
+            background-color: #4caf50;
+        }
+
+        .status-fail{
+            background-color: #f44336;
+        }
+
+        .dialog-box {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            width: 300px;
+        }
+
+        /* 設置背景遮罩 */
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .dialog-box .row{
+            display: flex;
+            width: 100%;
+            justify-content: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .dialog-box .left{
+            display: flex;
+            flex: 4;
+            align-items: center;      /* 垂直置中 */
+            height: 100%;
+        }
+
+        .dialog-box .right{
+            display: flex;
+            flex: 6;
+            justify-content: center;  /* 水平置中 */
+            align-items: center;      /* 垂直置中 */
+            height: 100%;
+        }
+
+        .dialog-box button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .dialog-box button:hover {
+            background-color: #45a049;
+        }
+
+
+        .custom-checkbox {
+            position: relative;
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+        }
+
+        .custom-checkbox input[type="checkbox"] {
+            position: absolute;
+            width: 0;
+            height: 0;
+            opacity: 0;
+        }
+
+        .custom-checkbox span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            border: 2px solid #007BFF;
+            border-radius: 4px; /* 圓角 */
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox span:after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background-color: #007BFF;
+            border-radius: 2px;
+            transform: scale(0) translate(-50%, -50%);
+            transition: all 0.3s ease;
+        }
+
+        .green-bg{
+            background-color: lightgreen;
+        }
+        .red-bg{
+            background-color: lightcoral;
+        }
+
+        table{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top : 0px;
+        }
+        th, td{
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th:nth-child(1), td:nth-child(1) {width: 15%;}
+        th:nth-child(2), td:nth-child(2) {width: 65%;}
+        th:nth-child(3), td:nth-child(3) {width: 20%;}
+
+        th{
+            background-color: #f4f4f4;
+        }
+        td{
+            background-color: #f4f4f4;
+        }
+        .completed{
+            background-color: #d4edda;
+        }
+        .completed-tag{
+            background-color: green;
+            color: white;
+            padding: 3px 6px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .table-label{
+            font-size:14px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            width: fit-content;
+        }
+
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .card {
+            padding: 10px;
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            min-width: 80px;
+            max-width: 120px;
+            text-align: center;
+        }
+
+        .card:hover {
+            background-color: #d0ebff;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="navbar">
+        {% include 'navbar.html' %}
+    </div>
+
+    <div id="content">
+        <div class="left-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Test Command</th>
+                        <th>Parameter</th>
+                    </tr>
+                </thead>
+                <tbody id="tableContainer">
+                    
+                </tbody>
+            </table>
+        </div>
+        <div class="right-container">
+            <div class="box">
+                
+            </div>
+            <div class="box">
+                <div class="card-container" id="cardContainer">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+     const data = {
+      "用戶資料": { "name": "Alice", "age": 25 },
+      "設定": { "theme": "dark", "notifications": true },
+      "儀表板": { "widgets": 5 }
+    };
+
+    const container = document.getElementById('cardContainer');
+
+    // 針對每個 key 產生一張卡片
+    Object.keys(data).forEach(key => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerText = key;
+      card.addEventListener('click', () => {
+        alert('你點了「' + key + '」');
+      });
+      container.appendChild(card);
+    });
+</script>
+</html>
