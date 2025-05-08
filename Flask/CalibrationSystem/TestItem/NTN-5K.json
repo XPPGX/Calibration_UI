@@ -1,0 +1,105 @@
+{
+    "Test_Item_Number": {
+        "1": {
+            "Test_Command": "SetMOD_Command",
+            "Para1": "INV0",
+            "Para2": "0x00B4",
+            "Para3": "0x0004"
+        },
+        "2": {
+            "Test_Command": "SetMOD_Command",
+            "Para1": "INV0",
+            "Para2": "0x00B9",
+            "Para3": "0x1130"
+        },
+        "3": {
+            "Test_Command": "SetMOD_Command",
+            "Para1": "INV0",
+            "Para2": "0x0100",
+            "Para3": "0x0004"
+        },
+        "4": {
+            "Test_Command": "SetMOD_Command",
+            "Para1": "INV0",
+            "Para2": "0x0101",
+            "Para3": "0x0000"
+        },
+        "5": {
+            "Test_Command": "SetMOD_Command",
+            "Para1": "INV0",
+            "Para2": "0x00CF",
+            "Para3": "0x4D57"
+        },
+        "6": {
+            "Test_Command": "SetMOD_Command",
+            "Para1": "INV0",
+            "Para2": "0x0102",
+            "Para3": "0x0001"
+        },
+        "7": {
+            "Test_Command": "SetMOD_Command",
+            "Para1": "INV0",
+            "Para2": "0x00CF",
+            "Para3": "0x4D57"
+        },
+        "8": {
+            "Test_Command": "SetMOD_Command",
+            "Para1": "INV0",
+            "Para2": "0x0103",
+            "Para3": "0x0001"
+        },
+        "9": {
+            "Test_Command": "SetACS_Vout",
+            "Para1": "ACS0",
+            "Para2": "200"
+        },
+        "10": {
+            "Test_Command": "SetACS_Frequency",
+            "Para1": "ACS0",
+            "Para2": "50"
+        },
+        "11": {
+            "Test_Command": "SetACS_ON",
+            "Para1": "ACS0"
+        },
+        "12": {
+            "Test_Command": "SetDMM_BinaryData(Chroma 51101)",
+            "Para1": "DMM0",
+            "Para2": "0x02",
+            "Para3": "0",
+            "Para4": "0x08",
+            "Para5": "2"
+        },
+        "13": {
+            "Test_Command": "DelayS",
+            "Para1": "25"
+        },
+        "14": {
+            "Test_Command": "ReadDWAM_Vrms",
+            "Para1": "DWAM0",
+            "Para2": "VAC_OUT",
+            "RangeMax":"202.3",
+            "RangeMin":"197.7"
+        },
+        "15": {
+            "Test_Command": "ReadDWAM_Frequency",
+            "Para1": "DWAM0",
+            "Para2": "F_OUT",
+            "RangeMax":"50.5",
+            "RangeMin":"49.5"
+        },
+        "16": {
+            "Test_Command": "ReadDMM_BinaryData(Chroma 51101)",
+            "Para1": "DMM0",
+            "Para2": "0x00",
+            "Para3": "0",
+            "Para4": "1",
+            "RangeMax":"55.68",
+            "RangeMin":"54.72"
+        },
+        "17": {
+            "Test_Command": "SetACS_OFF",
+            "Para1": "ACS0"
+        }
+    }
+}

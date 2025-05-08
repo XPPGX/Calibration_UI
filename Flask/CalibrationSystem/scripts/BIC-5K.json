@@ -3,17 +3,17 @@
         "ACI_DC_Offset_單相": {
             "Step_Setting": {
                 "1": {
-                    "Control_Device": "DCS1",
+                    "Control_Device": "DCS0",
                     "Setting_Type": "V",
                     "Setting_Value": "55"
                 },
                 "2": {
-                    "Control_Device": "DCS1",
+                    "Control_Device": "DCS0",
                     "Setting_Type": "I",
                     "Setting_Value": "115"
                 },
                 "3": {
-                    "Control_Device": "DCS1",
+                    "Control_Device": "DCS0",
                     "Setting_Type": "Switch",
                     "Setting_Value": "ON"
                 },
@@ -28,14 +28,14 @@
                     "Setting_Value": ""
                 },
                 "6": {
-                    "Control_Device": "DCS1",
+                    "Control_Device": "DCS0",
                     "Setting_Type": "Switch",
                     "Setting_Value": "OFF"
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "DMM1",
-                "Value_Type": "Ch0"
+                "Equipment_Name": "DWAM1",
+                "Value_Type": "I,DC"
             },
             "adjust_direction": "Negative",
             "enable": false,
@@ -46,17 +46,17 @@
         "ACI輕載電流(2A)": {
             "Step_Setting": {
                 "1": {
-                    "Control_Device": "DCL1",
+                    "Control_Device": "DCL0",
                     "Setting_Type": "I",
                     "Setting_Value": "7"
                 },
                 "2": {
-                    "Control_Device": "DCL1",
+                    "Control_Device": "DCL0",
                     "Setting_Type": "Switch",
                     "Setting_Value": "ON"
                 },
                 "3": {
-                    "Control_Device": "DCL1",
+                    "Control_Device": "DCL0",
                     "Setting_Type": "Wait",
                     "Setting_Value": "7.1"
                 },
@@ -66,14 +66,14 @@
                     "Setting_Value": ""
                 },
                 "5": {
-                    "Control_Device": "DCL1",
+                    "Control_Device": "DCL0",
                     "Setting_Type": "Switch",
                     "Setting_Value": "OFF"
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": ""
+                "Equipment_Name": "DWAM1",
+                "Value_Type": "I,RMS"
             },
             "adjust_direction": "Positive",
             "enable": false,
@@ -84,17 +84,17 @@
         "ACI重載電流(22A)": {
             "Step_Setting": {
                 "1": {
-                    "Control_Device": "DCL1",
+                    "Control_Device": "DCL0",
                     "Setting_Type": "I",
                     "Setting_Value": "90"
                 },
                 "2": {
-                    "Control_Device": "DCL1",
+                    "Control_Device": "DCL0",
                     "Setting_Type": "Switch",
                     "Setting_Value": "ON"
                 },
                 "3": {
-                    "Control_Device": "DCL1",
+                    "Control_Device": "DCL0",
                     "Setting_Type": "Wait",
                     "Setting_Value": "87.6"
                 },
@@ -104,14 +104,14 @@
                     "Setting_Value": ""
                 },
                 "5": {
-                    "Control_Device": "DCL1",
+                    "Control_Device": "DCL0",
                     "Setting_Type": "Switch",
                     "Setting_Value": "OFF"
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": ""
+                "Equipment_Name": "DWAM1",
+                "Value_Type": "I,RMS"
             },
             "adjust_direction": "Positive",
             "enable": false,
@@ -122,7 +122,7 @@
         "ACV": {
             "Step_Setting": {
                 "1": {
-                    "Control_Device": "ACS1",
+                    "Control_Device": "ACS0",
                     "Setting_Type": "Wait",
                     "Setting_Value": ""
                 },
@@ -133,8 +133,8 @@
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "DMM0",
-                "Value_Type": "Ch0"
+                "Equipment_Name": "DWAM1",
+                "Value_Type": "V,RMS"
             },
             "adjust_direction": "Positive",
             "enable": true,
@@ -145,22 +145,22 @@
         "DCI反向滿載電流": {
             "Step_Setting": {
                 "1": {
-                    "Control_Device": "DCS1",
+                    "Control_Device": "DCS0",
                     "Setting_Type": "V",
                     "Setting_Value": "55"
                 },
                 "2": {
-                    "Control_Device": "DCS1",
+                    "Control_Device": "DCS0",
                     "Setting_Type": "I",
                     "Setting_Value": "115"
                 },
                 "3": {
-                    "Control_Device": "DCS1",
+                    "Control_Device": "DCS0",
                     "Setting_Type": "Switch",
                     "Setting_Value": "ON"
                 },
                 "4": {
-                    "Control_Device": "DCS1",
+                    "Control_Device": "DCS0",
                     "Setting_Type": "Wait",
                     "Setting_Value": ""
                 },
@@ -170,14 +170,14 @@
                     "Setting_Value": ""
                 },
                 "6": {
-                    "Control_Device": "DCS1",
+                    "Control_Device": "DCS0",
                     "Setting_Type": "Switch",
                     "Setting_Value": "OFF"
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": ""
+                "Equipment_Name": "DMM2",
+                "Value_Type": "Ch0"
             },
             "adjust_direction": "Negative",
             "enable": false,
@@ -188,17 +188,17 @@
         "DCI正向滿載電流": {
             "Step_Setting": {
                 "1": {
-                    "Control_Device": "DCL1",
+                    "Control_Device": "DCL0",
                     "Setting_Type": "I",
                     "Setting_Value": "104"
                 },
                 "2": {
-                    "Control_Device": "DCL1",
+                    "Control_Device": "DCL0",
                     "Setting_Type": "Switch",
                     "Setting_Value": "ON"
                 },
                 "3": {
-                    "Control_Device": "DCL1",
+                    "Control_Device": "DCL0",
                     "Setting_Type": "Wait",
                     "Setting_Value": "80"
                 },
@@ -208,14 +208,14 @@
                     "Setting_Value": ""
                 },
                 "5": {
-                    "Control_Device": "DCL1",
+                    "Control_Device": "DCL0",
                     "Setting_Type": "Switch",
                     "Setting_Value": "OFF"
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": ""
+                "Equipment_Name": "DMM2",
+                "Value_Type": "Ch0"
             },
             "adjust_direction": "Positive",
             "enable": false,
@@ -226,7 +226,7 @@
         "DCI空載電流": {
             "Step_Setting": {
                 "1": {
-                    "Control_Device": "DCL1",
+                    "Control_Device": "DCL0",
                     "Setting_Type": "Wait",
                     "Setting_Value": ""
                 },
@@ -237,8 +237,8 @@
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": ""
+                "Equipment_Name": "DMM2",
+                "Value_Type": "Ch0"
             },
             "adjust_direction": "Positive",
             "enable": false,
@@ -249,7 +249,7 @@
         "DCV": {
             "Step_Setting": {
                 "1": {
-                    "Control_Device": "DCL1",
+                    "Control_Device": "DCL0",
                     "Setting_Type": "Wait",
                     "Setting_Value": ""
                 },
@@ -260,8 +260,8 @@
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "",
-                "Value_Type": ""
+                "Equipment_Name": "DMM1",
+                "Value_Type": "Ch0"
             },
             "adjust_direction": "Positive",
             "enable": false,

@@ -1013,8 +1013,11 @@
 
                         const MessageBox = document.getElementById("MessageBox");
                         let tmp_status = UI_Result.innerText;
-                        if(tmp_status == "PASS" || tmp_status == "Not Complete"){
+                        if(tmp_status == "PASS"){
                             MessageBox.textContent = MessageBox.textContent + "\n" + "=============== PASS ===============";
+                        }
+                        else if(tmp_status == "Not Complete"){
+                            MessageBox.textContent = MessageBox.textContent + "\n" + "=========== Not Complete ===========";
                         }
                         else{
                             tmp_status = "Fail"
@@ -1025,9 +1028,7 @@
                         setTimeout(() => {
                             UI_stage = 4;
                             Cali_Flag = 2;
-
                         });
-                        
                     }
                     break;
                 }

@@ -39,16 +39,73 @@
             border: 1px solid white;
         }
 
-        #content{
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
             display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup-box {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .popup-box button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        
+        #content{
+            display: none;
+            flex-direction: column; /*上下排列*/
             padding: 20px;
             font-size: 18px;
         }
+
+        .top-buttonSection{
+            display: flex;
+            flex-direction: row;
+            padding:10px;
+            justify-content: center;
+            gap:40px;
+
+        }
+
+        .spacer{
+            flex-grow: 1;
+        }
+
+        .left-group{
+            display: flex;
+            padding-right: 10%;
+        }
+        .center-group{
+            display: flex;
+            gap: 20px;
+        }
+
+        .main-section {
+            display: flex;
+            flex-direction: row; /* 左右排 */
+            gap: 20px;
+            font-size: 18px;
+        }
+
         .left-container{
             display: flex;
             flex-direction: column;
-            width: 50%;
-            padding-right: 20px;
+            width: 80%;
         }
         .top {
             display: flex;
@@ -56,8 +113,49 @@
             gap: 20px; /* 增加間距 */
         }
         .right-container{
-            width: 50%;
-            padding-left: 10%;
+            width: 40%;
+            padding-left: 2%;
+        }
+
+        .arrow-button{
+            font-size: 24px;
+            padding: 8px 16px;
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            min-width: 60px;
+        }
+        
+        .arrow-button:hover{
+            background-color: #1976d2;
+        }
+
+
+        .icon-button {
+            font-size: 20px;
+            padding: 8px 16px;
+            background-color: olivedrab;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            min-width: 60px;
+        }
+
+        .icon-button.minus {
+            background-color: red;
+        }
+
+        .icon-button.run{
+            background-color: #4caf50;
+        }
+
+        .icon-button:hover {
+            opacity: 0.5;
         }
 
         .box{
@@ -380,16 +478,23 @@
             text-align: center;
         }
 
-        th:nth-child(1), td:nth-child(1) {width: 15%;}
-        th:nth-child(2), td:nth-child(2) {width: 65%;}
+        th:nth-child(1), td:nth-child(1) {width: 10%;}
+        th:nth-child(2), td:nth-child(2) {width: 50%;}
         th:nth-child(3), td:nth-child(3) {width: 20%;}
+        th:nth-child(4), td:nth-child(4) {width: 20%;}
 
         th{
             background-color: #f4f4f4;
         }
+
         td{
             background-color: #f4f4f4;
         }
+
+        tr.selected-color td{
+            background-color: #e4f584 !important; /*Let row color cover the cell*/
+        }
+
         .completed{
             background-color: #d4edda;
         }
@@ -410,7 +515,7 @@
             width: fit-content;
         }
 
-        .card-container {
+        /* .card-container {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
@@ -432,7 +537,8 @@
         .card:hover {
             background-color: #d0ebff;
             transform: translateY(-2px);
-        }
+        } */
+        
     </style>
 </head>
 <body>
@@ -440,29 +546,53 @@
     <div id="navbar">
         {% include 'navbar.html' %}
     </div>
+    
+    <div id="popup" class="popup-overlay">
+        <div class="popup-box">
+            <p>請選擇一個選項</p>
+            <button onclick="handleChoice('option1')">New TestItem</button>
+            <button onclick="handleChoice('option2')">Open TestItem</button>
+        </div>
+    </div>
 
     <div id="content">
-        <div class="left-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>No.</th>
-                        <th>Test Command</th>
-                        <th>Parameter</th>
-                    </tr>
-                </thead>
-                <tbody id="tableContainer">
-                    
-                </tbody>
-            </table>
-        </div>
-        <div class="right-container">
-            <div class="box">
-                
+        <div class="top-buttonSection">
+            <div class="left-group">
+                <button>另存新檔</button>
             </div>
-            <div class="box">
-                <div class="card-container" id="cardContainer">
+            <div class="center-group">
+                <button class="arrow-button" onclick="moveRowUpward()">↑</button>
+                <button class="arrow-button" onclick="moveRowDownward()">↓</button>
+                <button class="icon-button" onclick="addRow()">+</button>
+                <button class="icon-button minus" onclick="deleteRow()">-</button>
+                <button class="icon-button run">Run</button>
+            </div>
+        </div>
 
+        <div class="main-section">
+            <div class="left-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Test Command</th>
+                            <th>Parameter</th>
+                            <th>Expected Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableContainer">
+                        
+                    </tbody>
+                </table>
+            </div>
+            <div class="right-container">
+                <div class="box">
+                    
+                </div>
+                <div class="box">
+                    <div class="card-container" id="cardContainer">
+    
+                    </div>
                 </div>
             </div>
         </div>
@@ -470,23 +600,213 @@
 </body>
 
 <script>
-     const data = {
-      "用戶資料": { "name": "Alice", "age": 25 },
-      "設定": { "theme": "dark", "notifications": true },
-      "儀表板": { "widgets": 5 }
+    const ColumnIndex_NO            = 0;
+    const ColumnIndex_TestCommand   = 1;
+    const ColumnIndex_Parameter     = 2;
+    const ColumnIndex_ExpectedValue = 3;
+
+    let instructionSet = Object();
+    let selectedRowSet = new Set();
+    // document.addEventListener('DOMContentLoaded', async function(){
+    //     const response = await fetch('/api/get_instruction_set');
+    //     if(!response.ok){
+    //         throw new Error("[Failed]instruction set loading");
+    //     }
+    //     const res_data = await response.json();
+    //     instructionSet = res_data;
+    //     console.log(instructionSet);
+    // });
+
+    window.onload = function () {
+        document.getElementById('popup').style.display = 'flex';
     };
 
-    const container = document.getElementById('cardContainer');
+    function handleChoice(option) {
+        console.log("你選擇了：" + option);
+        document.getElementById('popup').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+    }
 
-    // 針對每個 key 產生一張卡片
-    Object.keys(data).forEach(key => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerText = key;
-      card.addEventListener('click', () => {
-        alert('你點了「' + key + '」');
-      });
-      container.appendChild(card);
-    });
+    document.getElementById("tableContainer").addEventListener("click", async function(event){
+        if(event.target.tagName === "TD")
+        {
+            const clickedCell = event.target;
+            const columnIndex = clickedCell.cellIndex;
+            switch(columnIndex)
+            {
+                case ColumnIndex_NO:
+                    const clickedRow = clickedCell.closest("tr");
+                    console.log(clickedRow);
+                    if(clickedRow.classList.contains("selected-color")){
+                        clickedRow.classList.remove("selected-color");
+                    }
+                    else{
+                        clickedRow.classList.add("selected-color");
+                    }
+                    console.log("Clicked NO");
+                    
+                    break;
+                case ColumnIndex_TestCommand:
+                    console.log("Clicked TestCMD");
+                    break;
+                case ColumnIndex_Parameter:
+                    console.log("Clicked Para");
+                    break;
+                case ColumnIndex_ExpectedValue:
+                    console.log("Clicked ExV");    
+                    break;
+                default:
+                    break;
+            }
+        }
+    })
+
+    function addRow()
+    {
+        console.log("Click plus\n");
+        const table = document.getElementById("tableContainer");
+        const row = document.createElement('tr');
+
+        const row_Number_Cell = document.createElement('td');
+        const Test_Command_Cell = document.createElement('td');
+        const Parameter_Cell = document.createElement('td');
+        const Expected_Value = document.createElement('td');
+
+        let row_len = table.rows.length;
+        row_Number_Cell.textContent = String(row_len);
+        
+        Test_Command_Cell.textContent = "Text" + String(row_len);
+
+
+        row.appendChild(row_Number_Cell);
+        row.appendChild(Test_Command_Cell);
+        row.appendChild(Parameter_Cell);
+        row.appendChild(Expected_Value);
+
+        table.appendChild(row);
+    }
+    
+    function deleteRow()
+    {
+        const selectedRows = document.querySelectorAll("#tableContainer tr.selected-color");
+        if(selectedRows.length == 0)
+        {   
+            alert("Please select some rows!");
+            return; 
+        }
+        selectedRows.forEach(row => row.remove());
+        
+        const Table = document.getElementById("tableContainer");
+        const remainLength = Table.rows.length;
+        for(i = 0 ; i < remainLength ; i ++)
+        {
+            let row = Table.rows[i];
+            let Number_Cell = row.cells[0];
+            Number_Cell.textContent = String(i);
+        }
+    }
+    
+    function moveRowUpward()
+    {
+        const selectedRows = document.querySelectorAll("#tableContainer tr.selected-color");
+        if(selectedRows.length > 1)
+        {
+            alert("Please move just one row once");
+            return;
+        }
+        if(selectedRows.length == 0)
+        {
+            alert("Please select one row");
+            return;
+        }
+
+        //only one row
+
+        const selectedRow = selectedRows[0];
+
+        const previousRow = selectedRow.previousElementSibling;
+        if(previousRow)
+        {
+            selectedRow.parentNode.insertBefore(selectedRow, previousRow); //switch row
+
+            const selectedRow_Cells = selectedRow.querySelectorAll("td");
+            const previousRow_Cells = previousRow.querySelectorAll("td");
+
+            const s_Cells_Number = selectedRow_Cells[0].textContent;
+            const p_Cells_Number = previousRow_Cells[0].textContent;
+
+            selectedRow_Cells[0].textContent = p_Cells_Number;
+            previousRow_Cells[0].textContent = s_Cells_Number;
+        }
+        
+        
+        // const allRows = Array.from(document.querySelectorAll("#tableContainer tr"));
+        // const rowIndex = allRows.indexOf(selectedRow);
+
+        // if(rowIndex == 0){
+        //     //there is no need to move
+        //     return;
+        // }
+    }
+
+    function moveRowDownward()
+    {
+        const selectedRows = document.querySelectorAll("#tableContainer tr.selected-color");
+        if(selectedRows.length > 1)
+        {
+            alert("Please move just one row once");
+            return;
+        }
+        if(selectedRows.length == 0)
+        {
+            alert("Please select one row");
+            return;
+        }
+
+        //only one row
+        const selectedRow = selectedRows[0];
+
+        const nextRow = selectedRow.nextElementSibling;
+        if(nextRow)
+        {
+            selectedRow.parentNode.insertBefore(nextRow, selectedRow); //switch row
+
+            const selectedRow_Cells = selectedRow.querySelectorAll("td");
+            const nextRow_Cells = nextRow.querySelectorAll("td");
+
+            const s_Cells_Number = selectedRow_Cells[0].textContent;
+            const n_Cells_Number = nextRow_Cells[0].textContent;
+
+            selectedRow_Cells[0].textContent = n_Cells_Number;
+            nextRow_Cells[0].textContent = s_Cells_Number;
+        }
+    }
+
+    async function RunTestItem()
+    {
+        const response = await fetch('/api/Mock_enter_pressed', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body:JSON.stringify({"pressed" : 1})
+        });
+    }
+    //  const data = {
+    //   "用戶資料": { "name": "Alice", "age": 25 },
+    //   "設定": { "theme": "dark", "notifications": true },
+    //   "儀表板": { "widgets": 5 }
+    // };
+
+    // const container = document.getElementById('cardContainer');
+
+    // // 針對每個 key 產生一張卡片
+    // Object.keys(data).forEach(key => {
+    //   const card = document.createElement('div');
+    //   card.className = 'card';
+    //   card.innerText = key;
+    //   card.addEventListener('click', () => {
+    //     alert('你點了「' + key + '」');
+    //   });
+    //   container.appendChild(card);
+    // });
 </script>
 </html>

@@ -13,6 +13,7 @@ void Modbus_Init(void);
 void Modbus_TxProcess_Read(uint32_t MOD_ID, uint16_t StartAddress);
 void Modbus_TxProcess_Write(uint32_t MOD_ID, uint16_t StartAddress);
 void Modbus_RxProcess(uint16_t StartAddress);
+void TI_Modbus_TxProcess_Write(uint8_t MOD_ID, uint16_t StartAddress, uint16_t ByteValue);
 
 // CRC16
 uint16_t calculateCRC(uint8_t *data, int length) {
@@ -367,4 +368,29 @@ void Modbus_RxProcess(uint16_t StartAddress)
             Cali_Result = DUT_FAIL;
         }
     }
+}
+
+void TI_Modbus_TxProcess_Write(uint8_t MOD_ID, uint16_t StartAddress, uint16_t ByteValue) {
+    uint8_t polling_command[6] = {0};
+    uint8_t full_polling_command[8] = {0}; // Add CRC
+
+    polling_command[0] = MOD_ID;
+    polling_command[1] = 0x06;
+    polling_command[2] = (StartAddress>>8) & 0xFF;
+    polling_command[3] = StartAddress & 0xFF;
+    polling_command[4] = (ByteValue>>8) & 0xFF;
+    polling_command[5] = ByteValue & 0xFF;
+
+    // Calculate CRC
+    memcpy(full_polling_command, polling_command, sizeof(polling_command));
+    uint16_t crc = calculateCRC(polling_command, sizeof(polling_command));
+    full_polling_command[6] = crc & 0xFF;       // CRC 低位
+    full_polling_command[7] = (crc >> 8) & 0xFF; // CRC 高位
+
+    digitalWrite(EN_485, HIGH); // switch send mode
+    usleep(1000); // wait 1ms
+    for (int i = 0; i < sizeof(full_polling_command); i++) {
+        serialPutchar(serial_fd, full_polling_command[i]);
+    }
+    usleep(20000); // wait 20ms
 }

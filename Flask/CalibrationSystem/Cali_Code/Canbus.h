@@ -47,5 +47,6 @@ extern void Canbus_Init(void);
 extern void Canbus_TxProcess_Read(uint32_t CAN_ID, uint16_t CAN_Command);
 extern void Canbus_TxProcess_Write(uint32_t CAN_ID, uint16_t CAN_Command);
 extern void Canbus_RxProcess(uint16_t CAN_Command);
+extern void TI_Canbus_TxProcess_Write(uint32_t CAN_ID, uint8_t CAN_DLC, uint16_t CAN_Command, uint16_t ByteValue);
 
 #endif /* __CANBUS_H */

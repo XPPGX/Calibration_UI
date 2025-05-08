@@ -41,5 +41,6 @@ extern void Modbus_Init(void);
 extern void Modbus_TxProcess_Read(uint32_t MOD_ID, uint16_t StartAddress);
 extern void Modbus_TxProcess_Write(uint32_t MOD_ID, uint16_t StartAddress);
 extern void Modbus_RxProcess(uint16_t StartAddress);
+extern void TI_Modbus_TxProcess_Write(uint8_t MOD_ID, uint16_t StartAddress, uint16_t ByteValue);
 
 #endif /* __MODBUS_H */

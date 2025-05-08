@@ -39,6 +39,7 @@ uint8_t wCali_Status = 0;
 volatile uint8_t communication_found = 0; // 0: No COMM, 1: CAN, 2: MODBUS
 pthread_mutex_t lock; // Protect Shared variables
 pthread_t Cali_thread; // Main Cali thread
+pthread_t canbus_thread, modbus_thread;
 pthread_t Device_Comm_thread;
 
 struct input_event ev;
@@ -630,7 +631,6 @@ void Keyboard_Control(void)
 
 void* Cali_routine(void* arg) {
     Parameter_Init();
-    pthread_t canbus_thread, modbus_thread;
 
     // Init Mutex
     pthread_mutex_init(&lock, NULL);
@@ -752,6 +752,12 @@ void Start_Cali_thread(void) {
 
 void Stop_Cali_thread(void) {
     // Stop Communication Thread
+    pthread_cancel(Cali_thread);
+    pthread_join(Cali_thread, NULL);
+    pthread_cancel(canbus_thread);
+    pthread_join(canbus_thread, NULL);
+    pthread_cancel(modbus_thread);
+    pthread_join(modbus_thread, NULL);
     pthread_cancel(Device_Comm_thread);
     pthread_join(Device_Comm_thread, NULL);
     pthread_cancel(Cali_thread);
@@ -951,7 +957,7 @@ void Send_Step_Command(const char *usb_port, const char *control_device, const c
         }
         else if (strcmp(setting_type, "Wait") == 0)
         {
-            Valid_measured_value = 0;
+            Valid_measured_value = 1;
             filter_count = 0;
             Sum_Device_measured_value = 0.0;
             Filter_Device_measured_value = 0.0;
@@ -991,14 +997,6 @@ void Send_Step_Command(const char *usb_port, const char *control_device, const c
                     break;
                 }
                 usleep(100000); // delay 100ms
-                if((Device_measured_value >= PSU_Low_Limit) && (Device_measured_value <= PSU_High_Limit))
-                {
-                    Valid_measured_value = 1;       //UI value->Green
-                }
-                else
-                {
-                    Valid_measured_value = 0;       //UI value->Red
-                }
             }
         }
     } 
@@ -1022,7 +1020,7 @@ void Send_Step_Command(const char *usb_port, const char *control_device, const c
         }
         else if (strcmp(setting_type, "Wait") == 0)
         {
-            Valid_measured_value = 0;
+            Valid_measured_value = 1;
             filter_count = 0;
             Sum_Device_measured_value = 0.0;
             Filter_Device_measured_value = 0.0;
@@ -1062,14 +1060,6 @@ void Send_Step_Command(const char *usb_port, const char *control_device, const c
                     break;
                 }
                 usleep(100000); // delay 100ms
-                if((Device_measured_value >= PSU_Low_Limit) && (Device_measured_value <= PSU_High_Limit))
-                {
-                    Valid_measured_value = 1;       //UI value->Green
-                }
-                else
-                {
-                    Valid_measured_value = 0;       //UI value->Red
-                }
             }
         }
     } 
@@ -1121,7 +1111,7 @@ void Send_Step_Command(const char *usb_port, const char *control_device, const c
         }
         else if (strcmp(setting_type, "Wait") == 0)
         {
-            Valid_measured_value = 0;
+            Valid_measured_value = 1;
             filter_count = 0;
             Sum_Device_measured_value = 0.0;
             Filter_Device_measured_value = 0.0;
@@ -1161,14 +1151,6 @@ void Send_Step_Command(const char *usb_port, const char *control_device, const c
                     break;
                 }
                 usleep(100000); // delay 100ms
-                if((Device_measured_value >= PSU_Low_Limit) && (Device_measured_value <= PSU_High_Limit))
-                {
-                    Valid_measured_value = 1;       //UI value->Green
-                }
-                else
-                {
-                    Valid_measured_value = 0;       //UI value->Red
-                }
             }
         }
     } 
@@ -1388,6 +1370,7 @@ void Calibration_Device_Auto_Control(void) {
         // 取得設備的 USB_Port
         if (!find_device_info(device_config_json, control_device->valuestring, usb_port)) {
             printf("未找到設備資訊\n");
+            Cali_Result = DEVICE_FAIL;
             continue;
         }
 

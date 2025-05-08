@@ -17,6 +17,7 @@ void Canbus_Init(void);
 void Canbus_TxProcess_Read(uint32_t CAN_ID, uint16_t CAN_Command);
 void Canbus_TxProcess_Write(uint32_t CAN_ID, uint16_t CAN_Command);
 void Canbus_RxProcess(uint16_t CAN_Command);
+void TI_Canbus_TxProcess_Write(uint32_t CAN_ID, uint8_t CAN_DLC, uint16_t CAN_Command, uint16_t ByteValue);
 
 void Canbus_Init(void)
 {
@@ -348,6 +349,28 @@ void Canbus_RxProcess(uint16_t CAN_Command)
         if(Can_no_receive_cnt >= 50)
         {
             Cali_Result = DUT_FAIL;
+        }
+    }
+}
+
+void TI_Canbus_TxProcess_Write(uint32_t CAN_ID, uint8_t CAN_DLC, uint16_t CAN_Command, uint16_t ByteValue) {
+    // Setting CAN Frame
+    frame.can_id = CAN_ID | CAN_EFF_FLAG;
+    frame.can_dlc = CAN_DLC;    // Data Length
+
+    frame.data[0] = CAN_Command;
+    frame.data[1] = CAN_Command>>8;
+    frame.data[2] = ByteValue;
+    frame.data[3] = ByteValue>>8;
+
+    Can_Retry_cnt = 0;
+    while(write(can_socket, &frame, sizeof(frame)) != sizeof(frame)) {
+        Can_Retry_cnt++;
+        usleep(10000); //delay 10ms
+        if(Can_Retry_cnt >= 10)
+        {
+            Cali_Result = DUT_FAIL; //CAN Write error
+            break;
         }
     }
 }

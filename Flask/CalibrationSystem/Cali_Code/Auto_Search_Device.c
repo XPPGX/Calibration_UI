@@ -146,7 +146,8 @@ int SCPI_Read_Process(const char *device_path, const char *command) {
             device_count++;
         }
         else if((strcmp(command, SCPI_VOLT_RMS) == 0) || (strcmp(command, SCPI_VOLT_DC) == 0) 
-            || (strcmp(command, SCPI_CURR_RMS) == 0) || (strcmp(command, SCPI_CURR_DC) == 0))
+            || (strcmp(command, SCPI_CURR_RMS) == 0) || (strcmp(command, SCPI_CURR_DC) == 0)
+            || (strcmp(command, SCPI_FREQ) == 0))
         {
             Device_measured_value = atof(read_buffer);
             //printf("Device_measured_value: %.3f\n", Device_measured_value);
