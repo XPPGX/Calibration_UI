@@ -227,7 +227,7 @@
             "RangeMax" : "上限值",
             "RangeMin" : "下限值"
         },
-        "ReadDMM_BinaryData(Chroma51101)":{
+        "ReadDMM_BinaryData(Chroma 51101)":{
             "Para1": "儀器代號",
             "Para2": "Chroma 51101-8 Command",
             "Para3": "Chroma 51101-8 Value",
@@ -236,7 +236,7 @@
             "RangeMax" : "上限值",
             "RangeMin" : "下限值"
         },
-        "SetDMM_BinaryData(Chroma51101)":{
+        "SetDMM_BinaryData(Chroma 51101)":{
             "Para1": "儀器代號",
             "Para2": "Chroma 51101-8 Command",
             "Para3": "Chroma 51101-8 Value",

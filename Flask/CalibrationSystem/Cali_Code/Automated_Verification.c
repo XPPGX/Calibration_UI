@@ -1,6 +1,7 @@
 #include "Cali.h"
 #include "Auto_Search_Device.h"
 #include "Modbus.h"
+#include "Canbus.h"
 
 /* Parameter -----------------------------------------------*/
 uint8_t Command_Flag = 0;
@@ -119,7 +120,7 @@ void Set_Command_Process(void) {
 
 void Read_Command_Process(void) {
     Command_Flag = 1;
-
+    char TI_Step_Command[MAX_STRING_LENGTH] = "";
     //DWAM
     //V
     if (strcmp(UI_TestCommand, "ReadDWAM_Vrms") == 0) {

@@ -2,6 +2,8 @@
     "files.associations": {
         "auto_search_device.h": "c",
         "canbus.h": "c",
-        "chroma_meter_51101_8.h": "c"
+        "chroma_meter_51101_8.h": "c",
+        "cali.h": "c",
+        "modbus.h": "c"
     }
 }

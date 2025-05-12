@@ -77,14 +77,12 @@
         "14": {
             "Test_Command": "ReadDWAM_Vrms",
             "Para1": "DWAM0",
-            "Para2": "VAC_OUT",
             "RangeMax":"202.3",
             "RangeMin":"197.7"
         },
         "15": {
             "Test_Command": "ReadDWAM_Frequency",
             "Para1": "DWAM0",
-            "Para2": "F_OUT",
             "RangeMax":"50.5",
             "RangeMin":"49.5"
         },
@@ -94,6 +92,7 @@
             "Para2": "0x00",
             "Para3": "0",
             "Para4": "1",
+            "Para5": "1",
             "RangeMax":"55.68",
             "RangeMin":"54.72"
         },

@@ -69,7 +69,7 @@
         #content{
             display: none;
             flex-direction: column; /*上下排列*/
-            padding: 20px;
+            padding: 10px;
             font-size: 18px;
         }
 
@@ -88,8 +88,20 @@
 
         .left-group{
             display: flex;
+            gap: 10px;
             padding-right: 10%;
+            align-items: center;
         }
+        .left-group > *{
+            height: 30px; /* 或你想要的數值 */
+            box-sizing: border-box;
+        }
+        .left-group > label{
+            display: flex;
+            align-items: center;      /* 垂直置中 */
+            height: 40px;             /* 視需要設定高度 */
+        }
+
         .center-group{
             display: flex;
             gap: 20px;
@@ -98,7 +110,7 @@
         .main-section {
             display: flex;
             flex-direction: row; /* 左右排 */
-            gap: 20px;
+            gap: 5px;
             font-size: 18px;
         }
 
@@ -165,6 +177,7 @@
             background-color: white;
             margin-bottom: 20px;
             padding: 10px;
+            overflow: auto;
         }
 
 
@@ -467,6 +480,12 @@
             background-color: lightcoral;
         }
 
+        .scroll-wrapper {
+            max-height: 750px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+        }
+
         table{
             width: 100%;
             border-collapse: collapse;
@@ -490,9 +509,23 @@
         td{
             background-color: #f4f4f4;
         }
+        
+        td.selected-color{
+            background-color: #e4f584;
+        }
+
+        td:hover{
+            background-color: #d0e6ff;
+            cursor: pointer;
+        }
 
         tr.selected-color td{
             background-color: #e4f584 !important; /*Let row color cover the cell*/
+        }
+
+        tr.running-task td {
+            background-color: #007bff !important; /* Blue means is currently executing */
+            color: white;
         }
 
         .completed{
@@ -514,31 +547,93 @@
             text-align: center;
             width: fit-content;
         }
-
-        /* .card-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .card {
-            padding: 10px;
-            background-color: #e3f2fd;
-            border: 1px solid #90caf9;
-            border-radius: 8px;
-            box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-            transition: transform 0.2s, background-color 0.2s;
-            min-width: 80px;
-            max-width: 120px;
-            text-align: center;
-        }
-
-        .card:hover {
-            background-color: #d0ebff;
-            transform: translateY(-2px);
-        } */
         
+        .tree{
+            display: none;
+        }
+
+        .tree ul{
+            list-style: none;
+            padding-left: 10px;
+        }
+        .tree li{
+            cursor: pointer;
+            position: relative;
+        }
+        .tree > ul > li::before {
+            content: "▸";
+            position: absolute;
+            left: -15px;
+            transition: transform 0.2s;
+        }
+        .tree > ul > li.expanded::before {
+            transform: rotate(90deg);
+        }
+
+        .tree ul {
+            display: none;
+        }
+
+        .tree li.expanded > ul {
+            display: block;
+        }
+
+        .tree > ul {
+            display: block;
+        }
+
+        .tree-selected{
+            background-color: lightblue;
+            cursor: pointer;
+        }
+
+        .message-box {
+            padding: 10px;
+            width: 80%;
+            white-space: pre-line;
+        }
+
+        .parameter-input {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            font-size: 16px;
+            width:80%;
+        }
+
+        .parameter-input label {
+            font-weight: bold;
+        }
+
+        .parameter-input input {
+            padding: 4px;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+        }
+
+        .file-card-container{
+            display: block;
+            /* flex-wrap: wrap; */
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            /* overflow-x: hidden; */
+        }
+
+        .file-card {
+            border: 1px solid #888;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+            transition: background 0.2s;
+        }
+
+        .file-card:hover {
+            background-color: #eef;
+        }
     </style>
 </head>
 <body>
@@ -548,51 +643,63 @@
     </div>
     
     <div id="popup" class="popup-overlay">
-        <div class="popup-box">
+        <div class="popup-box" id="initChoices">
             <p>請選擇一個選項</p>
-            <button onclick="handleChoice('option1')">New TestItem</button>
-            <button onclick="handleChoice('option2')">Open TestItem</button>
+            <button onclick="handleChoice('New')">New TestItem</button>
+            <button onclick="handleChoice('Open')">Open TestItem</button>
+        </div>
+        <div class="popup-box" id="fileSelector" style="display: none;">
+            <h3>Select a file</h3>
+            <div id="fileCardContainers" class="file-card-container">
+
+            </div>
         </div>
     </div>
 
     <div id="content">
         <div class="top-buttonSection">
             <div class="left-group">
-                <button>另存新檔</button>
+                <label for="filename">File Name:</label>
+                <input type="text" placeholder="FileName" id="filename_input">
+                <button onclick="newFileSave()">另存新檔</button>
             </div>
             <div class="center-group">
                 <button class="arrow-button" onclick="moveRowUpward()">↑</button>
                 <button class="arrow-button" onclick="moveRowDownward()">↓</button>
                 <button class="icon-button" onclick="addRow()">+</button>
                 <button class="icon-button minus" onclick="deleteRow()">-</button>
-                <button class="icon-button run">Run</button>
+                <button class="icon-button run" onclick="RunTestItem()">Run</button>
             </div>
         </div>
 
         <div class="main-section">
             <div class="left-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>No.</th>
-                            <th>Test Command</th>
-                            <th>Parameter</th>
-                            <th>Expected Value</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableContainer">
-                        
-                    </tbody>
-                </table>
+                <div class="scroll-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Test Command</th>
+                                <th>Parameter</th>
+                                <th>Expected Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableContainer" class="table-container">
+                            
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div class="right-container">
                 <div class="box">
-                    
+                    <div class="message-box" id="MessageBox"></div>
+                    <div class="parameter-input" id="MessageInputBox"></div>
                 </div>
                 <div class="box">
-                    <div class="card-container" id="cardContainer">
-    
+                    <div class="tree" id="treeContainer">
+                    
                     </div>
+
                 </div>
             </div>
         </div>
@@ -600,66 +707,551 @@
 </body>
 
 <script>
+    /**
+     * CMD_Cell's property              : instruction, machineType
+     * Parameter_Cell's property        : paras_object[key], changeFlag_forPara
+     * Expected_Value_Cell's property   : expectedVal_object[key], changeFlag_forExpectedVal
+    */
+
+    let Run_Flag = 0;
+    let oldRunningID = -1; //step_idx starts with 0 in server end
+
     const ColumnIndex_NO            = 0;
     const ColumnIndex_TestCommand   = 1;
     const ColumnIndex_Parameter     = 2;
     const ColumnIndex_ExpectedValue = 3;
 
+    let g_currentCellIndex;
+    let g_currentClickedCell;
+
+    let g_cmd_machineType;
+    let g_cmd_instruction;
+
     let instructionSet = Object();
-    let selectedRowSet = new Set();
-    // document.addEventListener('DOMContentLoaded', async function(){
-    //     const response = await fetch('/api/get_instruction_set');
-    //     if(!response.ok){
-    //         throw new Error("[Failed]instruction set loading");
-    //     }
-    //     const res_data = await response.json();
-    //     instructionSet = res_data;
-    //     console.log(instructionSet);
-    // });
+    let mapping_instruction_to_machineType = Object();
+    let rcv_testItem = Object();
+    
+    document.addEventListener('DOMContentLoaded', async function(){
+        const response = await fetch('/api/get_instruction_set');
+        if(!response.ok){
+            throw new Error("[Failed]instruction set loading");
+        }
+        const res_data = await response.json();
+        instructionSet = res_data;
+        console.log(instructionSet);
+
+        const paraInfoBox = document.getElementById("MessageBox");
+        paraInfoBox.style.display = "none";
+
+        const tree = document.getElementById("treeContainer");
+        tree.style.display = "none";
+
+        const paraInputBox = document.getElementById("MessageInputBox");
+        paraInputBox.style.display = "none";
+
+        mapping_instruction_to_machineType = construct_Instruction_to_machineType_Mapping(instructionSet);
+        buildInstructionTree(instructionSet);
+        
+
+        setInterval(update_ui_stage, 500);
+    });
+
+    function construct_Instruction_to_machineType_Mapping(_instructionSet)
+    {
+        const reversed = {};
+        for(const [outer_key, obj] of Object.entries(_instructionSet))
+        {
+            for(const inner_key of Object.keys(obj))
+            {
+                reversed[inner_key] = outer_key;
+            }
+        }
+        console.log(reversed);
+        return reversed;
+    }
+
+    //The operation of the instrction are all defined in here
+    function buildInstructionTree(Json)
+    {
+        const machineTypeNum = Object.keys(Json).length;
+        console.log("machineTypeNum : " + machineTypeNum);
+
+        const ul_outer = document.createElement("ul");
+
+        for(const key_outer in Json)
+        {
+            const li_outer = document.createElement("li");
+            li_outer.textContent = key_outer;
+            
+            if(Json.hasOwnProperty(key_outer))
+            {
+                const ul_inner = document.createElement("ul");
+                for(const key_inner in Json[key_outer])
+                {
+                    const li_inner = document.createElement("li");
+                    li_inner.textContent = key_inner;
+                    li_inner.machineType = li_outer.textContent;
+
+                    ul_inner.appendChild(li_inner);
+                    li_inner.addEventListener("click", function(e){
+                        if(e.target === this)
+                        {
+                            e.stopPropagation();
+                            const onlyOwnText = this.textContent.trim();
+                            console.log(onlyOwnText);
+                            
+                            if(g_currentCellIndex === ColumnIndex_TestCommand)
+                            {
+                                if(g_currentClickedCell.textContent != onlyOwnText){
+                                    const row = g_currentClickedCell.closest("tr");
+
+                                    const corres_para_cell = row.cells[2];
+                                    corres_para_cell.textContent = "";
+                                    corres_para_cell.changeFlag_forPara = 1;
+
+                                    const corres_expVal_cell = row.cells[3];
+                                    corres_expVal_cell.textContent = "";
+                                    corres_expVal_cell.changeFlag_forExpectedVal = 1;
+                                }
+                                g_currentClickedCell.textContent = onlyOwnText;
+                                g_currentClickedCell.instruction = onlyOwnText;
+                                g_currentClickedCell.machineType = li_inner.machineType;
+                                
+                                // g_cmd_instruction = onlyOwnText;
+                                // g_cmd_machineType = li_inner.machineType;
+                                showParaInfo();
+                            }
+                        }
+                    })
+                }
+                li_outer.appendChild(ul_inner);
+                
+                li_outer.addEventListener("click", function(e){
+                    //prevent event propagation
+                    if(e.target === this) 
+                    {
+                        li_outer.classList.toggle("expanded"); 
+                        const onlyOwnText = e.target.firstChild.textContent.trim();
+                        // g_cmd_machineType = onlyOwnText;
+                        console.log(onlyOwnText);
+                    }
+                })
+            }
+
+            ul_outer.appendChild(li_outer);
+        }
+
+        const Tree = document.getElementById("treeContainer");
+        Tree.appendChild(ul_outer);
+    }
+
+    function showParaInfo()
+    {
+        const paraInfoBox = document.getElementById("MessageBox");
+        let paraInfoJson;
+        paraInfoBox.textContent = "";
+        paraInfoBox.style.display = "block";
+        paraInfoJson = instructionSet[g_currentClickedCell.machineType][g_currentClickedCell.instruction];
+        for(const key in paraInfoJson)
+        {
+            paraInfoBox.textContent = paraInfoBox.textContent + "\n" + key + ": " + paraInfoJson[key];
+            console.log(key + ": " + paraInfoJson[key]);
+        }
+    }
+
+    function showParaInput(cmd_changed_flag){
+        const paraInputBox = document.getElementById("MessageInputBox");
+        paraInputBox.textContent = "";
+        paraInputBox.style.display = "block";
+        
+        const currentRow = g_currentClickedCell.closest("tr");
+        const corres_cmd_cell = currentRow.cells[1];
+        if(!(corres_cmd_cell.hasOwnProperty('machineType')) || !(corres_cmd_cell.hasOwnProperty('instruction')))
+        {
+            console.log("The target cell has no property \'machinetype\' and \'instruction\'");
+            return;
+        }
+  
+        const paraInputJson = instructionSet[corres_cmd_cell.machineType][corres_cmd_cell.instruction];
+        // const paraInputJson = instructionSet[g_cmd_machineType][g_cmd_instruction];
+        let paras_object_temp = {};
+        
+        
+
+        for(const key in paraInputJson)
+        {   
+            const group = document.createElement("div");
+
+            if(key == "RangeMax" || key === "RangeMin")
+            {
+                continue;
+            }
+            const label = document.createElement("label");
+            label.textContent = key + ": ";
+            const input = document.createElement("input");
+            input.type = "text";
+            input.id = key;
+
+            //handle for default values
+            if(g_currentClickedCell.changeFlag_forPara === 0 && g_currentClickedCell.paras_object.hasOwnProperty(key))
+            {
+                input.value = g_currentClickedCell.paras_object[key];
+            }
+            
+            paras_object_temp[key] = "";
+            input.addEventListener("input", function(event){
+                g_currentClickedCell.paras_object[input.id] = event.target.value;
+                g_currentClickedCell.textContent = "";
+                for(const id in g_currentClickedCell.paras_object)
+                {
+                    if(g_currentClickedCell.textContent === "")
+                    {
+                        g_currentClickedCell.textContent = g_currentClickedCell.paras_object[id]; 
+                    }
+                    else
+                    {
+                        g_currentClickedCell.textContent = g_currentClickedCell.textContent + "," + g_currentClickedCell.paras_object[id];
+                    }
+                }
+            });
+
+            // label.appendChild(input);
+            group.appendChild(label);
+            group.appendChild(input);
+
+            paraInputBox.appendChild(group);
+        }
+        // paraInputBox.appendChild(group);
+        
+        if(g_currentClickedCell.changeFlag_forPara === 1){
+            g_currentClickedCell.paras_object = paras_object_temp;
+            g_currentClickedCell.changeFlag_forPara = 0;
+        }
+        
+        
+    }
+
+    function showExpectedVal()
+    {
+        const paraInputBox = document.getElementById("MessageInputBox");
+        paraInputBox.textContent = "";
+        paraInputBox.style.display = "block";
+        
+        const currentRow = g_currentClickedCell.closest("tr");
+        const corres_cmd_cell = currentRow.cells[1];
+        if(!(corres_cmd_cell.hasOwnProperty('machineType')) || !(corres_cmd_cell.hasOwnProperty('instruction')))
+        {
+            console.log("The target cell has no property \'machinetype\' and \'instruction\'");
+            return;
+        }
+  
+        const paraInputJson = instructionSet[corres_cmd_cell.machineType][corres_cmd_cell.instruction];
+        // const paraInputJson = instructionSet[g_cmd_machineType][g_cmd_instruction];
+
+        let expectedVal_object_temp = {};
+        
+        for(const key in paraInputJson)
+        {   
+            if(key != "RangeMax" && key != "RangeMin")
+            {
+                continue;
+            }
+            const group = document.createElement("div");
+
+            const label = document.createElement("label");
+            label.textContent = key + ": ";
+            const input = document.createElement("input");
+            input.type = "text";
+            input.id = key;
+
+            //handle for default values
+            if(g_currentClickedCell.changeFlag_forExpectedVal === 0 && g_currentClickedCell.expectedVal_object.hasOwnProperty(key))
+            {
+                input.value = g_currentClickedCell.expectedVal_object[key];
+            }
+            
+            expectedVal_object_temp[key] = "";
+            input.addEventListener("input", function(event){
+                // console.log(event.target.value);
+                // console.log(g_currentClickedCell.expectedVal_object);
+                g_currentClickedCell.expectedVal_object[input.id] = event.target.value;
+                g_currentClickedCell.textContent = "";
+                for(const id in g_currentClickedCell.expectedVal_object)
+                {
+                    if(g_currentClickedCell.textContent === "")
+                    {
+                        g_currentClickedCell.textContent = g_currentClickedCell.expectedVal_object[id]; 
+                    }
+                    else
+                    {
+                        g_currentClickedCell.textContent = g_currentClickedCell.textContent + "," + g_currentClickedCell.expectedVal_object[id];
+                    }
+                }
+            });
+
+            group.appendChild(label);
+            group.appendChild(input);
+
+            paraInputBox.appendChild(group);
+        }
+        
+        if(g_currentClickedCell.changeFlag_forExpectedVal === 1){
+            g_currentClickedCell.expectedVal_object = expectedVal_object_temp;
+            g_currentClickedCell.changeFlag_forExpectedVal = 0;
+        }
+    }
 
     window.onload = function () {
         document.getElementById('popup').style.display = 'flex';
     };
 
-    function handleChoice(option) {
+    async function handleChoice(option) {
         console.log("你選擇了：" + option);
-        document.getElementById('popup').style.display = 'none';
-        document.getElementById('content').style.display = 'block';
+        document.getElementById('initChoices').style.display = 'none';
+    
+        initWeb(option);
+        
+        
+    }
+
+    async function initWeb(option)
+    {
+        if(option === "Open")
+        {
+            /**
+             * 1. readDir and selected file
+             * 2. show filename
+             * 3. the file content in table 
+            */
+            // document.getElementById('fileModal').style.display = "block";
+            document.getElementById('fileSelector').style.display = "block";
+            fileSelector();
+            document.getElementById('content').style.display = 'block';
+        }
+        else
+        {
+            document.getElementById('popup').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
+        
+    }
+
+    async function fileSelector()
+    {
+        let response;
+        let res_data;
+        
+        //Get filenames from server
+        response = await fetch('/api/get_test_item_file_names');
+        if(!response.ok){
+            throw new Error("[Failed]instruction set loading");
+        }
+        res_data = await response.json();
+        const filenames = res_data["files"];
+        console.log(filenames);
+        
+        //select operation
+        const cardContainer = document.getElementById("fileCardContainers");
+        let selectedFileName_withSubName = "";
+        filenames.forEach(filename => {
+            const card = document.createElement("div");
+            card.className = "file-card";
+            card.textContent = filename;
+            card.addEventListener("click", () => {
+                console.log(card.textContent);
+                selectedFileName_withSubName = card.textContent;
+                document.getElementById("popup").style.display="none";
+                
+                //remove the subname of the filename
+                const index = selectedFileName_withSubName.lastIndexOf(".");
+                let selectedFileName_withoutSubName;
+                if(index !== -1)
+                {//no subname
+                    selectedFileName_withoutSubName = selectedFileName_withSubName.substring(0, index);
+                }
+                document.getElementById("filename_input").value = selectedFileName_withoutSubName;
+                get_test_item_file_content(selectedFileName_withSubName);
+            })
+            cardContainer.appendChild(card);
+        });
+    }
+
+    async function get_test_item_file_content(filename){
+        let response = await fetch('/api/get_test_item_file_content', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body:JSON.stringify({"filename" : filename})
+        });
+        let res_data = await response.json();
+        rcv_testItem = res_data;
+        buildTableFromRcvJson(rcv_testItem);
+    }
+    
+    function buildTableFromRcvJson(rcv_testItem)
+    {
+        const table = document.getElementById("tableContainer");
+        
+        console.log(rcv_testItem);
+        const testItems = rcv_testItem["Test_Item_Number"];
+        for(const key in testItems)
+        {
+            const new_row = document.createElement("tr");
+
+            const row_Number_Cell = document.createElement('td');
+            const Test_Command_Cell = document.createElement('td');
+            const Parameter_Cell = document.createElement('td');
+            const Expected_Value_Cell = document.createElement('td');
+
+            //[Row_Number_Cell]
+            row_Number_Cell.textContent = key;
+            
+            //[Test_Command_Cell]
+            Test_Command_Cell.textContent = testItems[key]["Test_Command"];
+            Test_Command_Cell.instruction = testItems[key]["Test_Command"];
+            Test_Command_Cell.machineType = mapping_instruction_to_machineType[Test_Command_Cell.instruction];
+            
+            //[Parameter_Cell]
+            let paras_object_temp = {};
+            let paras_counter = 1;
+            Parameter_Cell.textContent = "";
+            Parameter_Cell.changeFlag_forPara = 0;
+            while(1)
+            {
+                let para_key = "Para" + String(paras_counter);
+                if(testItems[key].hasOwnProperty(para_key))
+                { //The parameter "para1", "para2", ... exist
+                    paras_object_temp[para_key] = testItems[key][para_key];
+                    paras_counter = paras_counter + 1;
+                    if(Parameter_Cell.textContent == "")
+                    {
+                        Parameter_Cell.textContent = paras_object_temp[para_key];
+                    }
+                    else
+                    {
+                        Parameter_Cell.textContent = Parameter_Cell.textContent + "," + paras_object_temp[para_key];
+                    }
+                }
+                else{
+                    break;
+                }
+            }
+            Parameter_Cell.paras_object = paras_object_temp;
+            // console.log(Parameter_Cell.paras_object);
+            // console.log(Parameter_Cell.textContent);
+            
+            //[Expected_Value_Cell]
+            let expectedVal_object_temp = {};
+            Expected_Value_Cell.textContent = "";
+            Expected_Value_Cell.changeFlag_forExpectedVal = 0;
+            if(testItems[key].hasOwnProperty("RangeMax") && testItems[key].hasOwnProperty("RangeMin"))
+            {
+                expectedVal_object_temp["RangeMax"] = testItems[key]["RangeMax"];
+                expectedVal_object_temp["RangeMin"] = testItems[key]["RangeMin"];
+                Expected_Value_Cell.textContent = expectedVal_object_temp["RangeMax"] + "," + expectedVal_object_temp["RangeMin"];
+                console.log(Expected_Value_Cell.textContent);
+            }
+            Expected_Value_Cell.expectedVal_object = expectedVal_object_temp;
+            
+
+
+            new_row.appendChild(row_Number_Cell);
+            new_row.appendChild(Test_Command_Cell);
+            new_row.appendChild(Parameter_Cell);
+            new_row.appendChild(Expected_Value_Cell);
+
+            table.appendChild(new_row);
+        }
     }
 
     document.getElementById("tableContainer").addEventListener("click", async function(event){
-        if(event.target.tagName === "TD")
+        if(event.target.tagName === "TD" && Run_Flag !== 1)
         {
             const clickedCell = event.target;
             const columnIndex = clickedCell.cellIndex;
+            const paraInfoBox = document.getElementById("MessageBox");
+            const paraInputBox = document.getElementById("MessageInputBox");
+
             switch(columnIndex)
             {
                 case ColumnIndex_NO:
                     const clickedRow = clickedCell.closest("tr");
                     console.log(clickedRow);
+                    document.querySelectorAll("td").forEach(td =>{
+                        td.classList.remove("selected-color");
+                    })
+
                     if(clickedRow.classList.contains("selected-color")){
                         clickedRow.classList.remove("selected-color");
                     }
                     else{
                         clickedRow.classList.add("selected-color");
                     }
+
+                    g_currentClickedCell = clickedCell;
+                    g_currentCellIndex = ColumnIndex_NO;
+                    paraInputBox.style.display = "none";
+                    paraInfoBox.style.display = "none";
                     console.log("Clicked NO");
-                    
                     break;
+
                 case ColumnIndex_TestCommand:
                     console.log("Clicked TestCMD");
+                    
+                    highlightSelectedCell(clickedCell);
+                    paraInputBox.style.display = "none";
+
+                    const Tree = document.getElementById("treeContainer");
+                    Tree.style.display = "block";
+                    g_currentClickedCell = clickedCell;
+                    g_currentCellIndex = ColumnIndex_TestCommand;
+                    if(g_currentClickedCell.hasOwnProperty('machineType') && g_currentClickedCell.hasOwnProperty('instruction'))
+                    {
+                        showParaInfo();
+                    }
                     break;
+
                 case ColumnIndex_Parameter:
                     console.log("Clicked Para");
+
+                    highlightSelectedCell(clickedCell);
+
+                    paraInfoBox.style.display = "none"; 
+                    paraInputBox.style.display = "block";
+                    
+                    g_currentClickedCell = clickedCell;
+                    g_currentCellIndex = ColumnIndex_Parameter;
+                    console.log(g_currentClickedCell.paras_object);
+                    showParaInput();
                     break;
+                    
                 case ColumnIndex_ExpectedValue:
-                    console.log("Clicked ExV");    
+                    console.log("Clicked ExV");
+                    highlightSelectedCell(clickedCell);
+                    g_currentClickedCell = clickedCell;
+                    g_currentCellIndex = ColumnIndex_ExpectedValue; 
+                    console.log(g_currentClickedCell.expectedVal_object);
+                    paraInfoBox.style.display = "none";
+                    
+                    showExpectedVal();
                     break;
+
                 default:
                     break;
             }
         }
     })
+
+    function highlightSelectedCell(_clickedCell)
+    {
+        document.querySelectorAll("td").forEach(td => {
+            td.classList.remove("selected-color");
+        })
+        document.querySelectorAll("tr").forEach(tr =>{
+            tr.classList.remove("selected-color");
+        })
+        _clickedCell.classList.add("selected-color");
+    }
+
 
     function addRow()
     {
@@ -670,13 +1262,14 @@
         const row_Number_Cell = document.createElement('td');
         const Test_Command_Cell = document.createElement('td');
         const Parameter_Cell = document.createElement('td');
+
         const Expected_Value = document.createElement('td');
 
-        let row_len = table.rows.length;
+        let row_len = table.rows.length+1;
         row_Number_Cell.textContent = String(row_len);
         
         Test_Command_Cell.textContent = "Text" + String(row_len);
-
+        Parameter_Cell.changeFlag = 1;
 
         row.appendChild(row_Number_Cell);
         row.appendChild(Test_Command_Cell);
@@ -702,7 +1295,7 @@
         {
             let row = Table.rows[i];
             let Number_Cell = row.cells[0];
-            Number_Cell.textContent = String(i);
+            Number_Cell.textContent = String(i + 1);
         }
     }
     
@@ -782,31 +1375,128 @@
         }
     }
 
+    document.querySelectorAll(".tree li").forEach(item => {
+        item.addEventListener("click", function(e){
+            e.stopPropagation();
+            if(this.querySelector("ul"))
+            {
+                this.classList.toggle("expanded");
+            }
+        });
+
+        // if (item.querySelector("ul")) {
+        //     item.addEventListener("click", function (e) {
+        //         e.stopPropagation(); // 防止事件冒泡
+        //         this.classList.toggle("expanded");
+        //     });
+        // }
+    });
+
+    function recordTableInJSON()
+    {
+        let jsonObject = {};
+        jsonObject["Test_Item_Number"] = {};
+        
+        const table = document.getElementById("tableContainer");
+        for(let i = 0 ; i < table.rows.length ; i++)
+        {
+            const row = table.rows[i];
+            
+            const Num_Cell = row.cells[0];
+            const Cmd_Cell = row.cells[1];
+            const Para_Cell = row.cells[2];
+            const ExpVal_Cell = row.cells[3];
+            
+            jsonObject["Test_Item_Number"][Num_Cell.textContent] = {};
+            jsonObject["Test_Item_Number"][Num_Cell.textContent]["Test_Command"] = Cmd_Cell.textContent;
+            
+            for(const key in Para_Cell.paras_object)
+            {
+                jsonObject["Test_Item_Number"][Num_Cell.textContent][key] = Para_Cell.paras_object[key];
+            }
+            
+            for(const key in ExpVal_Cell.expectedVal_object)
+            {
+                jsonObject["Test_Item_Number"][Num_Cell.textContent][key] = ExpVal_Cell.expectedVal_object[key];
+            }
+            // console.log(jsonObject);
+        }
+        return jsonObject;
+    }
+
+    async function newFileSave()
+    {
+        //record data in table
+        const tableJsonObject = recordTableInJSON();
+        
+        //get new file name
+        const filename_str = document.getElementById("filename_input").value;
+
+        //combine two data into one json object
+        let transferJson = {};
+        transferJson.table = tableJsonObject;
+        transferJson.filename = filename_str + ".json";
+        console.log(transferJson);
+
+        //transfer jsonObject to server
+        const response = await fetch('/api/saveNewTestItem', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body:JSON.stringify(transferJson)
+        });
+        const res_data = await response.json();
+    }
+    
     async function RunTestItem()
     {
-        const response = await fetch('/api/Mock_enter_pressed', {
+        const response = await fetch('/api/Run_TestItem', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body:JSON.stringify({"pressed" : 1})
         });
+        
+        Run_Flag = 1;
+        oldRunningID = -1;
     }
-    //  const data = {
-    //   "用戶資料": { "name": "Alice", "age": 25 },
-    //   "設定": { "theme": "dark", "notifications": true },
-    //   "儀表板": { "widgets": 5 }
-    // };
+    
+    async function update_ui_stage()
+    {
+        const table = document.getElementById("tableContainer");
+        if(Run_Flag == 1)
+        {
+            const response = await fetch('/api/ui_update_TestItem');
+            if(!response.ok){
+                throw new Error("[Failed]instruction set loading");
+            }
+            const res_data = await response.json();
+            console.log("step_idx : " + res_data["step_idx"]);
 
-    // const container = document.getElementById('cardContainer');
+            const current_id = res_data["step_idx"];
+            console.log("row_len : " + table.rows.length);
+            if(current_id < table.rows.length + 1)
+            {
+                if(oldRunningID !== current_id)
+                {
+                    document.querySelectorAll("td").forEach(tr =>{tr.classList.remove("selected-color");})
+                    document.querySelectorAll("tr").forEach(tr =>{tr.classList.remove("selected-color");})
+                    document.querySelectorAll("tr").forEach(tr =>{tr.classList.remove("running-task");})
 
-    // // 針對每個 key 產生一張卡片
-    // Object.keys(data).forEach(key => {
-    //   const card = document.createElement('div');
-    //   card.className = 'card';
-    //   card.innerText = key;
-    //   card.addEventListener('click', () => {
-    //     alert('你點了「' + key + '」');
-    //   });
-    //   container.appendChild(card);
-    // });
+
+                    const currentRow = table.rows[current_id];
+                    if(currentRow.classList.contains("running-task"))
+                    {
+                        currentRow.classList.remove("running-task");
+                    }
+                    else
+                    {
+                        currentRow.classList.add("running-task");
+                    }
+
+                    oldRunningID = current_id;
+                }
+            }
+        }
+    }
+
 </script>
 </html>

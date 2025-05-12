@@ -1,0 +1,25 @@
+{
+    "Test_Item_Number": {
+        "1": {
+            "Test_Command": "ReadDWAM_Frequency",
+            "Para1": "Q",
+            "RangeMax": "Cc",
+            "RangeMin": "qq"
+        },
+        "2": {
+            "Test_Command": "ReadCAN_Command",
+            "Para1": "zzz",
+            "Para2": "aq"
+        },
+        "3": {
+            "Test_Command": "SetDCL_CCIout_L1",
+            "Para1": "asd",
+            "Para2": "zczx"
+        },
+        "4": {
+            "Test_Command": "SetDCL_CV_Ilimit",
+            "Para1": "1123",
+            "Para2": "asdas"
+        }
+    }
+}
