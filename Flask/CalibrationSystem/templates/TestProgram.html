@@ -703,7 +703,7 @@
 
 <script>
     /**
-     * testItem_Cell's property : testItem
+     * 
     */
     let Run_Flag = 0;
     let oldRunningID = -1;
@@ -757,7 +757,6 @@
                         console.log(onlyOwnText);
 
                         g_currentClickedCell.textContent = onlyOwnText;
-                        g_currentClickedCell.testItem = onlyOwnText;
                     }
                 }
             })
@@ -803,7 +802,7 @@
                 {
                     selectedFileName_withoutSubName = selectedFileName_withSubName.substring(0, index);   
                 }
-                document.getElementById("filename_input").value = selectedFileName_withSubName;
+                document.getElementById("filename_input").value = selectedFileName_withoutSubName;
                 get_test_program_file_content(selectedFileName_withSubName);
             });
             cardContainer.appendChild(card);
@@ -831,7 +830,23 @@
         console.log(testPrograms);
         for(const key in testPrograms)
         {
+            const new_row = document.createElement('tr');
             
+            const row_Number_Cell = document.createElement('td');
+            const Test_Item_Cell = document.createElement('td');
+            const dummy_Cell = document.createElement('td');
+
+            row_Number_Cell.textContent = key;
+
+            Test_Item_Cell.textContent = testPrograms[key];
+            
+            dummy_Cell.textContent = "";
+
+            new_row.appendChild(row_Number_Cell);
+            new_row.appendChild(Test_Item_Cell);
+            new_row.appendChild(dummy_Cell);
+
+            table.appendChild(new_row);
         }
     }
 
@@ -1086,6 +1101,10 @@
         });
         Run_Flag = 1;
         oldRunningID = -1;
+
+        document.querySelectorAll("td").forEach(tr =>{tr.classList.remove("selected-color");})
+        document.querySelectorAll("tr").forEach(tr =>{tr.classList.remove("selected-color");})
+        document.querySelectorAll("tr").forEach(tr =>{tr.classList.remove("running-task");})
     }
 
     async function update_ui_stage()
@@ -1113,9 +1132,18 @@
 
                 if(oldRunningID !== current_id)
                 {
-                    document.querySelectorAll("td").forEach(tr =>{tr.classList.remove("selected-color");})
-                    document.querySelectorAll("tr").forEach(tr =>{tr.classList.remove("selected-color");})
-                    document.querySelectorAll("tr").forEach(tr =>{tr.classList.remove("running-task");})
+                    if(oldRunningID > -1)
+                    {
+                        const oldRow = table.rows[oldRunningID];
+                        if(oldRow.classList.contains("running-task"))
+                        {
+                            oldRow.classList.remove("running-task");
+                        }   
+                        else
+                        {
+                            
+                        }
+                    }
 
                     const currentRow = table.rows[current_id];
                     if(currentRow.classList.contains("running-task"))

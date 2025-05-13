@@ -119,8 +119,9 @@ app = Flask(__name__)
 c_lib_Cali = ctypes.CDLL('./Cali_Code/Cali.so')
 #c_lib_Search_Device = ctypes.CDLL('./Clib/Cali_Code/Auto_Search_Device.so')
 
-DEBUG_MODE = 0 #DEBUG_MODE == 1, means it can run without DUT ; DEBUG_MODE = 0 means it needs to connect DUT to run
-DEBUG_DEVICE = 0 #DEBUG_DEVICE == 1, means it can run without any device ; DEBUG_DEVICE == 0, means it needs to connect device to run
+DEBUG_MODE = 0      #DEBUG_MODE == 1, means it can run without DUT ; DEBUG_MODE = 0 means it needs to connect DUT to run
+DEBUG_DEVICE = 0    #DEBUG_DEVICE == 1, means it can run without any device ; DEBUG_DEVICE == 0, means it needs to connect device to run
+DEBUG_TESTITEM = 1  #DEBUG_TESTITEM == 1, means it can run without any device ; DEBUG_TESTITEM == 0, means it needs to connect device to run
 Debug_Enter_pressed = 0
 
 ##################################################
@@ -712,50 +713,53 @@ def thread_Run_TestItems():
         if g_rangemin:
             c_lib_Cali.Check_UI_RangeMin(str(g_rangemin).encode("utf-8"))
 
-        if g_cmd.startswith("Set"):
-            c_lib_Cali.Set_Command_Process()
-        
-        elif g_cmd.startswith("Read"):
-            c_lib_Cali.Read_Command_Process()
-            TargetResult_Value = getDeviceMeasureValue()
-            TargetResult_Value_str = f"{TargetResult_Value:.3f}"
+        if(DEBUG_TESTITEM == 0): #Real run
+            if g_cmd.startswith("Set"):
+                c_lib_Cali.Set_Command_Process()
+            
+            elif g_cmd.startswith("Read"):
+                c_lib_Cali.Read_Command_Process()
+                TargetResult_Value = getDeviceMeasureValue()
+                TargetResult_Value_str = f"{TargetResult_Value:.3f}"
 
-            if g_rangemin and g_rangemax:
-                try:
-                    min_val = float(g_rangemin)
-                    max_val = float(g_rangemax)
-                    if min_val <= TargetResult_Value <= max_val:
-                        print(f"✅ Step {idx} 測量值 {TargetResult_Value_str} 在範圍 {min_val} ~ {max_val} 內")
+                if g_rangemin and g_rangemax:
+                    try:
+                        min_val = float(g_rangemin)
+                        max_val = float(g_rangemax)
+                        if min_val <= TargetResult_Value <= max_val:
+                            print(f"✅ Step {idx} 測量值 {TargetResult_Value_str} 在範圍 {min_val} ~ {max_val} 內")
+                        else:
+                            print(f"❌ Step {idx} 測量值 {TargetResult_Value_str} 超出範圍 {min_val} ~ {max_val}")
+                    except ValueError:
+                        print(f"⚠️ Step {idx} RangeMin 或 RangeMax 格式錯誤：{g_rangemin}, {g_rangemax}")
+
+            elif g_cmd in ["DelayS", "DelayMS"]:
+                handle_common_command(g_cmd, g_para1)
+
+            elif g_cmd == "Goto":
+                target_step = g_para1
+                repeat_count = int(g_para2) if g_para2.isdigit() else 1
+                counter = goto_counters.get(idx, 0)
+
+                if counter < repeat_count:
+                    goto_counters[idx] = counter + 1
+                    if target_step in Test_Item_json["Test_Item_Number"]:
+                        step_idx_testItem = step_keys.index(target_step)
+                        print(f"🔁 Goto Step {target_step}, 第 {counter + 1}/{repeat_count} 次")
+                        continue
                     else:
-                        print(f"❌ Step {idx} 測量值 {TargetResult_Value_str} 超出範圍 {min_val} ~ {max_val}")
-                except ValueError:
-                    print(f"⚠️ Step {idx} RangeMin 或 RangeMax 格式錯誤：{g_rangemin}, {g_rangemax}")
-
-        elif g_cmd in ["DelayS", "DelayMS"]:
-            handle_common_command(g_cmd, g_para1)
-
-        elif g_cmd == "Goto":
-            target_step = g_para1
-            repeat_count = int(g_para2) if g_para2.isdigit() else 1
-            counter = goto_counters.get(idx, 0)
-
-            if counter < repeat_count:
-                goto_counters[idx] = counter + 1
-                if target_step in Test_Item_json["Test_Item_Number"]:
-                    step_idx_testItem = step_keys.index(target_step)
-                    print(f"🔁 Goto Step {target_step}, 第 {counter + 1}/{repeat_count} 次")
-                    continue
+                        print(f"❌ Goto 指定步驟不存在：{target_step}")
                 else:
-                    print(f"❌ Goto 指定步驟不存在：{target_step}")
+                    print(f"✅ Goto 已執行 {repeat_count} 次，繼續下一步")
             else:
-                print(f"✅ Goto 已執行 {repeat_count} 次，繼續下一步")
-        else:
-            print(f"未定義指令處理：{g_cmd}")
+                print(f"未定義指令處理：{g_cmd}")
 
+        
+            while c_lib_Cali.Get_Command_Flag() != 0:
+                time.sleep(0.1)
 
-        while c_lib_Cali.Get_Command_Flag() != 0:
-            time.sleep(0.1)
-        # time.sleep(1)
+        elif(DEBUG_TESTITEM == 1):
+            time.sleep(1)
         step_idx_testItem += 1
     return
 

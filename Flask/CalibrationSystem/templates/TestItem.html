@@ -1540,6 +1540,10 @@
         
         Run_Flag = 1;
         oldRunningID = -1;
+
+        document.querySelectorAll("td").forEach(tr =>{tr.classList.remove("selected-color");})
+        document.querySelectorAll("tr").forEach(tr =>{tr.classList.remove("selected-color");})
+        document.querySelectorAll("tr").forEach(tr =>{tr.classList.remove("running-task");})
     }
     
     async function update_ui_stage()
@@ -1567,12 +1571,21 @@
 
                 if(oldRunningID !== current_id)
                 {
-                    document.querySelectorAll("td").forEach(tr =>{tr.classList.remove("selected-color");})
-                    document.querySelectorAll("tr").forEach(tr =>{tr.classList.remove("selected-color");})
-                    document.querySelectorAll("tr").forEach(tr =>{tr.classList.remove("running-task");})
-
-
+                    const oldRow = table.rows[oldRunningID];
                     const currentRow = table.rows[current_id];
+                    
+                    if(oldRunningID > -1){
+                        if(oldRow.classList.contains("running-task"))
+                        {
+                            oldRow.classList.remove("running-task");    
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                    
+
                     if(currentRow.classList.contains("running-task"))
                     {
                         currentRow.classList.remove("running-task");
