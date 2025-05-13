@@ -77,14 +77,14 @@
         "14": {
             "Test_Command": "ReadDWAM_Vrms",
             "Para1": "DWAM0",
-            "RangeMax":"202.3",
-            "RangeMin":"197.7"
+            "RangeMax": "202.3",
+            "RangeMin": "197.7"
         },
         "15": {
             "Test_Command": "ReadDWAM_Frequency",
             "Para1": "DWAM0",
-            "RangeMax":"50.5",
-            "RangeMin":"49.5"
+            "RangeMax": "50.5",
+            "RangeMin": "49.5"
         },
         "16": {
             "Test_Command": "ReadDMM_BinaryData(Chroma 51101)",
@@ -93,8 +93,8 @@
             "Para3": "0",
             "Para4": "1",
             "Para5": "1",
-            "RangeMax":"55.68",
-            "RangeMin":"54.72"
+            "RangeMax": "55.68",
+            "RangeMin": "54.72"
         },
         "17": {
             "Test_Command": "SetACS_OFF",

@@ -93,11 +93,12 @@ FINE_SETTING_JSON_FILE_PATH = "./DeviceConfig/Fine_setting.json"
 Devices_setting = {} #For current linked devices
 
 #Instruction Set
-INSTRUCTION_SET_DESCRIPTION_FILE_PATH = "./InstructionSet/InstructionSet.json"
-
+# INSTRUCTION_SET_DESCRIPTION_FILE_PATH = "./InstructionSet/InstructionSet.json"
+INSTRUCTION_SET_DESCRIPTION_FILE_PATH = "./InstructionSet/InstructionSet_new.json"
 #Test Item
 TEST_ITEM_DIR_PATH = "./TestItem"
 TEST_ITEM_FILE_PATH = "./TestItem/NTN-5K.json"
+TestItem_FilePath = ""
 step_idx = 0
 
 #Password
@@ -648,8 +649,10 @@ def GetCaliPointTarget(_cali_point_object, _device_name):
 
 def thread_Run_TestItems():
     global step_idx
+    global TestItem_FilePath
     #Load Json
-    with open(TEST_ITEM_FILE_PATH, "r", encoding="utf-8") as file:
+    # with open(TEST_ITEM_FILE_PATH, "r", encoding="utf-8") as file:
+    with open(TestItem_FilePath, "r", encoding="utf-8") as file:
         Test_Item_json = json.load(file)
     with open("./DeviceConfig/DeviceConfig.json", "r", encoding="utf-8") as file:
         device_config = json.load(file) 
@@ -767,6 +770,10 @@ def Calibration_schedule():
 @app.route('/TestItem')
 def TestItem():
     return render_template('TestItem.html')
+
+@app.route('/TestProgram')
+def TestProgram():
+    return render_template('TestProgram.html')
 ##################################################
 # WebAPI
 ##################################################
@@ -1244,25 +1251,30 @@ def handle_get_instruction_set():
         InstructionSet_JSON = json.load(file)
 
     json_str = json.dumps(InstructionSet_JSON, indent=4, ensure_ascii=False)
-    print(InstructionSet_JSON)
+    # print(InstructionSet_JSON)
     return jsonify(InstructionSet_JSON), 200
 
 @app.route('/api/saveNewTestItem', methods=['POST'])
 def handle_saveNewTestItem():
-    if request.is_json:
-        Json_obj = request.get_json()
-        json_str = json.dumps(Json_obj, indent=4, ensure_ascii=False)
-        print(json_str)
+    try:
+        if request.is_json:
+            Json_obj = request.get_json()
+            json_str = json.dumps(Json_obj, indent=4, ensure_ascii=False)
+            print(json_str)
 
-        print(Json_obj["filename"])
+            print(Json_obj["filename"])
+            
+            new_TestItem_FilePath = os.path.join(TEST_ITEM_DIR_PATH, Json_obj["filename"])
+            
+            TestItem_Json = Json_obj["table"]
+            with open(new_TestItem_FilePath, "w", encoding="utf-8") as f:
+                json.dump(TestItem_Json, f, indent=4, ensure_ascii=False)
+            
+            return jsonify({"done_flag" : 1}), 200
         
-        new_TestItem_FilePath = os.path.join(TEST_ITEM_DIR_PATH, Json_obj["filename"])
-        
-        TestItem_Json = Json_obj["table"]
-        with open(new_TestItem_FilePath, "w", encoding="utf-8") as f:
-            json.dump(TestItem_Json, f, indent=4, ensure_ascii=False)
-        
-    return jsonify({}), 200
+    except Exception as e:
+        return jsonify({'done_flag' : 0}), 400
+
 
 @app.route('/api/get_test_item_file_names', methods=['GET'])
 def handle_get_test_item_file_names():
@@ -1292,6 +1304,12 @@ def handle_get_test_item_file_content():
 
 @app.route('/api/Run_TestItem', methods=['POST'])
 def handle_Run_TestItem():
+    global TestItem_FilePath
+    filenameJson = request.get_json()
+    filename_withSubName = filenameJson["filename"]
+    TestItem_FilePath = os.path.join(TEST_ITEM_DIR_PATH, filename_withSubName)
+    print(TestItem_FilePath)
+
     thread = Thread(target=thread_Run_TestItems)
     thread.daemon = True
     thread.start()
@@ -1302,6 +1320,15 @@ def handle_Run_TestItem():
 def handle_ui_update_TestItem():
     global step_idx
     return jsonify({"step_idx" : step_idx}), 200
+
+@app.route('/api/get_TestItem_set', methods=['GET'])
+def handle_get_TestItem_set():
+    filenames = os.listdir(TEST_ITEM_DIR_PATH)
+    
+    for file in filenames:
+        print(file)
+    return jsonify({"filename_list" : filenames}), 200
+
 ##################################################
 # debug
 ##################################################

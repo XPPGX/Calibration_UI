@@ -1,0 +1,299 @@
+{
+    "AC_Source":{
+        "SetACS_Vout":{
+            "Para1": "儀器代號",
+            "Para2": "Vout value"
+        },
+        "SetACS_Frequency":{
+            "Para1": "儀器代號",
+            "Para2": "Frequency value"
+        },
+        "SetACS_ON":{
+            "Para1": "儀器代號"
+        },
+        "SetACS_OFF":{
+            "Para1": "儀器代號"
+        }
+    },
+    "DC_Load":{
+        "SetDCL_CCIout_L1":{
+            "Para1": "儀器代號",
+            "Para2": "CC mode L1 Iout value"
+        },
+        "SetDCL_CCIout_L2":{
+            "Para1": "儀器代號",
+            "Para2": "CC mode L2 Iout value"
+        },
+        "SetDCL_CVVout_L1":{
+            "Para1": "儀器代號",
+            "Para2": "CV mode L1 Vout value"
+        },
+        "SetDCL_CVVout_L2":{
+            "Para1": "儀器代號",
+            "Para2": "CV mode L2 Vout value"
+        },
+        "SetDCL_CV_Ilimit":{
+            "Para1": "儀器代號",
+            "Para2": "CV mode Ilimit value"
+        },
+        "SetDCL_ON":{
+            "Para1": "儀器代號"
+        },
+        "SetDCL_OFF":{
+            "Para1": "儀器代號"
+        }
+    },
+    "Power_meter":{
+        "ReadDWAM_Vrms":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Vdc":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Vpeak+":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Vpeak-":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_VTHD":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Irms":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Idc":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Ipeak+":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Ipeak-":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_ITHD":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_IINRUSH":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Preal":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Pfactor":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Pdc":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Frequency":{
+            "Para1": "儀器代號",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "SetDWAM_CT_ON":{
+            "Para1":"儀器代號"
+        },
+        "SetDWAM_CT_OFF":{
+            "Para1":"儀器代號"
+        },
+        "SetDWAM_CT_Ratio":{
+            "Para1":"儀器代號",
+            "Para2":"CT Ratio value"
+        },
+        "ReadDWAM_Vrms_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Vdc_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Vpeak+_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Vpeak-_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_VTHD_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Irms_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Idc_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Ipeak+_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Ipeak-_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_ITHD_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_IINRUSH_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Preal_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Pfactor_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Pdc_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDWAM_Frequency_CH":{
+            "Para1": "儀器代號",
+            "Para2": "Channel number(1~4)",
+            "Options2": ["Ch1", "Ch2", "Ch3", "Ch4"],
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        }
+    },
+    "Meter":{
+        "ReadDMM_V":{
+            "Para1": "儀器代號",
+            "Para2": "Value Gain",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "ReadDMM_BinaryData(Chroma 51101)":{
+            "Para1": "儀器代號",
+            "Para2": "Chroma 51101-8 Command",
+            "Para3": "Chroma 51101-8 Value",
+            "Para4": "Chroma 51101-8 Data length(0 or 1)",
+            "Options4": ["0", "1"],
+            "Para5": "Value Gain",
+            "RangeMax" : "上限值",
+            "RangeMin" : "下限值"
+        },
+        "SetDMM_BinaryData(Chroma 51101)":{
+            "Para1": "儀器代號",
+            "Para2": "Chroma 51101-8 Command",
+            "Para3": "Chroma 51101-8 Value",
+            "Para4": "Chroma 51101-8 Value",
+            "Para5": "Chroma 51101-8 Data length(1 or 2)",
+            "Options5": ["1", "2"]
+        }
+    },
+    "CANBUS_Device":{
+        "SetCAN_Command":{
+            "Para1": "CAN ID",
+            "Para2": "CAN DLC",
+            "Para3": "CAN command",
+            "Para4": "CAN Data"
+        },
+        "ReadCAN_Command" : {
+            "Para1": "CAN ID",
+            "Para2": "CAN command"
+        }
+    },
+    "MODBUS_Device":{
+        "SetMOD_Command":{
+            "Para1": "MOD ID",
+            "Para2": "MOD command",
+            "Para3": "MOD Data"
+        },
+        "ReadMOD_Command":{
+            "Para1": "儀器代號",
+            "Para2": "MOD command"
+        }
+    },
+    "General_Command":{
+        "DelayS":{
+            "Para1":"秒(s)"
+        },
+        "DelayMS":{
+            "Para1":"秒(s)"
+        },
+        "Goto":{
+            "Para1":"指定步驟",
+            "Para2":"循環次數"
+        }
+    }
+}

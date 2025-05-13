@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <title>校正治具</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="{{url_for('static', filename='js/navbar.js')}}"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-top: 60px; /* 留出空間給固定的navbar */
+            background: #d3d3d3; /* 漸變背景色 */
+            height: 100%; /* 讓背景覆蓋整個螢幕 */
+        }
+        /* 每一行設置 */
+        .row {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            position: relative;
+            gap:20px;
+            width: 100%;
+        }
+
+        .text {
+            padding: 5px;
+            color: white;
+        }
+        
+        .text.left{
+            width: 100px;
+            text-align: left;
+        }
+        .text.right{
+            width: 300px;
+            text-align: left;
+            border: 1px solid white;
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup-box {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .popup-box button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        
+        #content{
+            display: none;
+            flex-direction: column; /*上下排列*/
+            padding: 10px;
+            font-size: 18px;
+        }
+
+        .top-buttonSection{
+            display: flex;
+            flex-direction: row;
+            padding:10px;
+            justify-content: center;
+            gap:40px;
+
+        }
+
+        .spacer{
+            flex-grow: 1;
+        }
+
+        .left-group{
+            display: flex;
+            gap: 10px;
+            padding-right: 10%;
+            align-items: center;
+        }
+        .left-group > *{
+            height: 30px; /* 或你想要的數值 */
+            box-sizing: border-box;
+        }
+        .left-group > label{
+            display: flex;
+            align-items: center;      /* 垂直置中 */
+            height: 40px;             /* 視需要設定高度 */
+        }
+
+        .center-group{
+            display: flex;
+            gap: 20px;
+        }
+
+        .main-section {
+            display: flex;
+            flex-direction: row; /* 左右排 */
+            gap: 5px;
+            font-size: 18px;
+        }
+
+        .left-container{
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+        }
+        .top {
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* 增加間距 */
+        }
+        .right-container{
+            width: 40%;
+            padding-left: 2%;
+        }
+
+        .arrow-button{
+            font-size: 24px;
+            padding: 8px 16px;
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            min-width: 60px;
+        }
+        
+        .arrow-button:hover{
+            background-color: #1976d2;
+        }
+
+
+        .icon-button {
+            font-size: 20px;
+            padding: 8px 16px;
+            background-color: olivedrab;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            min-width: 60px;
+        }
+
+        .icon-button.minus {
+            background-color: red;
+        }
+
+        .icon-button.run{
+            background-color: #4caf50;
+        }
+
+        .icon-button:hover {
+            opacity: 0.5;
+        }
+
+        .box{
+            width: 80%;
+            height: 600px;
+            border: 2px solid #333;
+            background-color: white;
+            margin-bottom: 20px;
+            padding: 10px;
+            overflow: auto;
+        }
+
+
+        button:hover,
+        button.space-hover{
+            background-color: gray;
+        }
+        
+
+        .button_manual_auto {
+            background-color: #5db860;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 25px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            width: 150px;
+            height: 50px;
+        }
+
+        .text_in_container {
+            font-size: 30px;
+            color: black;
+            margin-left: 10px; /* 按鈕和文字之間的距離 */
+        }
+
+    
+        .button_start{
+            position: absolute;
+            top:0;
+            left:calc(50%);
+            background-color: #e4f584;
+            color: black;
+            border: none;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 35px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            width: 400px;
+            height: 100%;
+        }
+
+        .border_with_corner{
+            position: absolute;
+            top: 0;
+            left: calc(50%);
+            margin-left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 400px;
+            height: 50px;
+            border: 1px solid #000000;
+            border-radius: 10px;
+            background-color: #f4f4f4;
+        }
+
+        .text_coarsen_refine{
+            font-weight: bold;
+            font-size: 50px;
+            background-color: #d3d3d3;
+            border: 1px solid #000000;
+            border-radius: 10px;
+        }
+        .separator{
+            border-top: 2px solid #333;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .bottom{
+            display: flex;
+            flex-direction: column;
+            gap:10px;
+        }
+        .text_result{
+            margin-left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 300px;
+            border: 1px solid #000000;
+            border-radius: 10px;
+            background-color: #f4f4f4;
+            font-size: 50px;
+            font-weight: bold;
+        }
+
+        .text_equipment{
+           color: purple;    
+           font-weight: bold;
+        }
+        .row-equipment{
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            position: relative;
+            gap:20px;
+            width: 100%;
+        }
+        .row_equipment_border_with_corner{
+            /* position: absolute;
+            top: 0;
+            left: calc(30%); */
+            margin-left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            border: 1px solid #000000;
+            border-radius: 10px;
+            background-color: #f4f4f4;
+        }
+        .valueText{
+            width: 400px;
+        }
+        .row_equipment_Unit{
+            /* position: absolute;
+            top: 0;
+            left: calc(100%); */
+            margin-left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 10%;
+            height: 100%;
+            font-size: 24px;
+        }
+        .text-progress{
+            font-size: 30px;
+            color: black;
+            margin-left: 10px; /* 按鈕和文字之間的距離 */
+            margin-top: 60px;
+            font-weight: bold;
+        }
+
+        .task-list-container {
+            max-width: 100%;
+            margin-right: 10%;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            height: 300px;
+            width: 90%;
+            overflow-y: auto;
+        }
+
+        .task-item{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .task-item:last-child{
+            border-bottom: none;
+        }
+
+        .task-name{
+            font-size : 25px;
+        }
+
+        .task-status{
+            font-size: 20px;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: #fff;
+        }
+
+        .status-running{
+            background-color: #475569;
+        }
+
+        .status-ok{
+            background-color: #4caf50;
+        }
+
+        .status-fail{
+            background-color: #f44336;
+        }
+
+        .dialog-box {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            width: 300px;
+        }
+
+        /* 設置背景遮罩 */
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .dialog-box .row{
+            display: flex;
+            width: 100%;
+            justify-content: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .dialog-box .left{
+            display: flex;
+            flex: 4;
+            align-items: center;      /* 垂直置中 */
+            height: 100%;
+        }
+
+        .dialog-box .right{
+            display: flex;
+            flex: 6;
+            justify-content: center;  /* 水平置中 */
+            align-items: center;      /* 垂直置中 */
+            height: 100%;
+        }
+
+        .dialog-box button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .dialog-box button:hover {
+            background-color: #45a049;
+        }
+
+
+        .custom-checkbox {
+            position: relative;
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+        }
+
+        .custom-checkbox input[type="checkbox"] {
+            position: absolute;
+            width: 0;
+            height: 0;
+            opacity: 0;
+        }
+
+        .custom-checkbox span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            border: 2px solid #007BFF;
+            border-radius: 4px; /* 圓角 */
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox span:after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background-color: #007BFF;
+            border-radius: 2px;
+            transform: scale(0) translate(-50%, -50%);
+            transition: all 0.3s ease;
+        }
+
+        .green-bg{
+            background-color: lightgreen;
+        }
+        .red-bg{
+            background-color: lightcoral;
+        }
+
+        .scroll-wrapper {
+            max-height: 750px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+        }
+
+        table{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top : 0px;
+        }
+        th, td{
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th:nth-child(1), td:nth-child(1) {width: 10%;}
+        th:nth-child(2), td:nth-child(2) {width: 50%;}
+        th:nth-child(3), td:nth-child(3) {width: 20%;}
+        th:nth-child(4), td:nth-child(4) {width: 20%;}
+
+        th{
+            background-color: #f4f4f4;
+        }
+
+        td{
+            background-color: #f4f4f4;
+        }
+        
+        td.selected-color{
+            background-color: #e4f584;
+        }
+
+        td:hover{
+            background-color: #d0e6ff;
+            cursor: pointer;
+        }
+
+        tr.selected-color td{
+            background-color: #e4f584 !important; /*Let row color cover the cell*/
+        }
+
+        tr.running-task td {
+            background-color: #007bff !important; /* Blue means is currently executing */
+            color: white;
+        }
+
+        .completed{
+            background-color: #d4edda;
+        }
+        .completed-tag{
+            background-color: green;
+            color: white;
+            padding: 3px 6px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .table-label{
+            font-size:14px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            width: fit-content;
+        }
+        
+        .tree{
+            display: none;
+        }
+
+        .tree ul{
+            list-style: none;
+            padding-left: 10px;
+        }
+        .tree li{
+            cursor: pointer;
+            position: relative;
+        }
+        .tree > ul > li::before {
+            content: "▸";
+            position: absolute;
+            left: -15px;
+            transition: transform 0.2s;
+        }
+        .tree > ul > li.expanded::before {
+            transform: rotate(90deg);
+        }
+
+        .tree ul {
+            display: none;
+        }
+
+        .tree li.expanded > ul {
+            display: block;
+        }
+
+        .tree > ul {
+            display: block;
+        }
+
+        .tree-selected{
+            background-color: lightblue;
+            cursor: pointer;
+        }
+
+        .message-box {
+            padding: 10px;
+            width: 80%;
+            white-space: pre-line;
+        }
+
+        .parameter-input {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            font-size: 16px;
+            width:80%;
+        }
+
+        .parameter-input label {
+            font-weight: bold;
+        }
+
+        .parameter-input input {
+            padding: 4px;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+        }
+
+        .file-card-container{
+            display: block;
+            /* flex-wrap: wrap; */
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            /* overflow-x: hidden; */
+        }
+
+        .file-card {
+            border: 1px solid #888;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+            transition: background 0.2s;
+        }
+
+        .file-card:hover {
+            background-color: #eef;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="navbar">
+        {% include 'navbar.html' %}
+    </div>
+    
+    <div id="popup" class="popup-overlay">
+        <div class="popup-box" id="initChoices">
+            <p>請選擇一個選項</p>
+            <button onclick="handleChoice('New')">New TestProgram</button>
+            <button onclick="handleChoice('Open')">Open TestProgram</button>
+        </div>
+        <div class="popup-box" id="fileSelector" style="display: none;">
+            <h3>Select a file</h3>
+            <div id="fileCardContainers" class="file-card-container">
+
+            </div>
+        </div>
+    </div>
+
+    <div id="content">
+        <div class="top-buttonSection">
+            <div class="left-group">
+                <label for="filename">File Name:</label>
+                <input type="text" placeholder="FileName" id="filename_input">
+                <button onclick="newFileSave()">另存新檔</button>
+            </div>
+            <div class="center-group">
+                <button class="arrow-button" onclick="moveRowUpward()">↑</button>
+                <button class="arrow-button" onclick="moveRowDownward()">↓</button>
+                <button class="icon-button" onclick="addRow()">+</button>
+                <button class="icon-button minus" onclick="deleteRow()">-</button>
+                <button class="icon-button run" onclick="RunTestItem()">Run</button>
+            </div>
+        </div>
+
+        <div class="main-section">
+            <div class="left-container">
+                <div class="scroll-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Test Item</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableContainer" class="table-container">
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="right-container">
+                <div class="box">
+                    <div class="tree" id="treeContainer">
+                    
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+    /**
+     * 
+    */
+    let Run_Flag = 0;
+    let oldRunningID = -1;
+    let selectedFileName_withSubName = "";
+
+    const ColumnIndex_NO            = 0;
+    const ColumnIndex_TestCommand   = 1;
+
+    let g_currentCellIndex;
+    let g_currentClickedCell;
+    
+    document.addEventListener('DOMContentLoaded', async function(){
+        const response = await fetch('/api/get_TestItem_set');
+        if(!response.ok){
+            throw new Error("[Failed]TestItem set loading");
+        }
+        const res_data = await response.json();
+        const fileName_List = res_data["filename_list"];
+        console.log(res_data);
+        buildTestItemTree(fileName_List);
+    });
+
+    function buildTestItemTree(fileName_List)
+    {
+        const TestItemNum = Object.keys(fileName_List).length;
+        console.log("TestItemNum = " + TestItemNum);
+        
+        const ul_outer = document.createElement("ul");
+        
+        for(const filename of fileName_List)
+        {
+            const filename_withoutSubName = filename.substring(0, filename.lastIndexOf('.'));
+            console.log(filename);
+        }
+        
+    }
+
+    async function handleChoice(option) {
+        console.log("你選擇了：" + option);
+        document.getElementById('initChoices').style.display = 'none';
+        
+        initWeb(option);
+    }
+
+    async function initWeb(option)
+    {
+        if(option === "Open")
+        {
+            /**
+             * 1. readDir and selected file
+             * 2. show filename
+             * 3. the file content in table 
+            */
+            document.getElementById('fileSelector').style.display = "block";
+            fileSelector();
+            document.getElementById('content').style.display = 'block';
+        }
+        else
+        {
+            document.getElementById('popup').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
+    }
+
+    document.getElementById("tableContainer").addEventListener("click", async function(event){
+        if(event.target.tagName === "TD" && Run_Flag !== 1)
+        {
+            const clickedCell = event.target;
+            const columnIndex = clickedCell.cellIndex;
+            const paraInfoBox = document.getElementById("MessageBox");
+            const paraInputBox = document.getElementById("MessageInputBox");
+
+            switch(columnIndex)
+            {
+                case ColumnIndex_NO:
+                    const clickedRow = clickedCell.closest("tr");
+                    console.log(clickedRow);
+                    document.querySelectorAll("td").forEach(td =>{
+                        td.classList.remove("selected-color");
+                    })
+
+                    if(clickedRow.classList.contains("selected-color")){
+                        clickedRow.classList.remove("selected-color");
+                    }
+                    else{
+                        clickedRow.classList.add("selected-color");
+                    }
+
+                    g_currentClickedCell = clickedCell;
+                    g_currentCellIndex = ColumnIndex_NO;
+                    console.log("Clicked NO");
+                    break;
+
+                case ColumnIndex_TestCommand:
+                    console.log("Clicked TestCMD");
+                    
+                    highlightSelectedCell(clickedCell);
+
+                    const Tree = document.getElementById("treeContainer");
+                    Tree.style.display = "block";
+                    g_currentClickedCell = clickedCell;
+                    g_currentCellIndex = ColumnIndex_TestCommand;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    })
+
+    function highlightSelectedCell(_clickedCell)
+    {
+        document.querySelectorAll("td").forEach(td => {
+            td.classList.remove("selected-color");
+        })
+        document.querySelectorAll("tr").forEach(tr =>{
+            tr.classList.remove("selected-color");
+        })
+        _clickedCell.classList.add("selected-color");
+    }
+
+
+    function addRow()
+    {
+        console.log("Click plus\n");
+        const table = document.getElementById("tableContainer");
+        const row = document.createElement('tr');
+
+        const row_Number_Cell = document.createElement('td');
+        const Test_Command_Cell = document.createElement('td');
+        const dummy_Cell = document.createElement('td');
+
+        let row_len = table.rows.length+1;
+        row_Number_Cell.textContent = String(row_len);
+        
+        Test_Command_Cell.textContent = "Text" + String(row_len);
+
+        row.appendChild(row_Number_Cell);
+        row.appendChild(Test_Command_Cell);
+        row.appendChild(dummy_Cell);
+        table.appendChild(row);
+    }
+
+    function deleteRow()
+    {
+        const selectedRows = document.querySelectorAll("#tableContainer tr.selected-color");
+        if(selectedRows.length == 0)
+        {   
+            alert("Please select some rows!");
+            return; 
+        }
+        selectedRows.forEach(row => row.remove());
+        
+        const Table = document.getElementById("tableContainer");
+        const remainLength = Table.rows.length;
+        for(i = 0 ; i < remainLength ; i ++)
+        {
+            let row = Table.rows[i];
+            let Number_Cell = row.cells[0];
+            Number_Cell.textContent = String(i + 1);
+        }
+    }
+
+    function moveRowUpward()
+    {
+        const selectedRows = document.querySelectorAll("#tableContainer tr.selected-color");
+        if(selectedRows.length > 1)
+        {
+            alert("Please move just one row once");
+            return;
+        }
+        if(selectedRows.length == 0)
+        {
+            alert("Please select one row");
+            return;
+        }
+
+        //only one row
+
+        const selectedRow = selectedRows[0];
+
+        const previousRow = selectedRow.previousElementSibling;
+        if(previousRow)
+        {
+            selectedRow.parentNode.insertBefore(selectedRow, previousRow); //switch row
+
+            const selectedRow_Cells = selectedRow.querySelectorAll("td");
+            const previousRow_Cells = previousRow.querySelectorAll("td");
+
+            const s_Cells_Number = selectedRow_Cells[0].textContent;
+            const p_Cells_Number = previousRow_Cells[0].textContent;
+
+            selectedRow_Cells[0].textContent = p_Cells_Number;
+            previousRow_Cells[0].textContent = s_Cells_Number;
+        }
+        
+        
+        // const allRows = Array.from(document.querySelectorAll("#tableContainer tr"));
+        // const rowIndex = allRows.indexOf(selectedRow);
+
+        // if(rowIndex == 0){
+        //     //there is no need to move
+        //     return;
+        // }
+    }
+
+    function moveRowDownward()
+    {
+        const selectedRows = document.querySelectorAll("#tableContainer tr.selected-color");
+        if(selectedRows.length > 1)
+        {
+            alert("Please move just one row once");
+            return;
+        }
+        if(selectedRows.length == 0)
+        {
+            alert("Please select one row");
+            return;
+        }
+
+        //only one row
+        const selectedRow = selectedRows[0];
+
+        const nextRow = selectedRow.nextElementSibling;
+        if(nextRow)
+        {
+            selectedRow.parentNode.insertBefore(nextRow, selectedRow); //switch row
+
+            const selectedRow_Cells = selectedRow.querySelectorAll("td");
+            const nextRow_Cells = nextRow.querySelectorAll("td");
+
+            const s_Cells_Number = selectedRow_Cells[0].textContent;
+            const n_Cells_Number = nextRow_Cells[0].textContent;
+
+            selectedRow_Cells[0].textContent = n_Cells_Number;
+            nextRow_Cells[0].textContent = s_Cells_Number;
+        }
+    }
+</script>
+
+</html>

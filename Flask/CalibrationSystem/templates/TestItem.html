@@ -715,6 +715,7 @@
 
     let Run_Flag = 0;
     let oldRunningID = -1; //step_idx starts with 0 in server end
+    let selectedFileName_withSubName = "";
 
     const ColumnIndex_NO            = 0;
     const ColumnIndex_TestCommand   = 1;
@@ -723,9 +724,6 @@
 
     let g_currentCellIndex;
     let g_currentClickedCell;
-
-    let g_cmd_machineType;
-    let g_cmd_instruction;
 
     let instructionSet = Object();
     let mapping_instruction_to_machineType = Object();
@@ -816,9 +814,6 @@
                                 g_currentClickedCell.textContent = onlyOwnText;
                                 g_currentClickedCell.instruction = onlyOwnText;
                                 g_currentClickedCell.machineType = li_inner.machineType;
-                                
-                                // g_cmd_instruction = onlyOwnText;
-                                // g_cmd_machineType = li_inner.machineType;
                                 showParaInfo();
                             }
                         }
@@ -832,7 +827,6 @@
                     {
                         li_outer.classList.toggle("expanded"); 
                         const onlyOwnText = e.target.firstChild.textContent.trim();
-                        // g_cmd_machineType = onlyOwnText;
                         console.log(onlyOwnText);
                     }
                 })
@@ -853,9 +847,11 @@
         paraInfoBox.style.display = "block";
         paraInfoJson = instructionSet[g_currentClickedCell.machineType][g_currentClickedCell.instruction];
         for(const key in paraInfoJson)
-        {
-            paraInfoBox.textContent = paraInfoBox.textContent + "\n" + key + ": " + paraInfoJson[key];
-            console.log(key + ": " + paraInfoJson[key]);
+        {   
+            if(!key.startsWith("Option")){
+                paraInfoBox.textContent = paraInfoBox.textContent + "\n" + key + ": " + paraInfoJson[key];
+                console.log(key + ": " + paraInfoJson[key]);
+            }
         }
     }
 
@@ -873,62 +869,138 @@
         }
   
         const paraInputJson = instructionSet[corres_cmd_cell.machineType][corres_cmd_cell.instruction];
-        // const paraInputJson = instructionSet[g_cmd_machineType][g_cmd_instruction];
         let paras_object_temp = {};
-        
-        
 
         for(const key in paraInputJson)
         {   
             const group = document.createElement("div");
+            
 
-            if(key == "RangeMax" || key === "RangeMin")
+            const para_str = "Para";
+            const option_str = "Options";
+
+            if(!key.startsWith(para_str))
             {
                 continue;
             }
+
+            paras_object_temp[key] = "";
+
             const label = document.createElement("label");
             label.textContent = key + ": ";
-            const input = document.createElement("input");
-            input.type = "text";
-            input.id = key;
+            let new_element;
 
-            //handle for default values
-            if(g_currentClickedCell.changeFlag_forPara === 0 && g_currentClickedCell.paras_object.hasOwnProperty(key))
+            let select_or_input = -1; //0 for input, 1 for select
+            let index = key.indexOf(para_str);
+            
+            if(index !== -1)
             {
-                input.value = g_currentClickedCell.paras_object[key];
+                const Para_num = key.substring(index + para_str.length);
+                console.log("after_para : " + Para_num);
+                console.log(`[NOTE]${option_str} + ${Para_num}`);
+                if(paraInputJson.hasOwnProperty(option_str + Para_num))
+                {   
+                    //create a select element by a function
+                    select_or_input = 1;
+                    console.log("Create Selction");
+                    console.log("Options : " + paraInputJson[option_str + Para_num]);
+                    new_element = createSelection(key, paraInputJson[option_str + Para_num]);
+                }
+                else
+                {
+                    //create a input element by a function
+                    select_or_input = 0;
+                    console.log("Create Input");
+                    new_element = createInput(key);
+                }
+            }
+            else
+            {
+                console.log("can't find");
             }
             
-            paras_object_temp[key] = "";
-            input.addEventListener("input", function(event){
-                g_currentClickedCell.paras_object[input.id] = event.target.value;
-                g_currentClickedCell.textContent = "";
-                for(const id in g_currentClickedCell.paras_object)
-                {
-                    if(g_currentClickedCell.textContent === "")
-                    {
-                        g_currentClickedCell.textContent = g_currentClickedCell.paras_object[id]; 
-                    }
-                    else
-                    {
-                        g_currentClickedCell.textContent = g_currentClickedCell.textContent + "," + g_currentClickedCell.paras_object[id];
-                    }
-                }
-            });
-
-            // label.appendChild(input);
             group.appendChild(label);
-            group.appendChild(input);
+            group.appendChild(new_element);
 
             paraInputBox.appendChild(group);
         }
-        // paraInputBox.appendChild(group);
         
         if(g_currentClickedCell.changeFlag_forPara === 1){
             g_currentClickedCell.paras_object = paras_object_temp;
             g_currentClickedCell.changeFlag_forPara = 0;
         }
-        
-        
+    }
+
+    function createSelection(key, options)
+    {
+        const select = document.createElement("select");
+        select.id = key;
+
+        options.forEach(opt => {
+            const option = document.createElement("option");
+            option.value = opt;
+            option.textContent = opt;
+            select.appendChild(option);
+        })
+
+        /**
+         * Default value of selection must be set after options are all created.
+        */
+        if(g_currentClickedCell.changeFlag_forPara === 0 && g_currentClickedCell.paras_object.hasOwnProperty(key))
+        {
+            console.log("HI, " + g_currentClickedCell.paras_object[key]);
+            select.value = g_currentClickedCell.paras_object[key];
+        }
+
+        select.addEventListener("change", function(event){
+            g_currentClickedCell.paras_object[select.id] = event.target.value;
+            g_currentClickedCell.textContent = "";
+            for(const id in g_currentClickedCell.paras_object)
+            {
+                if(g_currentClickedCell.textContent === "")
+                {
+                    g_currentClickedCell.textContent = g_currentClickedCell.paras_object[id];
+                }
+                else
+                {
+                    g_currentClickedCell.textContent = g_currentClickedCell.textContent + "," + g_currentClickedCell.paras_object[id];
+                }
+            }
+            
+        });
+
+
+        return select;
+    }
+
+    function createInput(key)
+    {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.id = key;
+
+        if(g_currentClickedCell.changeFlag_forPara === 0 && g_currentClickedCell.paras_object.hasOwnProperty(key))
+        {
+            input.value = g_currentClickedCell.paras_object[key];  
+        }
+
+        input.addEventListener("input", function(event){
+            g_currentClickedCell.paras_object[input.id] = event.target.value;
+            g_currentClickedCell.textContent = "";
+            for(const id in g_currentClickedCell.paras_object)
+            {
+                if(g_currentClickedCell.textContent === "")
+                {
+                    g_currentClickedCell.textContent = g_currentClickedCell.paras_object[id]; 
+                }
+                else
+                {
+                    g_currentClickedCell.textContent = g_currentClickedCell.textContent + "," + g_currentClickedCell.paras_object[id];
+                }
+            }
+        });
+
+        return input;
     }
 
     function showExpectedVal()
@@ -946,7 +1018,6 @@
         }
   
         const paraInputJson = instructionSet[corres_cmd_cell.machineType][corres_cmd_cell.instruction];
-        // const paraInputJson = instructionSet[g_cmd_machineType][g_cmd_instruction];
 
         let expectedVal_object_temp = {};
         
@@ -1052,7 +1123,7 @@
         
         //select operation
         const cardContainer = document.getElementById("fileCardContainers");
-        let selectedFileName_withSubName = "";
+        selectedFileName_withSubName = "";
         filenames.forEach(filename => {
             const card = document.createElement("div");
             card.className = "file-card";
@@ -1445,14 +1516,26 @@
             body:JSON.stringify(transferJson)
         });
         const res_data = await response.json();
+        if(res_data["done_flag"] === 1)
+        {   
+            input = document.getElementById("filename_input");
+            alert(`The file <${input.value}> is saved successfully`);
+        }
+        else
+        {
+            alert("[Error] saving file");
+        }
+        
     }
     
     async function RunTestItem()
     {
+        const input = document.getElementById("filename_input");
+        selectedFileName_withSubName = input.value + ".json";
         const response = await fetch('/api/Run_TestItem', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body:JSON.stringify({"pressed" : 1})
+            body:JSON.stringify({"filename" : selectedFileName_withSubName})
         });
         
         Run_Flag = 1;
