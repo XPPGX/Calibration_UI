@@ -699,7 +699,7 @@
                     <div class="tree" id="treeContainer">
                     
                     </div>
-
+                        
                 </div>
             </div>
         </div>
@@ -751,7 +751,7 @@
         buildInstructionTree(instructionSet);
         
 
-        setInterval(update_ui_stage, 500);
+        setInterval(update_ui_stage, 100);
     });
 
     function construct_Instruction_to_machineType_Mapping(_instructionSet)
@@ -1518,7 +1518,7 @@
         const res_data = await response.json();
         if(res_data["done_flag"] === 1)
         {   
-            input = document.getElementById("filename_input");
+            const input = document.getElementById("filename_input");
             alert(`The file <${input.value}> is saved successfully`);
         }
         else
@@ -1549,15 +1549,22 @@
         {
             const response = await fetch('/api/ui_update_TestItem');
             if(!response.ok){
-                throw new Error("[Failed]instruction set loading");
+                throw new Error("[Failed]/api/ui_update_TestItem");
             }
             const res_data = await response.json();
-            console.log("step_idx : " + res_data["step_idx"]);
+            console.log("step_idx_testItem : " + res_data["step_idx_testItem"]);
 
-            const current_id = res_data["step_idx"];
+            const current_id = res_data["step_idx_testItem"];
             console.log("row_len : " + table.rows.length);
             if(current_id < table.rows.length + 1)
             {
+                if(current_id == table.rows.length)
+                {
+                    Run_Flag = 0;
+                    oldRunningID = -1;
+                    return;
+                }
+
                 if(oldRunningID !== current_id)
                 {
                     document.querySelectorAll("td").forEach(tr =>{tr.classList.remove("selected-color");})

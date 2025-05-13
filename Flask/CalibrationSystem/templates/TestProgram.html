@@ -549,7 +549,7 @@
         }
         
         .tree{
-            display: none;
+            display: block;
         }
 
         .tree ul{
@@ -668,7 +668,7 @@
                 <button class="arrow-button" onclick="moveRowDownward()">↓</button>
                 <button class="icon-button" onclick="addRow()">+</button>
                 <button class="icon-button minus" onclick="deleteRow()">-</button>
-                <button class="icon-button run" onclick="RunTestItem()">Run</button>
+                <button class="icon-button run" onclick="RunTestProgram()">Run</button>
             </div>
         </div>
 
@@ -703,18 +703,20 @@
 
 <script>
     /**
-     * 
+     * testItem_Cell's property : testItem
     */
     let Run_Flag = 0;
     let oldRunningID = -1;
     let selectedFileName_withSubName = "";
 
     const ColumnIndex_NO            = 0;
-    const ColumnIndex_TestCommand   = 1;
+    const ColumnIndex_TestItem   = 1;
 
     let g_currentCellIndex;
     let g_currentClickedCell;
     
+    let rcv_testProgram = Object();
+
     document.addEventListener('DOMContentLoaded', async function(){
         const response = await fetch('/api/get_TestItem_set');
         if(!response.ok){
@@ -724,21 +726,44 @@
         const fileName_List = res_data["filename_list"];
         console.log(res_data);
         buildTestItemTree(fileName_List);
+
+        setInterval(update_ui_stage, 500);
     });
 
     function buildTestItemTree(fileName_List)
     {
+        const Tree = document.getElementById("treeContainer");
+
         const TestItemNum = Object.keys(fileName_List).length;
         console.log("TestItemNum = " + TestItemNum);
         
-        const ul_outer = document.createElement("ul");
+
+        // const ul_outer = document.createElement("ul");
         
         for(const filename of fileName_List)
         {
             const filename_withoutSubName = filename.substring(0, filename.lastIndexOf('.'));
             console.log(filename);
+
+            const li_outer = document.createElement("li");
+            li_outer.textContent = filename_withoutSubName;
+            li_outer.addEventListener("click", function(e){
+                if(e.target === this)
+                {
+                    if(g_currentCellIndex === ColumnIndex_TestItem)
+                    {
+                        e.stopPropagation();
+                        const onlyOwnText = this.textContent.trim();
+                        console.log(onlyOwnText);
+
+                        g_currentClickedCell.textContent = onlyOwnText;
+                        g_currentClickedCell.testItem = onlyOwnText;
+                    }
+                }
+            })
+            // ul_outer.appendChild(li_outer);
+            Tree.appendChild(li_outer);
         }
-        
     }
 
     async function handleChoice(option) {
@@ -746,6 +771,68 @@
         document.getElementById('initChoices').style.display = 'none';
         
         initWeb(option);
+    }
+
+    async function fileSelector()
+    {
+        let response;
+        let res_data;
+
+        response = await fetch('/api/get_test_program_file_names');
+        if(!response.ok){
+            throw new Error("[Failed]instruction set loading");
+        }
+        res_data = await response.json();
+        const filenames = res_data["files"];
+        console.log(filenames);
+
+        const cardContainer = document.getElementById("fileCardContainers");
+        selectedFileName_withSubName = "";
+        filenames.forEach(filename => {
+            const card = document.createElement("div");
+            card.className = "file-card";
+            card.textContent = filename;
+            card.addEventListener("click", () => {
+                console.log(card.textContent);
+                selectedFileName_withSubName = card.textContent;
+                document.getElementById("popup").style.display = "none";
+
+                const index = selectedFileName_withSubName.lastIndexOf(".");
+                let selectedFileName_withoutSubName;
+                if(index !== -1)
+                {
+                    selectedFileName_withoutSubName = selectedFileName_withSubName.substring(0, index);   
+                }
+                document.getElementById("filename_input").value = selectedFileName_withSubName;
+                get_test_program_file_content(selectedFileName_withSubName);
+            });
+            cardContainer.appendChild(card);
+        });
+    }
+
+    async function get_test_program_file_content(filename)
+    {
+        let response = await fetch('/api/get_test_program_file_content', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body:JSON.stringify({"filename" : filename})
+        });
+        let res_data = await response.json();
+        rcv_testProgram = res_data;
+        console.log(rcv_testProgram);
+        buildTableFromRcvJson(rcv_testProgram)
+    }
+
+    function buildTableFromRcvJson(rcv_testProgram)
+    {
+        const table = document.getElementById("tableContainer");
+        const testPrograms = rcv_testProgram["Test_Program"];
+
+        console.log(testPrograms);
+        for(const key in testPrograms)
+        {
+            
+        }
     }
 
     async function initWeb(option)
@@ -797,7 +884,7 @@
                     console.log("Clicked NO");
                     break;
 
-                case ColumnIndex_TestCommand:
+                case ColumnIndex_TestItem:
                     console.log("Clicked TestCMD");
                     
                     highlightSelectedCell(clickedCell);
@@ -805,7 +892,7 @@
                     const Tree = document.getElementById("treeContainer");
                     Tree.style.display = "block";
                     g_currentClickedCell = clickedCell;
-                    g_currentCellIndex = ColumnIndex_TestCommand;
+                    g_currentCellIndex = ColumnIndex_TestItem;
                     break;
 
                 default:
@@ -824,7 +911,6 @@
         })
         _clickedCell.classList.add("selected-color");
     }
-
 
     function addRow()
     {
@@ -940,6 +1026,111 @@
 
             selectedRow_Cells[0].textContent = n_Cells_Number;
             nextRow_Cells[0].textContent = s_Cells_Number;
+        }
+    }
+
+    function recordTableInJSON()
+    {
+        let jsonObject = {};
+        jsonObject["Test_Program"] = {};
+        
+        const table = document.getElementById("tableContainer");
+        for(let i = 0 ; i < table.rows.length ; i ++)
+        {
+            const row           = table.rows[i];
+            const Num_Cell      = row.cells[0];
+            const TestItem_Cell = row.cells[1];
+
+            jsonObject["Test_Program"][Num_Cell.textContent] = TestItem_Cell.textContent;
+        }
+        console.log(jsonObject);
+        return jsonObject;
+    }
+
+    async function newFileSave()
+    {
+        const tableJsonObject = recordTableInJSON();
+
+        const filename_str = document.getElementById("filename_input").value;
+
+        let transferJson = {};
+        transferJson.table = tableJsonObject;
+        transferJson.filename = filename_str + ".json";
+        console.log(transferJson);
+
+        const response = await fetch('/api/saveNewTestProgram', {
+            method: 'POST',
+            headers: {'Content-Type' : 'application/json'},
+            body:JSON.stringify(transferJson)
+        });
+        const res_data = await response.json();
+        if(res_data["done_flag"] === 1)
+        {
+            const input = document.getElementById("filename_input");
+            alert(`The file <${input.value}> is saved successfully`);
+        }
+        else
+        {
+            alert("[Error] saveing file");
+        }
+    }
+
+    async function RunTestProgram()
+    {
+        const input = document.getElementById("filename_input");
+        selectedFileName_withSubName = input.value + ".json";
+        const response = await fetch('/api/Run_TestProgram',{
+            method: 'POST',
+            headers: {'Content-Type' : 'application/json'},
+            body:JSON.stringify({"filename" : selectedFileName_withSubName})
+        });
+        Run_Flag = 1;
+        oldRunningID = -1;
+    }
+
+    async function update_ui_stage()
+    {
+        const table = document.getElementById("tableContainer");
+        if(Run_Flag == 1)
+        {
+            const response = await fetch('/api/ui_update_TestProgram');
+            if(!response.ok){
+                throw new Error("[Failed]/api/ui_update_TestProgram");
+            }
+            const res_data = await response.json();
+            console.log("step_idx_testProgram : " + res_data["step_idx_testProgram"]);
+
+            const current_id = res_data["step_idx_testProgram"];
+            console.log("row_len : " + table.rows.length);
+            if(current_id < table.rows.length + 1)
+            {
+                if(current_id == table.rows.length)
+                {
+                    Run_Flag = 0;
+                    oldRunningID = -1;
+                    return;
+                }
+
+                if(oldRunningID !== current_id)
+                {
+                    document.querySelectorAll("td").forEach(tr =>{tr.classList.remove("selected-color");})
+                    document.querySelectorAll("tr").forEach(tr =>{tr.classList.remove("selected-color");})
+                    document.querySelectorAll("tr").forEach(tr =>{tr.classList.remove("running-task");})
+
+                    const currentRow = table.rows[current_id];
+                    if(currentRow.classList.contains("running-task"))
+                    {
+                        currentRow.classList.remove("running-task");
+                    }
+                    else
+                    {
+                        currentRow.classList.add("running-task");
+                    }
+
+                    oldRunningID = current_id;
+                    
+                }
+            }
         }
     }
 </script>

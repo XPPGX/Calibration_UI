@@ -95,14 +95,21 @@ Devices_setting = {} #For current linked devices
 #Instruction Set
 # INSTRUCTION_SET_DESCRIPTION_FILE_PATH = "./InstructionSet/InstructionSet.json"
 INSTRUCTION_SET_DESCRIPTION_FILE_PATH = "./InstructionSet/InstructionSet_new.json"
+
 #Test Item
 TEST_ITEM_DIR_PATH = "./TestItem"
 TEST_ITEM_FILE_PATH = "./TestItem/NTN-5K.json"
 TestItem_FilePath = ""
-step_idx = 0
+step_idx_testItem = 0
+
+#Test Program
+TEST_PROGRAM_DIR_PATH = "./TestProgram"
+TestProgram_FilePath = ""
+step_idx_testProgram = 0
 
 #Password
 Password = set()
+
 Password.add("admin")
 pass_or_not_flag = 0
 token_second_counter = 0
@@ -648,7 +655,7 @@ def GetCaliPointTarget(_cali_point_object, _device_name):
     return current_cali_point_target
 
 def thread_Run_TestItems():
-    global step_idx
+    global step_idx_testItem
     global TestItem_FilePath
     #Load Json
     # with open(TEST_ITEM_FILE_PATH, "r", encoding="utf-8") as file:
@@ -659,9 +666,9 @@ def thread_Run_TestItems():
     
     goto_counters = {}  # Record goto count
     step_keys = list(sorted(Test_Item_json["Test_Item_Number"].keys(), key=int))
-    step_idx = 0
-    while step_idx < len(step_keys):
-        idx = step_keys[step_idx]
+    step_idx_testItem = 0
+    while step_idx_testItem < len(step_keys):
+        idx = step_keys[step_idx_testItem]
         item = Test_Item_json["Test_Item_Number"][idx]
 
         g_cmd = item["Test_Command"]
@@ -735,7 +742,7 @@ def thread_Run_TestItems():
         #     if counter < repeat_count:
         #         goto_counters[idx] = counter + 1
         #         if target_step in Test_Item_json["Test_Item_Number"]:
-        #             step_idx = step_keys.index(target_step)
+        #             step_idx_testItem = step_keys.index(target_step)
         #             print(f"🔁 Goto Step {target_step}, 第 {counter + 1}/{repeat_count} 次")
         #             continue
         #         else:
@@ -748,8 +755,27 @@ def thread_Run_TestItems():
 
         # while c_lib_Cali.Get_Command_Flag() != 0:
         #     time.sleep(0.1)
-        time.sleep(3)
-        step_idx += 1
+        time.sleep(1)
+        step_idx_testItem += 1
+    return
+
+def thread_Run_TestPrograms():
+    global step_idx_testProgram
+    global TestProgram_FilePath
+    global TestItem_FilePath
+    with open(TestProgram_FilePath, "r", encoding="utf-8") as file:
+        Test_Program_Json = json.load(file)
+    
+    step_keys = list(sorted(Test_Program_Json["Test_Program"].keys(), key=int))
+    step_idx_testProgram = 0
+    while(step_idx_testProgram < len(step_keys)):
+        idx = step_keys[step_idx_testProgram]
+        TestItemName = Test_Program_Json["Test_Program"][idx]
+        TestItemName_withSubName = TestItemName + ".json"
+        TestItem_FilePath = os.path.join(TEST_ITEM_DIR_PATH, TestItemName_withSubName)
+        print("\n[Executing] Test Item => {}\n".format(TestItem_FilePath))
+        thread_Run_TestItems() #call as a normal function
+        step_idx_testProgram += 1
     return
 ##################################################
 # Web page routes
@@ -1275,7 +1301,6 @@ def handle_saveNewTestItem():
     except Exception as e:
         return jsonify({'done_flag' : 0}), 400
 
-
 @app.route('/api/get_test_item_file_names', methods=['GET'])
 def handle_get_test_item_file_names():
     files = os.listdir(TEST_ITEM_DIR_PATH)
@@ -1299,12 +1324,10 @@ def handle_get_test_item_file_content():
     except Exception as e:
         return jsonify({'error' : str(e)}), 400
 
-
-
-
 @app.route('/api/Run_TestItem', methods=['POST'])
 def handle_Run_TestItem():
     global TestItem_FilePath
+
     filenameJson = request.get_json()
     filename_withSubName = filenameJson["filename"]
     TestItem_FilePath = os.path.join(TEST_ITEM_DIR_PATH, filename_withSubName)
@@ -1313,13 +1336,13 @@ def handle_Run_TestItem():
     thread = Thread(target=thread_Run_TestItems)
     thread.daemon = True
     thread.start()
-        
+    
     return jsonify({}), 200
 
 @app.route('/api/ui_update_TestItem', methods=['GET'])
 def handle_ui_update_TestItem():
-    global step_idx
-    return jsonify({"step_idx" : step_idx}), 200
+    global step_idx_testItem
+    return jsonify({"step_idx_testItem" : step_idx_testItem}), 200
 
 @app.route('/api/get_TestItem_set', methods=['GET'])
 def handle_get_TestItem_set():
@@ -1329,6 +1352,62 @@ def handle_get_TestItem_set():
         print(file)
     return jsonify({"filename_list" : filenames}), 200
 
+@app.route('/api/saveNewTestProgram', methods=['POST'])
+def handle_saveNewTestProgram():
+    try:
+        if request.is_json:
+            Json_obj = request.get_json()
+            json_str = json.dumps(Json_obj, indent=4, ensure_ascii=False)
+            print(json_str)
+
+            print(Json_obj["filename"])
+            new_TestProgram_FilePath = os.path.join(TEST_PROGRAM_DIR_PATH, Json_obj["filename"])
+            TestProgram_Json = Json_obj["table"]
+            with open(new_TestProgram_FilePath, "w", encoding="utf-8") as f:
+                json.dump(TestProgram_Json, f, indent=4, ensure_ascii=False)
+            
+            return jsonify({"done_flag" : 1}), 200
+    except Exception as e:
+        print(str(e))
+        return jsonify({'done_flag' : 0}), 400
+
+@app.route('/api/get_test_program_file_names', methods=['GET'])
+def handle_get_test_program_file_names():
+    files = os.listdir(TEST_PROGRAM_DIR_PATH)
+    print(files)
+    return jsonify({"files" : files})
+
+@app.route('/api/get_test_program_file_content', methods=['POST'])
+def handle_get_test_program_file_content():
+    Rcv_Json_data = request.get_json()
+    testProgram_fileName_withSubName = Rcv_Json_data.get('filename', "File_Not_Found")
+    print(testProgram_fileName_withSubName)
+
+    file_path = os.path.join(TEST_PROGRAM_DIR_PATH, testProgram_fileName_withSubName)
+    with open(file_path, 'r') as file:
+        file_content = json.load(file)
+        print(file_content)
+
+    return jsonify(file_content), 200
+
+@app.route('/api/Run_TestProgram', methods=['POST'])
+def handle_Run_TestProgram():
+    global TestProgram_FilePath
+    filenameJson = request.get_json()
+    filename_withSubName = filenameJson["filename"]
+    TestProgram_FilePath = os.path.join(TEST_PROGRAM_DIR_PATH, filename_withSubName)
+    print(TestProgram_FilePath)
+
+    thread = Thread(target=thread_Run_TestPrograms)
+    thread.daemon = True
+    thread.start()
+
+    return jsonify({}), 200
+
+@app.route('/api/ui_update_TestProgram', methods=['GET'])
+def handle_ui_update_TestProgram():
+    global step_idx_testProgram
+    return jsonify({"step_idx_testProgram" : step_idx_testProgram}), 200
 ##################################################
 # debug
 ##################################################
@@ -1360,9 +1439,9 @@ def handle_Mock_enter_pressed():
     
     goto_counters = {}  # Record goto count
     step_keys = list(sorted(Test_Item_json["Test_Item_Number"].keys(), key=int))
-    step_idx = 0
-    while step_idx < len(step_keys):
-        idx = step_keys[step_idx]
+    step_idx_testItem = 0
+    while step_idx_testItem < len(step_keys):
+        idx = step_keys[step_idx_testItem]
         item = Test_Item_json["Test_Item_Number"][idx]
 
         g_cmd = item["Test_Command"]
@@ -1436,7 +1515,7 @@ def handle_Mock_enter_pressed():
             if counter < repeat_count:
                 goto_counters[idx] = counter + 1
                 if target_step in Test_Item_json["Test_Item_Number"]:
-                    step_idx = step_keys.index(target_step)
+                    step_idx_testItem = step_keys.index(target_step)
                     print(f"🔁 Goto Step {target_step}, 第 {counter + 1}/{repeat_count} 次")
                     continue
                 else:
@@ -1449,7 +1528,7 @@ def handle_Mock_enter_pressed():
         while c_lib_Cali.Get_Command_Flag() != 0:
             time.sleep(0.1)
 
-        step_idx += 1
+        step_idx_testItem += 1
 
     return jsonify({}), 200
 
