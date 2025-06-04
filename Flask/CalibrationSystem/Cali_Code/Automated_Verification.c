@@ -243,7 +243,7 @@ void Read_Command_Process(void) {
         uint8_t Chroma51101_cmd = (uint8_t)strtoul(UI_Para2, NULL, 0);
         uint8_t Chroma51101_para1 = (uint8_t)strtoul(UI_Para3, NULL, 0);
         uint8_t Chroma51101_length = (uint8_t)strtoul(UI_Para4, NULL, 0);
-        float Current_Shunt_Factor = atof(UI_Para5);
+        Current_Shunt_Factor = atof(UI_Para5);
         Chroma_51101_Read_Process(UI_Para1, Chroma51101_cmd, Chroma51101_para1, Chroma51101_length);
     }
 
