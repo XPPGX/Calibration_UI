@@ -162,8 +162,22 @@
             background-color: red;
         }
 
+        .icon-button.minus:disabled {
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
+            border: 1px solid #999;
+        }
+        
         .icon-button.run{
             background-color: #4caf50;
+        }
+
+        .icon-button.run:disabled{
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
+            border: 1px solid #999;
         }
 
         .icon-button:hover {
@@ -633,6 +647,13 @@
 
         .file-card:hover {
             background-color: #eef;
+        }
+
+        button:disabled{
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
+            border: 1px solid #999;
         }
     </style>
 </head>
@@ -1544,6 +1565,9 @@
         document.querySelectorAll("td").forEach(tr =>{tr.classList.remove("selected-color");})
         document.querySelectorAll("tr").forEach(tr =>{tr.classList.remove("selected-color");})
         document.querySelectorAll("tr").forEach(tr =>{tr.classList.remove("running-task");})
+
+        disable_switchPage();
+        all_button_disable();
     }
     
     async function update_ui_stage()
@@ -1566,6 +1590,8 @@
                 {
                     Run_Flag = 0;
                     oldRunningID = -1;
+                    enable_switchPage();
+                    all_button_enable();
                     return;
                 }
 
@@ -1601,5 +1627,24 @@
         }
     }
 
-</script>
+    function all_button_disable()
+    {
+        document.querySelectorAll('button').forEach(btn=>                                                                                                                                                                                                      {
+            btn.disabled = true;
+            console.log(btn);
+        });
+
+        console.log("all button disable");
+    }
+
+    function all_button_enable()
+    {
+        document.querySelectorAll('button').forEach(btn=>                                                                                                                                                                                                                 {
+            btn.disabled = false;
+            console.log(btn);
+        });
+        
+        console.log("all button enable");
+    }
+    </script>
 </html>

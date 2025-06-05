@@ -196,6 +196,12 @@
         .btn_config_appr{
             display: block;
         }
+        button:disabled{
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
+            border: 1px solid #999;
+        }
         @media (max-width: 1200px) {
             body{
                 padding-top: 180px;
@@ -410,6 +416,7 @@
 <script>
     let current_fine_setting_device_name_str = "";
     let device_ModelName_USBport_mapping = {};
+    var rescanBtn_mutex_lock = false;
 
     document.addEventListener('DOMContentLoaded', async function(){
         initNavbar();
@@ -528,6 +535,18 @@
     }
     // Use a POST API to inform server to call cali's function "scan_usb_devices"
     document.getElementById('btn_Rescan').addEventListener('click', async () => {
+        //prevent the case of multiple click in extremely small time, for send multi-API
+        if(rescanBtn_mutex_lock == true)
+        {
+            console.log("[Click] already run Rescan");
+            return;   
+        }
+        console.log("[Click] Rescan");
+        rescanBtn_mutex_lock = true;
+        document.querySelectorAll('button').forEach(btn=>{
+            btn.disabled = true;
+        });
+        
         const response1 = await fetch('/api/scan_usb_devices', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -558,6 +577,11 @@
             //device_ModelName_USBport_mapping[model_name] = usb_port;
         }
         console.log(device_ModelName_USBport_mapping);
+
+        rescanBtn_mutex_lock = false;
+        document.querySelectorAll('button').forEach(btn=>{
+            btn.disabled = false;
+        });
     });
 
     function addRow(type, code_name, equip_name, serial_num, protocol, port) {

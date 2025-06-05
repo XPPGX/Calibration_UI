@@ -34,11 +34,11 @@
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "DWAM1",
-                "Value_Type": "I,DC"
+                "Equipment_Name": "DWAM0",
+                "Value_Type": "I,RMS"
             },
             "adjust_direction": "Negative",
-            "enable": false,
+            "enable": true,
             "scaling_factor": "mA",
             "step_cmd": "0x0001",
             "unit": "A"
@@ -72,11 +72,11 @@
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "DWAM1",
+                "Equipment_Name": "DWAM0",
                 "Value_Type": "I,RMS"
             },
             "adjust_direction": "Positive",
-            "enable": false,
+            "enable": true,
             "scaling_factor": "ACI",
             "step_cmd": "0x0007",
             "unit": "A"
@@ -110,11 +110,11 @@
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "DWAM1",
+                "Equipment_Name": "DWAM0",
                 "Value_Type": "I,RMS"
             },
             "adjust_direction": "Positive",
-            "enable": false,
+            "enable": true,
             "scaling_factor": "ACI",
             "step_cmd": "0x0008",
             "unit": "A"
@@ -133,8 +133,8 @@
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "DWAM1",
-                "Value_Type": "V,RMS"
+                "Equipment_Name": "DMM1",
+                "Value_Type": "Ch0"
             },
             "adjust_direction": "Positive",
             "enable": true,
@@ -176,11 +176,11 @@
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "DMM2",
+                "Equipment_Name": "DMM1",
                 "Value_Type": "Ch0"
             },
             "adjust_direction": "Negative",
-            "enable": false,
+            "enable": true,
             "scaling_factor": "DCI",
             "step_cmd": "0x0005",
             "unit": "A"
@@ -214,11 +214,11 @@
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "DMM2",
-                "Value_Type": "Ch0"
+                "Equipment_Name": "DWAM0",
+                "Value_Type": "I,RMS"
             },
             "adjust_direction": "Positive",
-            "enable": false,
+            "enable": true,
             "scaling_factor": "DCI",
             "step_cmd": "0x0004",
             "unit": "A"
@@ -237,11 +237,11 @@
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "DMM2",
+                "Equipment_Name": "DMM1",
                 "Value_Type": "Ch0"
             },
             "adjust_direction": "Positive",
-            "enable": false,
+            "enable": true,
             "scaling_factor": "DCI",
             "step_cmd": "0x0003",
             "unit": "A"
@@ -260,11 +260,11 @@
                 }
             },
             "Target_Equipment": {
-                "Equipment_Name": "DMM1",
+                "Equipment_Name": "DMM0",
                 "Value_Type": "Ch0"
             },
             "adjust_direction": "Positive",
-            "enable": false,
+            "enable": true,
             "scaling_factor": "DCV",
             "step_cmd": "0x0002",
             "unit": "V"
@@ -272,6 +272,13 @@
     },
     "Order": [
         "0x0006",
+        "0x0001",
+        "0x0002",
+        "0x0003",
+        "0x0004",
+        "0x0005",
+        "0x0007",
+        "0x0008",
         "0xffff"
     ],
     "script_File_Name": "BIC-5K.json"

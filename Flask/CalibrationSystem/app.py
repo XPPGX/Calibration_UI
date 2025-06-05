@@ -119,8 +119,8 @@ app = Flask(__name__)
 c_lib_Cali = ctypes.CDLL('./Cali_Code/Cali.so')
 #c_lib_Search_Device = ctypes.CDLL('./Clib/Cali_Code/Auto_Search_Device.so')
 
-DEBUG_MODE = 0      #DEBUG_MODE == 1, means it can run without DUT ; DEBUG_MODE = 0 means it needs to connect DUT to run
-DEBUG_DEVICE = 0    #DEBUG_DEVICE == 1, means it can run without any device ; DEBUG_DEVICE == 0, means it needs to connect device to run
+DEBUG_MODE = 1      #DEBUG_MODE == 1, means it can run without DUT ; DEBUG_MODE = 0 means it needs to connect DUT to run
+DEBUG_DEVICE = 1    #DEBUG_DEVICE == 1, means it can run without any device ; DEBUG_DEVICE == 0, means it needs to connect device to run
 DEBUG_TESTITEM = 1  #DEBUG_TESTITEM == 1, means it can run without any device ; DEBUG_TESTITEM == 0, means it needs to connect device to run
 Debug_Enter_pressed = 0
 
@@ -961,16 +961,17 @@ def handle_scan_usb_devices():
     #Debug mode
     elif(DEBUG_DEVICE == 1):
         # device_info_1 = "/dev/ttyUSB0,Chroma,51101-8"
+        # time.sleep(5) # for test re-click the rescan button
         device_info_1 = "/dev/USBTMC0,Chroma,61815,96181500001444,1.70"
         device_info_2 = "/dev/USBTMC1,Chroma ATE,66205,662025001432,1.70"
         device_info_3 = "/dev/ttyUSB1,GWInstek,GDM8342,GER817373,1.04"
         device_info_4 = "/dev/ttyUSB2,ATA1045"
         device_info_5 = "/dev/ttyUSB0,Chroma,51101-8"
         DeviceInfo_str_list.append(device_info_1)
-        # DeviceInfo_str_list.append(device_info_2)
-        # DeviceInfo_str_list.append(device_info_3)
-        # DeviceInfo_str_list.append(device_info_4)
-        # DeviceInfo_str_list.append(device_info_5)
+        DeviceInfo_str_list.append(device_info_2)
+        DeviceInfo_str_list.append(device_info_3)
+        DeviceInfo_str_list.append(device_info_4)
+        DeviceInfo_str_list.append(device_info_5)
         print(DeviceInfo_str_list)
     
     
@@ -1430,109 +1431,109 @@ def Mock_equipment_value():
 ##################################################
 @app.route('/api/Mock_enter_pressed', methods=['POST'])
 def handle_Mock_enter_pressed():
-    # global Debug_Enter_pressed
-    # Rcv_Json_data = request.get_json()
-    # Debug_Enter_pressed = Rcv_Json_data["pressed"]
-    # print(f'Debug_Enter_pressed = {Debug_Enter_pressed}')
+    global Debug_Enter_pressed
+    Rcv_Json_data = request.get_json()
+    Debug_Enter_pressed = Rcv_Json_data["pressed"]
+    print(f'Debug_Enter_pressed = {Debug_Enter_pressed}')
 
     #Load Json
-    with open(TEST_ITEM_FILE_PATH, "r", encoding="utf-8") as file:
-        Test_Item_json = json.load(file)
-    with open("./DeviceConfig/DeviceConfig.json", "r", encoding="utf-8") as file:
-        device_config = json.load(file) 
+    # with open(TEST_ITEM_FILE_PATH, "r", encoding="utf-8") as file:
+    #     Test_Item_json = json.load(file)
+    # with open("./DeviceConfig/DeviceConfig.json", "r", encoding="utf-8") as file:
+    #     device_config = json.load(file) 
     
-    goto_counters = {}  # Record goto count
-    step_keys = list(sorted(Test_Item_json["Test_Item_Number"].keys(), key=int))
-    step_idx_testItem = 0
-    while step_idx_testItem < len(step_keys):
-        idx = step_keys[step_idx_testItem]
-        item = Test_Item_json["Test_Item_Number"][idx]
+    # goto_counters = {}  # Record goto count
+    # step_keys = list(sorted(Test_Item_json["Test_Item_Number"].keys(), key=int))
+    # step_idx_testItem = 0
+    # while step_idx_testItem < len(step_keys):
+        # idx = step_keys[step_idx_testItem]
+        # item = Test_Item_json["Test_Item_Number"][idx]
 
-        g_cmd = item["Test_Command"]
-        g_para1 = item.get("Para1", "")
-        g_para2 = item.get("Para2", "")
-        g_para3 = item.get("Para3", "")
-        g_para4 = item.get("Para4", "")
-        g_para5 = item.get("Para5", "")
-        g_rangemax = item.get("RangeMax", "")
-        g_rangemin = item.get("RangeMin", "")
+        # g_cmd = item["Test_Command"]
+        # g_para1 = item.get("Para1", "")
+        # g_para2 = item.get("Para2", "")
+        # g_para3 = item.get("Para3", "")
+        # g_para4 = item.get("Para4", "")
+        # g_para5 = item.get("Para5", "")
+        # g_rangemax = item.get("RangeMax", "")
+        # g_rangemin = item.get("RangeMin", "")
 
-        print(f"\n Step {idx}: {g_cmd}")
-        print(f"   Parameters: Para1={g_para1}, Para2={g_para2}, Para3={g_para3}, Para4={g_para4}, Para5={g_para5}")
+        # print(f"\n Step {idx}: {g_cmd}")
+        # print(f"   Parameters: Para1={g_para1}, Para2={g_para2}, Para3={g_para3}, Para4={g_para4}, Para5={g_para5}")
 
-        if g_cmd:
-            c_lib_Cali.Check_UI_TestCommand(str(g_cmd).encode("utf-8"))
-        if not g_cmd.startswith("Set") and not g_cmd.startswith("Read"):
-            if g_para1:
-                c_lib_Cali.Check_UI_Para1(str(g_para1).encode("utf-8"))
-        else:
-            usb_port_result = None
-            for device_name, device_info in device_config.items():
-                identifiers = device_info.get("Identifier", [])
-                if g_para1 in identifiers:
-                    usb_ports = device_info.get("USB_Port", [])
-                    if usb_ports:
-                        usb_port_result = usb_ports[0]  # 取第一個 USB_Port
-                        break
-            if usb_port_result:
-                c_lib_Cali.Check_UI_Para1(str(usb_port_result).encode("utf-8"))
-        if g_para2:
-            c_lib_Cali.Check_UI_Para2(str(g_para2).encode("utf-8"))
-        if g_para3:
-            c_lib_Cali.Check_UI_Para3(str(g_para3).encode("utf-8"))
-        if g_para4:
-            c_lib_Cali.Check_UI_Para4(str(g_para4).encode("utf-8"))
-        if g_para5:
-            c_lib_Cali.Check_UI_Para5(str(g_para5).encode("utf-8"))
-        if g_rangemax:
-            c_lib_Cali.Check_UI_RangeMax(str(g_rangemax).encode("utf-8"))
-        if g_rangemin:
-            c_lib_Cali.Check_UI_RangeMin(str(g_rangemin).encode("utf-8"))
+        # if g_cmd:
+        #     c_lib_Cali.Check_UI_TestCommand(str(g_cmd).encode("utf-8"))
+        # if not g_cmd.startswith("Set") and not g_cmd.startswith("Read"):
+        #     if g_para1:
+        #         c_lib_Cali.Check_UI_Para1(str(g_para1).encode("utf-8"))
+        # else:
+        #     usb_port_result = None
+        #     for device_name, device_info in device_config.items():
+        #         identifiers = device_info.get("Identifier", [])
+        #         if g_para1 in identifiers:
+        #             usb_ports = device_info.get("USB_Port", [])
+        #             if usb_ports:
+        #                 usb_port_result = usb_ports[0]  # 取第一個 USB_Port
+        #                 break
+        #     if usb_port_result:
+        #         c_lib_Cali.Check_UI_Para1(str(usb_port_result).encode("utf-8"))
+        # if g_para2:
+        #     c_lib_Cali.Check_UI_Para2(str(g_para2).encode("utf-8"))
+        # if g_para3:
+        #     c_lib_Cali.Check_UI_Para3(str(g_para3).encode("utf-8"))
+        # if g_para4:
+        #     c_lib_Cali.Check_UI_Para4(str(g_para4).encode("utf-8"))
+        # if g_para5:
+        #     c_lib_Cali.Check_UI_Para5(str(g_para5).encode("utf-8"))
+        # if g_rangemax:
+        #     c_lib_Cali.Check_UI_RangeMax(str(g_rangemax).encode("utf-8"))
+        # if g_rangemin:
+        #     c_lib_Cali.Check_UI_RangeMin(str(g_rangemin).encode("utf-8"))
 
-        if g_cmd.startswith("Set"):
-            c_lib_Cali.Set_Command_Process()
+        # if g_cmd.startswith("Set"):
+        #     c_lib_Cali.Set_Command_Process()
         
-        elif g_cmd.startswith("Read"):
-            c_lib_Cali.Read_Command_Process()
-            TargetResult_Value = getDeviceMeasureValue()
-            TargetResult_Value_str = f"{TargetResult_Value:.3f}"
+        # elif g_cmd.startswith("Read"):
+        #     c_lib_Cali.Read_Command_Process()
+        #     TargetResult_Value = getDeviceMeasureValue()
+        #     TargetResult_Value_str = f"{TargetResult_Value:.3f}"
 
-            if g_rangemin and g_rangemax:
-                try:
-                    min_val = float(g_rangemin)
-                    max_val = float(g_rangemax)
-                    if min_val <= TargetResult_Value <= max_val:
-                        print(f"✅ Step {idx} 測量值 {TargetResult_Value_str} 在範圍 {min_val} ~ {max_val} 內")
-                    else:
-                        print(f"❌ Step {idx} 測量值 {TargetResult_Value_str} 超出範圍 {min_val} ~ {max_val}")
-                except ValueError:
-                    print(f"⚠️ Step {idx} RangeMin 或 RangeMax 格式錯誤：{g_rangemin}, {g_rangemax}")
+        #     if g_rangemin and g_rangemax:
+        #         try:
+        #             min_val = float(g_rangemin)
+        #             max_val = float(g_rangemax)
+        #             if min_val <= TargetResult_Value <= max_val:
+        #                 print(f"✅ Step {idx} 測量值 {TargetResult_Value_str} 在範圍 {min_val} ~ {max_val} 內")
+        #             else:
+        #                 print(f"❌ Step {idx} 測量值 {TargetResult_Value_str} 超出範圍 {min_val} ~ {max_val}")
+        #         except ValueError:
+        #             print(f"⚠️ Step {idx} RangeMin 或 RangeMax 格式錯誤：{g_rangemin}, {g_rangemax}")
 
-        elif g_cmd in ["DelayS", "DelayMS"]:
-            handle_common_command(g_cmd, g_para1)
+        # elif g_cmd in ["DelayS", "DelayMS"]:
+        #     handle_common_command(g_cmd, g_para1)
 
-        elif g_cmd == "Goto":
-            target_step = g_para1
-            repeat_count = int(g_para2) if g_para2.isdigit() else 1
-            counter = goto_counters.get(idx, 0)
+        # elif g_cmd == "Goto":
+        #     target_step = g_para1
+        #     repeat_count = int(g_para2) if g_para2.isdigit() else 1
+        #     counter = goto_counters.get(idx, 0)
 
-            if counter < repeat_count:
-                goto_counters[idx] = counter + 1
-                if target_step in Test_Item_json["Test_Item_Number"]:
-                    step_idx_testItem = step_keys.index(target_step)
-                    print(f"🔁 Goto Step {target_step}, 第 {counter + 1}/{repeat_count} 次")
-                    continue
-                else:
-                    print(f"❌ Goto 指定步驟不存在：{target_step}")
-            else:
-                print(f"✅ Goto 已執行 {repeat_count} 次，繼續下一步")
-        else:
-            print(f"未定義指令處理：{g_cmd}")
+        #     if counter < repeat_count:
+        #         goto_counters[idx] = counter + 1
+        #         if target_step in Test_Item_json["Test_Item_Number"]:
+        #             step_idx_testItem = step_keys.index(target_step)
+        #             print(f"🔁 Goto Step {target_step}, 第 {counter + 1}/{repeat_count} 次")
+        #             continue
+        #         else:
+        #             print(f"❌ Goto 指定步驟不存在：{target_step}")
+        #     else:
+        #         print(f"✅ Goto 已執行 {repeat_count} 次，繼續下一步")
+        # else:
+        #     print(f"未定義指令處理：{g_cmd}")
 
-        while c_lib_Cali.Get_Command_Flag() != 0:
-            time.sleep(0.1)
+        # while c_lib_Cali.Get_Command_Flag() != 0:
+        #     time.sleep(0.1)
 
-        step_idx_testItem += 1
+        # step_idx_testItem += 1
 
     return jsonify({}), 200
 
@@ -1547,6 +1548,6 @@ def handle_common_command(g_cmd, g_para1):
 if __name__ == '__main__':
     # ~ Init_getDeviceSetting_from_Local_File()
     Init_getScript_from_Local_File()
-    #app.run('127.0.0.1', port=4040)
-    app.run(debug=True)
+    app.run('127.0.0.1', port=4040)
+    # app.run(debug=True)
     # print("admin" in Password)

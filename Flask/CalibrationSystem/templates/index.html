@@ -43,6 +43,8 @@
             display: flex;
             padding: 20px;
             font-size: 18px;
+            height: auto;
+            overflow-y: auto;
         }
         .left-container{
             display: flex;
@@ -440,12 +442,23 @@
             border: 2px solid #27ae60;
         }
 
+        button:disabled{
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
+            border: 1px solid #999;
+        }
+
         @media (max-width: 1200px) {
             body{
                 padding-top: 120px;
+                height: auto;
+                overflow-y: auto;
             }
             
             #content{
+                height: auto;
+                overflow-y: auto;
                 flex-direction: column;
             }
             .left-container, .right-container{
@@ -611,7 +624,6 @@
      * 2 means calibration finish and the values still need remain on the screen
      */
     var Cali_Flag = 0; 
-
     /**
      * UI_stage :
      * 1 means UI stage 1
@@ -643,6 +655,7 @@
     let compare_device_value_float  = 0;
 
     var resultShowcase_Flag = 0; //For handling the multi showcase of the final results like "PASS" or "FAIL"
+    var mobile_scroll_enable_flag = true;
 
     document.addEventListener('DOMContentLoaded', function(){
         initNavbar();
@@ -727,6 +740,9 @@
                 if(res_data["OK_Flag"] == 1){
                     //Enable the timer function "update_ui_stage()"
                     Cali_Flag = 1;
+
+                    document.getElementById("UI_btnStartSetting").disabled = true;
+                    disable_switchPage();
 
                     //UI_stage turns to 1
                     UI_stage = 1;
@@ -856,6 +872,8 @@
                         setTimeout(() => {
                             UI_stage = 4;
                             Cali_Flag = 2;
+                            document.getElementById("UI_btnStartSetting").disabled = false;
+                            enable_switchPage();
                         });
                     }
 
@@ -919,6 +937,9 @@
                             const MessageBox = document.getElementById("MessageBox");
                             MessageBox.textContent = MessageBox.textContent + "\n" + "=============== FAIL ===============";
                             MessageBox.scrollTop = MessageBox.scrollHeight;
+                            scrollPageToBottomIfMobile();
+                            document.getElementById("UI_btnStartSetting").disabled = false;
+                            enable_switchPage();
                         });
                     }
 
@@ -993,6 +1014,7 @@
                         const MessageBox = document.getElementById("MessageBox");
                         MessageBox.textContent = MessageBox.textContent + "\n" + UI_CaliPoint.innerText + "...OK";
                         MessageBox.scrollTop = MessageBox.scrollHeight;
+                        scrollPageToBottomIfMobile();
                     }
                     
 
@@ -1025,9 +1047,16 @@
                         }
                         MessageBox.scrollTop = MessageBox.scrollHeight;
 
+                        scrollPageToBottomIfMobile();
+                        
                         setTimeout(() => {
                             UI_stage = 4;
                             Cali_Flag = 2;
+
+                            document.getElementById("UI_btnStartSetting").disabled = false;
+                            
+                            enable_switchPage();
+                            
                         });
                     }
                     break;
@@ -1073,6 +1102,15 @@
         const MessageBox = document.getElementById("MessageBox");
         MessageBox.innerText = "";
         MessageBox.scrollTop = MessageBox.scrollHeight;
+    }
+
+    function scrollPageToBottomIfMobile()
+    {   
+        if(mobile_scroll_enable_flag === true){
+            if(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)){
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+        }
     }
 </script>
 
